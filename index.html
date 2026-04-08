@@ -801,61 +801,18 @@ async function sendMessage() {
   await callGPT();
 }
 
+// index.html의 callGPT 함수 부분
 async function callGPT() {
-  if (isLoading) return;
-  isLoading = true;
-  document.getElementById('chat-status').textContent = '입력 중...';
-  const typingId = showTyping();
-
-  try {
-    // 💡 여기에 본인의 OpenAI API 키를 입력하세요! (예: sk-...)
-    const OPENAI_API_KEY = '여기에_실제_OPENAI_API키를_넣어주세요'; 
-
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo', // 더 좋은 성능을 원하면 'gpt-4o' 등 사용 가능
-        messages: [
-          { role: 'system', content: buildSystemPrompt() },
-          // 이미지 전송 로직이 섞여있으므로, 텍스트 형태만 추출해서 보냅니다.
-          ...messages.slice(-30).map(m => ({
-             role: m.role,
-             content: typeof m.content === 'string' ? m.content : '사진을 보냈습니다.' 
-          }))
-        ]
-      })
-    });
-
-    removeTyping(typingId);
-
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      appendMessage('ai', `앗 오류났어 😅 ${err.error?.message || '다시 해봐'}`);
-      isLoading = false;
-      document.getElementById('chat-status').textContent = '온라인';
-      return;
-    }
-
-    const data = await resp.json();
-    const reply = data.choices[0].message.content.trim();
-    appendMessage('ai', reply);
-    
-    // DB와 로컬 배열에 저장
-    messages.push({ role: 'assistant', content: reply });
-    await saveMessage('assistant', reply);
-
-  } catch(e) {
-    removeTyping(typingId);
-    appendMessage('ai', '야 인터넷 연결 확인해봐 ㅠ');
-    console.error('GPT API Error:', e);
-  }
-  
-  isLoading = false;
-  document.getElementById('chat-status').textContent = '온라인';
+  // ... (중략)
+  const resp = await fetch('/api/chat', { // 우리 서버 주소로 호출!
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'gpt-3.5-turbo',
+      messages: [ /* ... 메시지들 ... */ ]
+    })
+  });
+  // ... (이후 동일)
 }
 
 function appendMessage(role, content, imgSrc) {
