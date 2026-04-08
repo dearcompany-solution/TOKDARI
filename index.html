@@ -648,7 +648,7 @@ async function loadMessages() {
     .eq('user_id', currentUser.id)
     .order('created_at', { ascending: true })
     .limit(100);
-  if (data) {
+  if (data && data.length > 0) {
     messages = data;
     data.forEach(m => appendMessage(m.role, m.content));
   }
