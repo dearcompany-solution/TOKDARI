@@ -538,8 +538,9 @@ async function doSignup() {
   // 방금 만든 프로필 불러오기
   const { data, error } = await sb.from('profiles').select('*').eq('username', username).eq('password_hash', password).maybeSingle();
 
-  profile = newProfile;
-  currentUser = { id: newProfile.id }; // 가짜 user 객체
+  if (!data) { errEl.textContent = '가입 후 로그인 실패, 다시 시도해줘'; return; }
+  profile = data;
+  currentUser = { id: data.id };
 
   errEl.textContent = '';
   document.getElementById('signup-screen').classList.remove('show');
