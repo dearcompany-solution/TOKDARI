@@ -3,12 +3,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-  if (!OPENAI_API_KEY) {
-    return res.status(500).json({ error: 'API 키가 설정되지 않았어요' });
-  }
-
   try {
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // Vercel 환경 변수에 키 등록 필수
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -16,21 +13,19 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-3.5-turbo',
         messages: req.body.messages,
-        max_tokens: 300,
-        temperature: 0.85
       })
     });
 
     const data = await response.json();
-
+    
     if (!response.ok) {
-      return res.status(response.status).json({ error: data.error?.message || '오류가 났어' });
+      return res.status(response.status).json(data);
     }
 
-    return res.status(200).json(data);
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ error: '서버 내부 오류가 발생했습니다.' });
   }
 }
