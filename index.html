@@ -11,6 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
 <title>톡다리</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <!-- Supabase SDK -->
@@ -94,10 +95,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 
 /* INPUT */
 .input-bar{background:var(--bg2);border-top:1px solid var(--border);padding:.6rem .75rem;display:flex;align-items:flex-end;gap:8px;padding-bottom:max(.6rem,env(safe-area-inset-bottom))}
-.input-bar textarea{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:9px 14px;color:var(--text);font-size:.9rem;outline:none;resize:none;max-height:120px;font-family:'Noto Sans KR',sans-serif;line-height:1.5;transition:border-color .2s}
+.input-bar textarea{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:9px 14px;color:var(--text);font-size:.95rem;outline:none;resize:none;max-height:120px;font-family:'Noto Sans KR',sans-serif;line-height:1.5;transition:border-color .2s;min-height:40px}
 .input-bar textarea:focus{border-color:var(--purple)}
-.send-btn{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.img-btn{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation}
 #photo-input{display:none}
 
 /* HOME */
@@ -355,6 +355,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
   </div>
   <div id="chat-screen" class="screen">
     <div class="app-header">
+      <button class="hbtn" onclick="switchTab('home')" style="font-size:1.3rem;padding:4px 8px;margin-right:4px;">←</button>
       <div class="avatar-circle"><span id="chat-avatar-emoji">🐧</span><div class="online-dot"></div></div>
       <div>
         <div class="header-name" id="chat-name">펭수</div>
@@ -367,10 +368,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
     </div>
     <div id="chat-messages"></div>
     <div class="input-bar">
-      <button class="img-btn" onclick="document.getElementById('photo-input').click()">📷</button>
-      <input type="file" id="photo-input" accept="image/*" onchange="handlePhoto(event)">
+      <input type="file" id="photo-input" accept="image/*" onchange="handlePhoto(event)" style="display:none">
       <textarea id="msg-textarea" placeholder="메시지 입력..." rows="1"
-        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        oninput="autoResize(this)"></textarea>
       <button class="send-btn" onclick="sendMessage()">↑</button>
     </div>
   </div>
@@ -428,10 +428,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
   <div class="tab-bar">
     <button class="tab-item active" id="tab-home" onclick="switchTab('home')">
       <span class="ti">🏠</span><span class="tl">홈</span>
-    </button>
-    <button class="tab-item" id="tab-chat" onclick="switchTab('chat')">
-      <span class="ti-wrap"><span class="ti">💬</span><span class="notif-badge" id="chat-badge" style="display:none"></span></span>
-      <span class="tl">톡다리</span>
     </button>
     <button class="tab-item" id="tab-diary" onclick="switchTab('diary')">
       <span class="ti">📔</span><span class="tl">기록</span>
@@ -722,7 +718,7 @@ async function startApp() {
   await loadChatrooms();
   await loadDiary();
   updateStats();
-  if (messages.length === 0) sendFirstMessage();
+  restoreTab();
   requestNotifPermission();
   scheduleRandomPing();
 }
@@ -801,63 +797,53 @@ async function sendMessage() {
   await callGPT();
 }
 
-// index.html의 callGPT 함수 부분
 async function callGPT() {
   if (isLoading) return;
   isLoading = true;
   document.getElementById('chat-status').textContent = '입력 중...';
-  
-  // 타이핑 애니메이션 시작
   const typingId = showTyping();
 
   try {
-    // Vercel 서버의 백엔드(/api/chat)로 요청 보내기
     const resp = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: buildSystemPrompt() },
-          // 사진 데이터는 빼고 텍스트만 전송되도록 처리
           ...messages.slice(-30).map(m => ({
-             role: m.role,
-             content: typeof m.content === 'string' ? m.content : '사진을 보냈습니다.' 
+            role: m.role === 'ai' ? 'assistant' : m.role,
+            content: typeof m.content === 'string' ? m.content : m.content
           }))
         ]
       })
     });
 
-    // 타이핑 애니메이션 제거
     removeTyping(typingId);
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      appendMessage('ai', `앗 오류났어 😅 ${err.error?.message || '다시 해봐'}`);
+      appendMessage('ai', `앗 오류났어 😅 ${err.error || '다시 해봐'}`);
       isLoading = false;
       document.getElementById('chat-status').textContent = '온라인';
       return;
     }
 
-    // AI 답장 데이터 받아오기
     const data = await resp.json();
+    if (!data.choices || !data.choices[0]) {
+      appendMessage('ai', '응답을 받지 못했어 ㅠ 다시 해봐');
+      isLoading = false;
+      document.getElementById('chat-status').textContent = '온라인';
+      return;
+    }
     const reply = data.choices[0].message.content.trim();
-    
-    // 1. 화면에 AI 답장 띄우기
     appendMessage('ai', reply);
-    
-    // 2. 로컬 메시지 배열과 DB(Supabase)에 대화 저장하기
     messages.push({ role: 'assistant', content: reply });
     await saveMessage('assistant', reply);
-
   } catch(e) {
-    // 인터넷 끊김 등 에러 발생 시 처리
     removeTyping(typingId);
+    console.error('callGPT error:', e);
     appendMessage('ai', '야 인터넷 연결 확인해봐 ㅠ');
-    console.error('GPT API Error:', e);
   }
-  
-  // 상태 초기화
   isLoading = false;
   document.getElementById('chat-status').textContent = '온라인';
 }
@@ -905,7 +891,27 @@ function showTyping() {
 }
 function removeTyping(id) { const el = document.getElementById(id); if(el) el.remove(); }
 function scrollToBottom() { const w = document.getElementById('chat-messages'); w.scrollTop = w.scrollHeight; }
-function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey&&window.innerWidth>600){e.preventDefault();sendMessage();} }
+function handleKey(e) {
+  if(e.key==='Enter' && !e.shiftKey && !e.isComposing && window.innerWidth>600){
+    e.preventDefault();
+    sendMessage();
+  }
+}
+// 한글 IME 처리 - compositionend 후 전송 방지
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('msg-textarea');
+  if(ta) {
+    let isComposing = false;
+    ta.addEventListener('compositionstart', () => { isComposing = true; });
+    ta.addEventListener('compositionend', () => { isComposing = false; });
+    ta.addEventListener('keydown', (e) => {
+      if(e.key==='Enter' && !e.shiftKey && !isComposing && window.innerWidth>600){
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  }
+});
 function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
 
 async function clearChat() {
@@ -1018,12 +1024,29 @@ function askSchedule() {
 }
 
 // ══════════ TAB ══════════
+let currentTab = 'home';
 function switchTab(tab) {
+  currentTab = tab;
+  sessionStorage.setItem('currentTab', tab);
   document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
   document.getElementById('home-screen').classList.remove('active');
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  if(tab==='home') { document.getElementById('home-screen').classList.add('active'); document.getElementById('tab-home').classList.add('active'); }
-  else { document.getElementById(tab+'-screen').classList.add('active'); document.getElementById('tab-'+tab).classList.add('active'); if(tab==='chat'){document.getElementById('chat-badge').style.display='none';setTimeout(()=>scrollToBottom(),100);} }
+  if(tab==='home') {
+    document.getElementById('home-screen').classList.add('active');
+    document.getElementById('tab-home').classList.add('active');
+  } else if(tab==='chat') {
+    document.getElementById('chat-screen').classList.add('active');
+    setTimeout(()=>scrollToBottom(),100);
+  } else {
+    document.getElementById(tab+'-screen').classList.add('active');
+    const tabBtn = document.getElementById('tab-'+tab);
+    if(tabBtn) tabBtn.classList.add('active');
+  }
+}
+function restoreTab() {
+  const saved = sessionStorage.getItem('currentTab') || 'home';
+  if(saved === 'chat' && !currentRoom) switchTab('home');
+  else switchTab(saved);
 }
 
 // ══════════ TAG HELPERS ══════════
@@ -1050,7 +1073,6 @@ function scheduleRandomPing() {
   setTimeout(() => {
     if(Notification.permission==='granted'&&document.hidden) {
       new Notification(profile.friend_name||'톡다리',{body:pings[Math.floor(Math.random()*pings.length)],icon:'icon.svg'});
-      document.getElementById('chat-badge').style.display='block';
     }
     scheduleRandomPing();
   }, delay);
