@@ -515,26 +515,14 @@ async function doSignup() {
 
   errEl.textContent = '가입 중...';
 
-  // Supabase Auth: 이메일 형식으로 변환 (아이디@tokdari.app)
-  const fakeEmail = `${username}@tokdari.app`;
-  const fullPassword = `tokdari_${password}_${username}`;
+  // 아이디 중복 체크
+  const { data: existing } = await sb.from('profiles').select('id').eq('username', username).single();
+  if (existing) { errEl.textContent = '이미 있는 아이디야!'; return; }
 
-  const { data, error } = await sb.auth.signUp({
-    email: fakeEmail,
-    password: fullPassword
-  });
-
-  if (error) {
-    errEl.textContent = error.message.includes('already') ? '이미 있는 아이디야!' : error.message;
-    return;
-  }
-
-  currentUser = data.user;
-
-  // 프로필 저장
+  // 비밀번호 해시 없이 간단 저장 (토이 프로젝트용)
   const { error: pErr } = await sb.from('profiles').insert({
-    id: currentUser.id,
     username, name, phone,
+    password_hash: password, // 실제 서비스라면 절대 평문 저장 X
     friend_name: '펭수',
     friend_nickname: '친구야',
     avatar: '🐧',
@@ -542,10 +530,12 @@ async function doSignup() {
     roles: ['감정 쓰레기통', '욕받이', '개인비서']
   });
 
-  if (pErr && !pErr.message.includes('duplicate')) {
-    errEl.textContent = '프로필 저장 실패: ' + pErr.message;
-    return;
-  }
+  if (pErr) { errEl.textContent = '가입 실패: ' + pErr.message; return; }
+
+  // 방금 만든 프로필 불러오기
+  const { data: newProfile } = await sb.from('profiles').select('*').eq('username', username).single();
+  profile = newProfile;
+  currentUser = { id: newProfile.id }; // 가짜 user 객체
 
   errEl.textContent = '';
   document.getElementById('signup-screen').classList.remove('show');
@@ -558,23 +548,18 @@ async function doLogin() {
   const errEl = document.getElementById('li-error');
 
   if (!username || !password) { errEl.textContent = '아이디랑 비밀번호 입력해줘!'; return; }
-
   errEl.textContent = '로그인 중...';
 
-  const fakeEmail = `${username}@tokdari.app`;
-  const fullPassword = `tokdari_${password}_${username}`;
+  const { data, error } = await sb.from('profiles')
+    .select('*')
+    .eq('username', username)
+    .eq('password_hash', password)
+    .single();
 
-  const { data, error } = await sb.auth.signInWithPassword({
-    email: fakeEmail,
-    password: fullPassword
-  });
+  if (error || !data) { errEl.textContent = '아이디 또는 비밀번호가 틀렸어!'; return; }
 
-  if (error) {
-    errEl.textContent = '아이디 또는 비밀번호가 틀렸어!';
-    return;
-  }
-
-  currentUser = data.user;
+  profile = data;
+  currentUser = { id: data.id };
   await loadProfile();
 }
 
