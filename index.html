@@ -480,9 +480,9 @@ window.addEventListener('load', async () => {
     currentUser = session.user;
     await loadProfile();
   } else {
-    hideSplash();
-    showSignup();
-  }
+  hideSplash();
+  showLogin();
+}
 });
 
 function hideSplash() {
@@ -556,13 +556,17 @@ async function doLogin() {
     .select('*')
     .eq('username', username)
     .eq('password_hash', password)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) { errEl.textContent = '아이디 또는 비밀번호가 틀렸어!'; return; }
+  if (error) { errEl.textContent = '오류: ' + error.message; return; }
+  if (!data) { errEl.textContent = '아이디 또는 비밀번호가 틀렸어!'; return; }
 
   profile = data;
   currentUser = { id: data.id };
-  await loadProfile();
+
+  errEl.textContent = '';
+  hideSplash();
+  startApp();
 }
 
 async function doLogout() {
@@ -574,7 +578,7 @@ async function doLogout() {
   document.getElementById('app').classList.remove('show');
   document.getElementById('chat-messages').innerHTML = '';
   hideSplash();
-  showSignup();
+  showLogin();
 }
 
 // ══════════ PROFILE ══════════
@@ -644,7 +648,10 @@ async function loadMessages() {
     .eq('user_id', currentUser.id)
     .order('created_at', { ascending: true })
     .limit(100);
-  if (data) messages = data;
+  if (data) {
+    messages = data;
+    data.forEach(m => appendMessage(m.role, m.content));
+  }
 }
 
 async function saveMessage(role, content) {
