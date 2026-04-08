@@ -11,349 +11,253 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <title>톡다리</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root {
-    --bg: #0d0d1a;
-    --bg2: #13132a;
-    --bg3: #1a1a35;
-    --purple: #7c3aed;
-    --purple-light: #a78bfa;
-    --pink: #ec4899;
-    --text: #f0f0ff;
-    --text2: #9999bb;
-    --text3: #6666aa;
-    --bubble-ai: #1e1e3f;
-    --bubble-user: #5b21b6;
-    --border: rgba(124,58,237,0.2);
-    --radius: 20px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: 'Noto Sans KR', sans-serif; color: var(--text); }
+:root {
+  --bg:#0d0d1a; --bg2:#13132a; --bg3:#1a1a35;
+  --purple:#7c3aed; --pl:#a78bfa; --pink:#ec4899;
+  --text:#f0f0ff; --text2:#9999bb; --text3:#6666aa;
+  --bai:#1e1e3f; --buser:#5b21b6; --border:rgba(124,58,237,0.2);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text)}
 
-  /* ─── SETUP SCREEN ─── */
-  #setup-screen {
-    position: fixed; inset: 0; background: var(--bg);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 2rem; z-index: 100; gap: 1.5rem;
-  }
-  #setup-screen h1 { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, var(--purple-light), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  #setup-screen p { color: var(--text2); font-size: 0.9rem; text-align: center; line-height: 1.6; }
-  .setup-box {
-    width: 100%; max-width: 400px;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;
-  }
-  .setup-label { font-size: 0.75rem; color: var(--text2); font-weight: 500; letter-spacing: 0.05em; }
-  .setup-input {
-    width: 100%; background: var(--bg3); border: 1px solid var(--border);
-    border-radius: 12px; padding: 0.75rem 1rem;
-    color: var(--text); font-size: 0.9rem; outline: none;
-    font-family: 'Noto Sans KR', sans-serif;
-    transition: border-color 0.2s;
-  }
-  .setup-input:focus { border-color: var(--purple); }
-  .tag-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
-  .tag {
-    padding: 5px 14px; border-radius: 20px; font-size: 0.78rem; cursor: pointer;
-    border: 1.5px solid var(--border); color: var(--text2); background: transparent;
-    transition: all 0.15s; font-family: 'Noto Sans KR', sans-serif;
-  }
-  .tag.on { border-color: var(--purple); color: var(--purple-light); background: rgba(124,58,237,0.15); }
-  .start-btn {
-    width: 100%; max-width: 400px; padding: 1rem;
-    background: linear-gradient(135deg, var(--purple), var(--pink));
-    border: none; border-radius: 14px; color: #fff;
-    font-size: 1rem; font-weight: 700; cursor: pointer;
-    font-family: 'Noto Sans KR', sans-serif;
-    transition: opacity 0.2s; letter-spacing: 0.02em;
-  }
-  .start-btn:active { opacity: 0.85; }
-  .api-warning { font-size: 0.72rem; color: var(--text3); text-align: center; max-width: 340px; }
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
+#splash .logo{font-size:5rem;animation:pulse 2s infinite}
+#splash h1{font-size:2rem;font-weight:700;background:linear-gradient(135deg,var(--pl),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 
-  /* ─── MAIN APP ─── */
-  #app { position: fixed; inset: 0; display: none; flex-direction: column; }
-  #app.show { display: flex; }
+/* AUTH */
+.auth-wrap{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;z-index:100;gap:1rem;overflow-y:auto}
+.auth-wrap.show{display:flex}
+.auth-logo{font-size:3rem}
+.auth-title{font-size:1.5rem;font-weight:700;background:linear-gradient(135deg,var(--pl),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-sub{font-size:0.8rem;color:var(--text3);text-align:center}
+.auth-box{width:100%;max-width:360px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:1.4rem;display:flex;flex-direction:column;gap:10px}
+.auth-label{font-size:0.7rem;color:var(--text3);font-weight:500;letter-spacing:.05em}
+.auth-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:11px 14px;color:var(--text);font-size:0.9rem;outline:none;font-family:'Noto Sans KR',sans-serif;transition:border-color .2s}
+.auth-input:focus{border-color:var(--purple)}
+.auth-btn{width:100%;max-width:360px;padding:1rem;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;border-radius:14px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:opacity .2s}
+.auth-btn:active{opacity:.85}
+.auth-switch{font-size:0.8rem;color:var(--text3);cursor:pointer;text-align:center}
+.auth-switch span{color:var(--pl);text-decoration:underline}
+.auth-error{font-size:0.78rem;color:#f87171;text-align:center;min-height:18px}
 
-  /* Tab screens */
-  .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
-  .screen.active { display: flex; }
+/* ONBOARD */
+#onboard{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;padding:1.5rem;z-index:100;gap:1rem;overflow-y:auto}
+#onboard.show{display:flex}
+.ob-title{font-size:1.3rem;font-weight:700;margin-top:.5rem}
+.ob-sub{font-size:0.8rem;color:var(--text3)}
+.ob-box{width:100%;max-width:360px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:1.2rem;display:flex;flex-direction:column;gap:10px}
+.ob-label{font-size:0.7rem;color:var(--text3);font-weight:500;letter-spacing:.05em}
+.ob-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-size:0.88rem;outline:none;font-family:'Noto Sans KR',sans-serif}
+.ob-input:focus{border-color:var(--purple)}
+.tag-wrap{display:flex;flex-wrap:wrap;gap:6px}
+.tag{padding:5px 13px;border-radius:20px;font-size:0.78rem;cursor:pointer;border:1.5px solid var(--border);color:var(--text2);background:transparent;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
+.tag.on{border-color:var(--purple);color:var(--pl);background:rgba(124,58,237,.15)}
 
-  /* ─── HEADER ─── */
-  .app-header {
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: 0.8rem 1rem;
-    display: flex; align-items: center; gap: 10px;
-    position: relative;
-  }
-  .avatar-circle {
-    width: 40px; height: 40px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--purple), var(--pink));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; flex-shrink: 0; position: relative;
-  }
-  .online-dot {
-    width: 10px; height: 10px; background: #22c55e;
-    border-radius: 50%; position: absolute; bottom: 1px; right: 1px;
-    border: 2px solid var(--bg2);
-  }
-  .header-name { font-weight: 700; font-size: 1rem; }
-  .header-status { font-size: 0.72rem; color: #22c55e; }
-  .header-actions { margin-left: auto; display: flex; gap: 4px; }
-  .hbtn {
-    background: none; border: none; color: var(--text2);
-    font-size: 1.2rem; cursor: pointer; padding: 6px; border-radius: 8px;
-    transition: background 0.15s;
-  }
-  .hbtn:hover { background: var(--bg3); }
+/* APP */
+#app{position:fixed;inset:0;display:none;flex-direction:column}
+#app.show{display:flex}
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden}
+.screen.active{display:flex}
 
-  /* ─── CHAT ─── */
-  #chat-messages {
-    flex: 1; overflow-y: auto; padding: 1rem 0.75rem;
-    display: flex; flex-direction: column; gap: 8px;
-    scroll-behavior: smooth;
-  }
-  #chat-messages::-webkit-scrollbar { width: 3px; }
-  #chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-  .date-divider {
-    text-align: center; font-size: 0.7rem; color: var(--text3);
-    padding: 4px 12px; background: var(--bg2); border-radius: 10px;
-    align-self: center;
-  }
-  .msg-row { display: flex; align-items: flex-end; gap: 6px; }
-  .msg-row.user { flex-direction: row-reverse; }
-  .msg-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--pink)); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
-  .bubble {
-    max-width: 72%; padding: 10px 14px; border-radius: 18px;
-    font-size: 0.88rem; line-height: 1.6; word-break: break-word;
-  }
-  .bubble.ai { background: var(--bubble-ai); color: var(--text); border-bottom-left-radius: 4px; }
-  .bubble.user { background: var(--bubble-user); color: #fff; border-bottom-right-radius: 4px; }
-  .bubble img { max-width: 100%; border-radius: 10px; display: block; margin-top: 4px; }
-  .msg-time { font-size: 0.65rem; color: var(--text3); margin-bottom: 2px; white-space: nowrap; }
-  .typing-bubble { background: var(--bubble-ai); border-radius: 18px; border-bottom-left-radius: 4px; padding: 12px 16px; display: flex; gap: 4px; align-items: center; }
-  .tdot { width: 7px; height: 7px; background: var(--text3); border-radius: 50%; animation: tdot 1.2s infinite; }
-  .tdot:nth-child(2) { animation-delay: 0.2s; }
-  .tdot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes tdot { 0%,80%,100%{transform:translateY(0);opacity:0.5} 40%{transform:translateY(-6px);opacity:1} }
+/* HEADER */
+.app-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:.75rem 1rem;display:flex;align-items:center;gap:10px}
+.avatar-circle{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;position:relative}
+.online-dot{width:10px;height:10px;background:#22c55e;border-radius:50%;position:absolute;bottom:1px;right:1px;border:2px solid var(--bg2)}
+.header-name{font-weight:700;font-size:1rem}
+.header-status{font-size:.72rem;color:#22c55e}
+.header-actions{margin-left:auto;display:flex;gap:4px}
+.hbtn{background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;padding:6px;border-radius:8px}
 
-  /* ─── INPUT BAR ─── */
-  .input-bar {
-    background: var(--bg2); border-top: 1px solid var(--border);
-    padding: 0.6rem 0.75rem; display: flex; align-items: flex-end; gap: 8px;
-    padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
-  }
-  .input-bar textarea {
-    flex: 1; background: var(--bg3); border: 1px solid var(--border);
-    border-radius: 20px; padding: 9px 14px; color: var(--text);
-    font-size: 0.9rem; outline: none; resize: none; max-height: 120px;
-    font-family: 'Noto Sans KR', sans-serif; line-height: 1.5;
-    transition: border-color 0.2s;
-  }
-  .input-bar textarea:focus { border-color: var(--purple); }
-  .send-btn {
-    width: 40px; height: 40px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--purple), var(--pink));
-    border: none; color: #fff; font-size: 1.1rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; transition: opacity 0.15s;
-  }
-  .send-btn:active { opacity: 0.8; }
-  .img-btn {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: var(--bg3); border: 1px solid var(--border);
-    color: var(--text2); font-size: 1.1rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  #photo-input { display: none; }
+/* CHAT */
+#chat-messages{flex:1;overflow-y:auto;padding:1rem .75rem;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth}
+#chat-messages::-webkit-scrollbar{width:3px}
+#chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.msg-row{display:flex;align-items:flex-end;gap:6px}
+.msg-row.user{flex-direction:row-reverse}
+.msg-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.bubble{max-width:72%;padding:10px 14px;border-radius:18px;font-size:.88rem;line-height:1.6;word-break:break-word}
+.bubble.ai{background:var(--bai);color:var(--text);border-bottom-left-radius:4px}
+.bubble.user{background:var(--buser);color:#fff;border-bottom-right-radius:4px}
+.bubble img{max-width:100%;border-radius:10px;display:block;margin-top:4px}
+.msg-time{font-size:.65rem;color:var(--text3);margin-bottom:2px;white-space:nowrap}
+.typing-bubble{background:var(--bai);border-radius:18px;border-bottom-left-radius:4px;padding:12px 16px;display:flex;gap:4px;align-items:center}
+.tdot{width:7px;height:7px;background:var(--text3);border-radius:50%;animation:tdot 1.2s infinite}
+.tdot:nth-child(2){animation-delay:.2s}.tdot:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-6px);opacity:1}}
 
-  /* ─── HOME SCREEN ─── */
-  #home-screen {
-    background: var(--bg);
-    display: none; flex-direction: column; flex: 1; overflow-y: auto;
-  }
-  #home-screen.active { display: flex; }
-  .home-hero {
-    background: linear-gradient(160deg, var(--bg2) 0%, var(--bg3) 100%);
-    padding: 1.5rem; margin: 0.75rem; border-radius: 20px;
-    border: 1px solid var(--border);
-    display: flex; align-items: center; gap: 14px;
-  }
-  .home-hero-avatar { font-size: 3rem; }
-  .home-hero h2 { font-size: 1.1rem; font-weight: 700; }
-  .home-hero p { font-size: 0.8rem; color: var(--text2); margin-top: 4px; line-height: 1.5; }
-  .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 0.75rem 0.75rem; }
-  .home-card {
-    background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
-    padding: 1rem; cursor: pointer; transition: background 0.15s;
-  }
-  .home-card:active { background: var(--bg3); }
-  .home-card .hc-icon { font-size: 1.8rem; margin-bottom: 8px; }
-  .home-card .hc-title { font-size: 0.85rem; font-weight: 700; }
-  .home-card .hc-sub { font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
-  .home-stat-row { display: flex; gap: 10px; padding: 0 0.75rem 0.75rem; }
-  .stat-card {
-    flex: 1; background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 14px; padding: 0.9rem; text-align: center;
-  }
-  .stat-card .sv { font-size: 1.5rem; font-weight: 700; color: var(--purple-light); }
-  .stat-card .sl { font-size: 0.7rem; color: var(--text2); margin-top: 2px; }
-  .mood-selector { padding: 0 0.75rem 1rem; }
-  .mood-selector p { font-size: 0.8rem; color: var(--text2); margin-bottom: 8px; }
-  .mood-row { display: flex; gap: 8px; }
-  .mood-btn {
-    flex: 1; font-size: 1.5rem; background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 12px; padding: 8px 0; cursor: pointer; transition: all 0.15s; text-align: center;
-  }
-  .mood-btn.sel { border-color: var(--purple); background: rgba(124,58,237,0.2); }
+/* INPUT */
+.input-bar{background:var(--bg2);border-top:1px solid var(--border);padding:.6rem .75rem;display:flex;align-items:flex-end;gap:8px;padding-bottom:max(.6rem,env(safe-area-inset-bottom))}
+.input-bar textarea{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:9px 14px;color:var(--text);font-size:.9rem;outline:none;resize:none;max-height:120px;font-family:'Noto Sans KR',sans-serif;line-height:1.5;transition:border-color .2s}
+.input-bar textarea:focus{border-color:var(--purple)}
+.send-btn{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.img-btn{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#photo-input{display:none}
 
-  /* ─── DIARY SCREEN ─── */
-  #diary-screen {
-    background: var(--bg);
-    display: none; flex-direction: column; flex: 1; overflow: hidden;
-  }
-  #diary-screen.active { display: flex; }
-  .diary-list { flex: 1; overflow-y: auto; padding: 0.75rem; display: flex; flex-direction: column; gap: 8px; }
-  .diary-entry {
-    background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--purple);
-    border-radius: 14px; padding: 12px 14px; cursor: pointer;
-  }
-  .de-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .de-mood { font-size: 1.3rem; }
-  .de-date { font-size: 0.7rem; color: var(--text3); }
-  .de-text { font-size: 0.82rem; color: var(--text2); line-height: 1.5; }
-  .diary-fab {
-    position: fixed; bottom: 80px; right: 16px;
-    width: 52px; height: 52px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--purple), var(--pink));
-    border: none; color: #fff; font-size: 1.5rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 20px rgba(124,58,237,0.4);
-  }
+/* HOME */
+#home-screen{background:var(--bg);display:none;flex-direction:column;flex:1;overflow-y:auto}
+#home-screen.active{display:flex}
+.home-hero{background:linear-gradient(160deg,var(--bg2),var(--bg3));padding:1.5rem;margin:.75rem;border-radius:20px;border:1px solid var(--border);display:flex;align-items:center;gap:14px}
+.home-hero-avatar{font-size:3rem}
+.home-hero h2{font-size:1.1rem;font-weight:700}
+.home-hero p{font-size:.8rem;color:var(--text2);margin-top:4px;line-height:1.5}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 .75rem .75rem}
+.home-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1rem;cursor:pointer;transition:background .15s}
+.home-card:active{background:var(--bg3)}
+.hc-icon{font-size:1.8rem;margin-bottom:8px}
+.hc-title{font-size:.85rem;font-weight:700}
+.hc-sub{font-size:.72rem;color:var(--text2);margin-top:2px}
+.home-stat-row{display:flex;gap:10px;padding:0 .75rem .75rem}
+.stat-card{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:.9rem;text-align:center}
+.stat-card .sv{font-size:1.5rem;font-weight:700;color:var(--pl)}
+.stat-card .sl{font-size:.7rem;color:var(--text2);margin-top:2px}
+.mood-selector{padding:0 .75rem .75rem}
+.mood-selector p{font-size:.8rem;color:var(--text2);margin-bottom:8px}
+.mood-row{display:flex;gap:8px}
+.mood-btn{flex:1;font-size:1.5rem;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 0;cursor:pointer;transition:all .15s;text-align:center}
+.mood-btn.sel{border-color:var(--purple);background:rgba(124,58,237,.2)}
 
-  /* ─── SETTINGS SCREEN ─── */
-  #settings-screen {
-    background: var(--bg);
-    display: none; flex-direction: column; flex: 1; overflow-y: auto;
-  }
-  #settings-screen.active { display: flex; }
-  .settings-body { padding: 0.75rem; display: flex; flex-direction: column; gap: 12px; }
-  .settings-section {
-    background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 1rem;
-    display: flex; flex-direction: column; gap: 10px;
-  }
-  .settings-section h3 { font-size: 0.8rem; color: var(--text2); font-weight: 500; letter-spacing: 0.05em; }
-  .settings-input {
-    width: 100%; background: var(--bg3); border: 1px solid var(--border);
-    border-radius: 10px; padding: 8px 12px; color: var(--text); font-size: 0.85rem;
-    outline: none; font-family: 'Noto Sans KR', sans-serif;
-  }
-  .toggle-row {
-    display: flex; align-items: center; justify-content: space-between; padding: 4px 0;
-  }
-  .toggle-label { font-size: 0.85rem; }
-  .toggle {
-    width: 46px; height: 26px; background: var(--bg3); border-radius: 13px;
-    border: 1px solid var(--border); position: relative; cursor: pointer; transition: background 0.2s;
-  }
-  .toggle.on { background: var(--purple); border-color: var(--purple); }
-  .toggle-thumb {
-    width: 20px; height: 20px; background: #fff; border-radius: 50%;
-    position: absolute; top: 2px; left: 3px; transition: transform 0.2s;
-  }
-  .toggle.on .toggle-thumb { transform: translateX(20px); }
-  .save-settings-btn {
-    width: 100%; padding: 0.9rem; background: linear-gradient(135deg, var(--purple), var(--pink));
-    border: none; border-radius: 12px; color: #fff; font-size: 0.95rem; font-weight: 700;
-    cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
-  }
+/* DIARY */
+#diary-screen{background:var(--bg);display:none;flex-direction:column;flex:1;overflow:hidden}
+#diary-screen.active{display:flex}
+.diary-list{flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:8px}
+.diary-entry{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:14px;padding:12px 14px;cursor:pointer}
+.de-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.de-mood{font-size:1.3rem}
+.de-date{font-size:.7rem;color:var(--text3)}
+.de-text{font-size:.82rem;color:var(--text2);line-height:1.5}
+.diary-fab{position:fixed;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;color:#fff;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(124,58,237,.4)}
 
-  /* ─── BOTTOM TAB BAR ─── */
-  .tab-bar {
-    background: var(--bg2); border-top: 1px solid var(--border);
-    display: flex; padding-bottom: env(safe-area-inset-bottom);
-  }
-  .tab-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center;
-    padding: 8px 0 6px; cursor: pointer; background: none; border: none; gap: 3px;
-  }
-  .tab-item .ti { font-size: 1.3rem; }
-  .tab-item .tl { font-size: 0.65rem; color: var(--text3); }
-  .tab-item.active .tl { color: var(--purple-light); font-weight: 700; }
-  .notif-badge {
-    width: 8px; height: 8px; background: var(--pink);
-    border-radius: 50%; position: absolute; top: -2px; right: -2px;
-  }
-  .ti-wrap { position: relative; display: inline-block; }
+/* SETTINGS */
+#settings-screen{background:var(--bg);display:none;flex-direction:column;flex:1;overflow-y:auto}
+#settings-screen.active{display:flex}
+.settings-body{padding:.75rem;display:flex;flex-direction:column;gap:12px}
+.settings-section{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1rem;display:flex;flex-direction:column;gap:10px}
+.settings-section h3{font-size:.8rem;color:var(--text2);font-weight:500;letter-spacing:.05em}
+.settings-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:.85rem;outline:none;font-family:'Noto Sans KR',sans-serif}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+.toggle-label{font-size:.85rem}
+.toggle{width:46px;height:26px;background:var(--bg3);border-radius:13px;border:1px solid var(--border);position:relative;cursor:pointer;transition:background .2s}
+.toggle.on{background:var(--purple);border-color:var(--purple)}
+.toggle-thumb{width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:2px;left:3px;transition:transform .2s}
+.toggle.on .toggle-thumb{transform:translateX(20px)}
+.save-settings-btn{width:100%;padding:.9rem;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;border-radius:12px;color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.logout-btn{width:100%;padding:.9rem;background:transparent;border:1px solid rgba(239,68,68,.4);border-radius:12px;color:#f87171;font-size:.9rem;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
 
-  /* ─── DIARY WRITE MODAL ─── */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    display: flex; align-items: flex-end; z-index: 200; visibility: hidden; opacity: 0;
-    transition: opacity 0.25s, visibility 0.25s;
-  }
-  .modal-overlay.show { visibility: visible; opacity: 1; }
-  .modal-sheet {
-    width: 100%; background: var(--bg2); border-radius: 24px 24px 0 0;
-    padding: 1.25rem; display: flex; flex-direction: column; gap: 12px;
-    transform: translateY(100%); transition: transform 0.3s;
-    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
-  }
-  .modal-overlay.show .modal-sheet { transform: translateY(0); }
-  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto; }
-  .modal-title { font-size: 1rem; font-weight: 700; text-align: center; }
-  .diary-textarea {
-    width: 100%; min-height: 120px; background: var(--bg3);
-    border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px;
-    color: var(--text); font-size: 0.9rem; font-family: 'Noto Sans KR', sans-serif;
-    resize: none; outline: none; line-height: 1.6;
-  }
-  .mood-pick { display: flex; gap: 8px; justify-content: center; font-size: 1.6rem; }
-  .mp { cursor: pointer; padding: 4px; border-radius: 8px; border: 2px solid transparent; }
-  .mp.sel { border-color: var(--purple); background: rgba(124,58,237,0.15); }
-  .modal-btns { display: flex; gap: 8px; }
-  .modal-btn {
-    flex: 1; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border);
-    font-size: 0.9rem; font-weight: 500; cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
-  }
-  .modal-btn.primary { background: var(--purple); color: #fff; border-color: var(--purple); }
-  .modal-btn.cancel { background: transparent; color: var(--text2); }
+/* TAB BAR */
+.tab-bar{background:var(--bg2);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 6px;cursor:pointer;background:none;border:none;gap:3px}
+.tab-item .ti{font-size:1.3rem}
+.tab-item .tl{font-size:.65rem;color:var(--text3)}
+.tab-item.active .tl{color:var(--pl);font-weight:700}
+.notif-badge{width:8px;height:8px;background:var(--pink);border-radius:50%;position:absolute;top:-2px;right:-2px}
+.ti-wrap{position:relative;display:inline-block}
 
-  /* ─── TOAST ─── */
-  .toast {
-    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: var(--bg3); border: 1px solid var(--border); border-radius: 10px;
-    padding: 8px 16px; font-size: 0.8rem; color: var(--text2);
-    opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 300;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;z-index:200;visibility:hidden;opacity:0;transition:opacity .25s,visibility .25s}
+.modal-overlay.show{visibility:visible;opacity:1}
+.modal-sheet{width:100%;background:var(--bg2);border-radius:24px 24px 0 0;padding:1.25rem;display:flex;flex-direction:column;gap:12px;transform:translateY(100%);transition:transform .3s;padding-bottom:max(1.25rem,env(safe-area-inset-bottom))}
+.modal-overlay.show .modal-sheet{transform:translateY(0)}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto}
+.modal-title{font-size:1rem;font-weight:700;text-align:center}
+.diary-textarea{width:100%;min-height:120px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Noto Sans KR',sans-serif;resize:none;outline:none;line-height:1.6}
+.mood-pick{display:flex;gap:8px;justify-content:center;font-size:1.6rem}
+.mp{cursor:pointer;padding:4px;border-radius:8px;border:2px solid transparent}
+.mp.sel{border-color:var(--purple);background:rgba(124,58,237,.15)}
+.modal-btns{display:flex;gap:8px}
+.modal-btn{flex:1;padding:.8rem;border-radius:12px;border:1px solid var(--border);font-size:.9rem;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.modal-btn.primary{background:var(--purple);color:#fff;border-color:var(--purple)}
+.modal-btn.cancel{background:transparent;color:var(--text2)}
 
-  /* trash mode */
-  #chat-screen.trash .app-header { background: #1a0505; border-bottom-color: rgba(239,68,68,0.3); }
-  #chat-screen.trash .bubble.ai { background: #1a0505; }
-  #chat-screen.trash .input-bar { background: #1a0505; border-top-color: rgba(239,68,68,0.3); }
-  #chat-screen.trash .input-bar textarea { background: #2a0808; border-color: rgba(239,68,68,0.3); }
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 16px;font-size:.8rem;color:var(--text2);opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:300}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* TRASH MODE */
+#chat-screen.trash .app-header{background:#1a0505;border-bottom-color:rgba(239,68,68,.3)}
+#chat-screen.trash .bubble.ai{background:#1a0505}
+#chat-screen.trash .input-bar{background:#1a0505;border-top-color:rgba(239,68,68,.3)}
+#chat-screen.trash .input-bar textarea{background:#2a0808;border-color:rgba(239,68,68,.3)}
 </style>
 </head>
 <body>
 
-<!-- ══════════ SETUP SCREEN ══════════ -->
-<div id="setup-screen">
-  <h1>톡다리 🐧</h1>
-  <p>나만의 AI 친구를 설정해봐!<br>성격이랑 말투 골라서 진짜 친구처럼 쓸 수 있어.</p>
+<!-- SPLASH -->
+<div id="splash">
+  <div class="logo">🐧</div>
+  <h1>톡다리</h1>
+  <p>잠깐만, 불러오는 중...</p>
+</div>
 
-  <div class="setup-box">
+<!-- 회원가입 -->
+<div class="auth-wrap" id="signup-screen">
+  <div class="auth-logo">🐧</div>
+  <div class="auth-title">톡다리 시작하기</div>
+  <div class="auth-sub">가입하고 나만의 AI 친구를 만들어봐!</div>
+  <div class="auth-box">
     <div>
-      <div class="setup-label">OPENAI API 키 입력</div>
-      <input class="setup-input" id="api-key-input" type="password" placeholder="sk-proj-..." autocomplete="off">
+      <div class="auth-label">이름</div>
+      <input class="auth-input" id="su-name" type="text" placeholder="홍길동">
     </div>
     <div>
-      <div class="setup-label">톡다리 이름</div>
-      <input class="setup-input" id="friend-name-input" value="펭수" placeholder="친구 이름">
+      <div class="auth-label">전화번호</div>
+      <input class="auth-input" id="su-phone" type="tel" placeholder="010-0000-0000">
     </div>
     <div>
-      <div class="setup-label">아바타</div>
-      <div class="tag-wrap" id="avatar-tags">
+      <div class="auth-label">아이디</div>
+      <input class="auth-input" id="su-username" type="text" placeholder="영문/숫자 조합">
+    </div>
+    <div>
+      <div class="auth-label">비밀번호 (4자리 숫자)</div>
+      <input class="auth-input" id="su-password" type="password" placeholder="••••" maxlength="4" inputmode="numeric">
+    </div>
+    <div class="auth-error" id="su-error"></div>
+  </div>
+  <button class="auth-btn" onclick="doSignup()">가입하기 →</button>
+  <div class="auth-switch" onclick="showLogin()">이미 계정이 있어? <span>로그인</span></div>
+</div>
+
+<!-- 로그인 -->
+<div class="auth-wrap" id="login-screen">
+  <div class="auth-logo">🐧</div>
+  <div class="auth-title">다시 왔구나!</div>
+  <div class="auth-sub">아이디랑 비밀번호 입력해줘</div>
+  <div class="auth-box">
+    <div>
+      <div class="auth-label">아이디</div>
+      <input class="auth-input" id="li-username" type="text" placeholder="아이디 입력">
+    </div>
+    <div>
+      <div class="auth-label">비밀번호 (4자리)</div>
+      <input class="auth-input" id="li-password" type="password" placeholder="••••" maxlength="4" inputmode="numeric">
+    </div>
+    <div class="auth-error" id="li-error"></div>
+  </div>
+  <button class="auth-btn" onclick="doLogin()">로그인 →</button>
+  <div class="auth-switch" onclick="showSignup()">계정이 없어? <span>회원가입</span></div>
+</div>
+
+<!-- 초기 설정 (온보딩) -->
+<div id="onboard" >
+  <div class="auth-logo">🎉</div>
+  <div class="ob-title">톡다리 설정하기</div>
+  <div class="ob-sub">내 AI 친구 성격을 골라봐!</div>
+  <div class="ob-box">
+    <div>
+      <div class="ob-label">톡다리 이름</div>
+      <input class="ob-input" id="ob-fname" value="펭수" placeholder="친구 이름">
+    </div>
+    <div>
+      <div class="ob-label">톡다리 이름 (내가 부를 호칭)</div>
+      <input class="ob-input" id="ob-nickname" value="친구야" placeholder="예: 야, 펭수야, 자기야...">
+    </div>
+    <div>
+      <div class="ob-label">아바타</div>
+      <div class="tag-wrap" id="ob-avatar">
         <button class="tag on" data-val="🐧">🐧 펭수</button>
         <button class="tag" data-val="🐻">🐻 곰돌이</button>
         <button class="tag" data-val="🦊">🦊 여우</button>
@@ -362,8 +266,8 @@
       </div>
     </div>
     <div>
-      <div class="setup-label">말투 스타일</div>
-      <div class="tag-wrap" id="style-tags">
+      <div class="ob-label">말투 스타일</div>
+      <div class="tag-wrap" id="ob-style">
         <button class="tag on" data-val="친구같이 편하고 솔직하게, 반말로">친구같이</button>
         <button class="tag" data-val="욕도 쓰면서 찐친처럼, 반말로">욕쟁이 찐친</button>
         <button class="tag" data-val="다정하고 따뜻하게, 반말로">다정하게</button>
@@ -372,8 +276,8 @@
       </div>
     </div>
     <div>
-      <div class="setup-label">역할 (여러 개 가능)</div>
-      <div class="tag-wrap" id="role-tags">
+      <div class="ob-label">역할 (여러 개 가능)</div>
+      <div class="tag-wrap" id="ob-roles">
         <button class="tag on" data-val="감정 쓰레기통">감정 쓰레기통</button>
         <button class="tag on" data-val="욕받이">욕받이</button>
         <button class="tag" data-val="응원단">응원단</button>
@@ -382,21 +286,19 @@
       </div>
     </div>
   </div>
-
-  <p class="api-warning">⚠️ API 키는 내 기기에만 저장돼요. 외부 서버로 전송되지 않아요.<br>OpenAI API 사용 비용이 발생할 수 있어요 (개인용 기준 월 1~2달러 수준)</p>
-  <button class="start-btn" onclick="startApp()">톡다리 시작하기 🚀</button>
+  <button class="auth-btn" onclick="saveOnboard()" style="max-width:360px;width:100%">톡다리 만들기 🚀</button>
 </div>
 
-<!-- ══════════ MAIN APP ══════════ -->
+<!-- 메인 앱 -->
 <div id="app">
 
-  <!-- ── HOME SCREEN ── -->
+  <!-- 홈 -->
   <div id="home-screen" class="active">
     <div class="home-hero">
       <div class="home-hero-avatar" id="home-avatar">🐧</div>
       <div>
         <h2 id="home-greeting">야 왔구나!</h2>
-        <p id="home-msg">오늘 뭐 있었어?<br>어서 얘기해봐 ㅋㅋ</p>
+        <p id="home-msg">오늘 뭐 있었어? 어서 얘기해봐 ㅋㅋ</p>
       </div>
     </div>
     <div class="mood-selector">
@@ -415,7 +317,7 @@
         <div class="hc-title">대화하기</div>
         <div class="hc-sub">친구처럼 털어놔</div>
       </div>
-      <div class="home-card" onclick="switchTab('chat'); setTrashMode(true)">
+      <div class="home-card" onclick="switchTab('chat');setTrashMode(true)">
         <div class="hc-icon">🗑</div>
         <div class="hc-title">감정 쓰레기통</div>
         <div class="hc-sub">마음껏 쏟아내</div>
@@ -425,42 +327,29 @@
         <div class="hc-title">감정 다이어리</div>
         <div class="hc-sub">기록 남기기</div>
       </div>
-      <div class="home-card" onclick="switchTab('chat'); askSchedule()">
+      <div class="home-card" onclick="switchTab('chat');askSchedule()">
         <div class="hc-icon">📅</div>
         <div class="hc-title">개인비서</div>
         <div class="hc-sub">일정 & 할일</div>
       </div>
     </div>
     <div class="home-stat-row">
-      <div class="stat-card">
-        <div class="sv" id="stat-days">0</div>
-        <div class="sl">대화한 날</div>
-      </div>
-      <div class="stat-card">
-        <div class="sv" id="stat-msgs">0</div>
-        <div class="sl">주고받은 톡</div>
-      </div>
-      <div class="stat-card">
-        <div class="sv" id="stat-diary">0</div>
-        <div class="sl">다이어리</div>
-      </div>
+      <div class="stat-card"><div class="sv" id="stat-msgs">0</div><div class="sl">주고받은 톡</div></div>
+      <div class="stat-card"><div class="sv" id="stat-diary">0</div><div class="sl">다이어리</div></div>
     </div>
   </div>
 
-  <!-- ── CHAT SCREEN ── -->
+  <!-- 채팅 -->
   <div id="chat-screen" class="screen">
     <div class="app-header">
-      <div class="avatar-circle" id="chat-avatar-circle">
-        <span id="chat-avatar-emoji">🐧</span>
-        <div class="online-dot"></div>
-      </div>
+      <div class="avatar-circle"><span id="chat-avatar-emoji">🐧</span><div class="online-dot"></div></div>
       <div>
         <div class="header-name" id="chat-name">펭수</div>
         <div class="header-status" id="chat-status">온라인</div>
       </div>
       <div class="header-actions">
-        <button class="hbtn" onclick="clearChat()" title="대화 초기화">🗑</button>
-        <button class="hbtn" onclick="toggleTrash()" id="trash-btn" title="쓰레기통 모드">💢</button>
+        <button class="hbtn" onclick="clearChat()">🗑</button>
+        <button class="hbtn" onclick="toggleTrash()">💢</button>
       </div>
     </div>
     <div id="chat-messages"></div>
@@ -473,38 +362,36 @@
     </div>
   </div>
 
-  <!-- ── DIARY SCREEN ── -->
+  <!-- 다이어리 -->
   <div id="diary-screen" class="screen">
     <div class="app-header">
       <div style="font-size:1.1rem;font-weight:700;">감정 다이어리 📔</div>
-      <div style="margin-left:auto;font-size:0.75rem;color:var(--text3);">나만 볼 수 있어요 🔒</div>
+      <div style="margin-left:auto;font-size:.75rem;color:var(--text3);">나만 볼 수 있어요 🔒</div>
     </div>
     <div class="diary-list" id="diary-list"></div>
     <button class="diary-fab" onclick="openDiaryModal()">+</button>
   </div>
 
-  <!-- ── SETTINGS SCREEN ── -->
+  <!-- 설정 -->
   <div id="settings-screen" class="screen">
-    <div class="app-header">
-      <div style="font-size:1.1rem;font-weight:700;">설정 ⚙️</div>
-    </div>
+    <div class="app-header"><div style="font-size:1.1rem;font-weight:700;">설정 ⚙️</div></div>
     <div class="settings-body">
       <div class="settings-section">
-        <h3>AI 설정</h3>
-        <div class="setup-label">API 키 변경</div>
-        <input class="settings-input" id="s-apikey" type="password" placeholder="sk-proj-...">
-        <div class="setup-label">톡다리 이름</div>
-        <input class="settings-input" id="s-name" value="펭수">
-        <div class="setup-label">아바타</div>
-        <div class="tag-wrap" id="s-avatar-tags">
+        <h3>톡다리 설정</h3>
+        <div class="ob-label">톡다리 이름</div>
+        <input class="settings-input" id="s-fname" value="펭수">
+        <div class="ob-label">톡다리 이름 (내가 부를 호칭)</div>
+        <input class="settings-input" id="s-nickname" value="친구야" placeholder="예: 야, 펭수야, 자기야...">
+        <div class="ob-label">아바타</div>
+        <div class="tag-wrap" id="s-avatar">
           <button class="tag on" data-val="🐧">🐧 펭수</button>
           <button class="tag" data-val="🐻">🐻 곰돌이</button>
           <button class="tag" data-val="🦊">🦊 여우</button>
           <button class="tag" data-val="😈">😈 악당</button>
           <button class="tag" data-val="👾">👾 외계인</button>
         </div>
-        <div class="setup-label">말투</div>
-        <div class="tag-wrap" id="s-style-tags">
+        <div class="ob-label">말투</div>
+        <div class="tag-wrap" id="s-style">
           <button class="tag on" data-val="친구같이 편하고 솔직하게, 반말로">친구같이</button>
           <button class="tag" data-val="욕도 쓰면서 찐친처럼, 반말로">욕쟁이 찐친</button>
           <button class="tag" data-val="다정하고 따뜻하게, 반말로">다정하게</button>
@@ -513,29 +400,18 @@
         </div>
       </div>
       <div class="settings-section">
-        <h3>알림 설정</h3>
-        <div class="toggle-row">
-          <span class="toggle-label">푸시 알림 허용</span>
-          <div class="toggle on" id="notif-toggle" onclick="toggleNotif(this)"><div class="toggle-thumb"></div></div>
-        </div>
+        <h3>알림</h3>
         <div class="toggle-row">
           <span class="toggle-label">톡다리가 먼저 연락</span>
-          <div class="toggle on" id="first-toggle" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
         </div>
-      </div>
-      <div class="settings-section">
-        <h3>데이터</h3>
-        <div class="toggle-row">
-          <span class="toggle-label">대화 내용 저장</span>
-          <div class="toggle on" id="save-toggle" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
-        </div>
-        <button class="modal-btn cancel" style="width:100%;border-radius:10px;" onclick="clearAllData()">모든 데이터 삭제</button>
       </div>
       <button class="save-settings-btn" onclick="saveSettings()">설정 저장 ✓</button>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
 
-  <!-- ── TAB BAR ── -->
+  <!-- 탭바 -->
   <div class="tab-bar">
     <button class="tab-item active" id="tab-home" onclick="switchTab('home')">
       <span class="ti">🏠</span><span class="tl">홈</span>
@@ -553,7 +429,7 @@
   </div>
 </div>
 
-<!-- ── DIARY MODAL ── -->
+<!-- 다이어리 모달 -->
 <div class="modal-overlay" id="diary-modal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -576,8 +452,16 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ══════════ SUPABASE 설정 ══════════
+// ⬇️ 여기에 본인 Supabase 정보 입력
+const SUPABASE_URL = 'https://aeswnjssbaoqwicmgarb.supabase.co';
+const SUPABASE_KEY = 'YOUR_SUPABASE_PUBLISHABLE_KEY'; // ← 여기에 publishable key 붙여넣기
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // ══════════ STATE ══════════
-let config = {};
+let currentUser = null;
+let profile = {};
 let messages = [];
 let diaryEntries = [];
 let isLoading = false;
@@ -585,146 +469,230 @@ let trashMode = false;
 let selectedDiaryMood = '😊';
 
 // ══════════ INIT ══════════
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
-  loadFromStorage();
-  if (config.apiKey) {
-    showApp();
+  // 로그인 상태 확인
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await loadProfile();
+  } else {
+    hideSplash();
+    showSignup();
   }
 });
 
-function loadFromStorage() {
-  try {
-    config = JSON.parse(localStorage.getItem('tokdari_config') || '{}');
-    messages = JSON.parse(localStorage.getItem('tokdari_msgs') || '[]');
-    diaryEntries = JSON.parse(localStorage.getItem('tokdari_diary') || '[]');
-  } catch(e) {}
+function hideSplash() {
+  setTimeout(() => {
+    document.getElementById('splash').style.display = 'none';
+  }, 1000);
 }
 
-function saveToStorage() {
-  localStorage.setItem('tokdari_config', JSON.stringify(config));
-  localStorage.setItem('tokdari_msgs', JSON.stringify(messages.slice(-200)));
-  localStorage.setItem('tokdari_diary', JSON.stringify(diaryEntries));
+// ══════════ AUTH ══════════
+function showSignup() {
+  document.getElementById('signup-screen').classList.add('show');
+  document.getElementById('login-screen').classList.remove('show');
+  document.getElementById('onboard').classList.remove('show');
+}
+function showLogin() {
+  document.getElementById('login-screen').classList.add('show');
+  document.getElementById('signup-screen').classList.remove('show');
 }
 
-// ══════════ SETUP ══════════
-function makeTagsExclusive(groupId) {
-  document.getElementById(groupId).querySelectorAll('.tag').forEach(t => {
-    t.addEventListener('click', () => {
-      document.getElementById(groupId).querySelectorAll('.tag').forEach(x => x.classList.remove('on'));
-      t.classList.add('on');
-    });
+async function doSignup() {
+  const name = document.getElementById('su-name').value.trim();
+  const phone = document.getElementById('su-phone').value.trim();
+  const username = document.getElementById('su-username').value.trim();
+  const password = document.getElementById('su-password').value.trim();
+  const errEl = document.getElementById('su-error');
+
+  if (!name || !phone || !username || !password) { errEl.textContent = '모든 항목을 입력해줘!'; return; }
+  if (password.length !== 4 || !/^\d+$/.test(password)) { errEl.textContent = '비밀번호는 숫자 4자리야!'; return; }
+  if (username.length < 3) { errEl.textContent = '아이디는 3자 이상이어야 해!'; return; }
+
+  errEl.textContent = '가입 중...';
+
+  // Supabase Auth: 이메일 형식으로 변환 (아이디@tokdari.app)
+  const fakeEmail = `${username}@tokdari.app`;
+  const fullPassword = `tokdari_${password}_${username}`;
+
+  const { data, error } = await sb.auth.signUp({
+    email: fakeEmail,
+    password: fullPassword
   });
-}
-function makeTagsMulti(groupId) {
-  document.getElementById(groupId).querySelectorAll('.tag').forEach(t => {
-    t.addEventListener('click', () => t.classList.toggle('on'));
-  });
-}
 
-makeTagsExclusive('avatar-tags');
-makeTagsExclusive('style-tags');
-makeTagsMulti('role-tags');
-makeTagsExclusive('s-avatar-tags');
-makeTagsExclusive('s-style-tags');
-
-function getSelectedTag(groupId) {
-  const el = document.getElementById(groupId).querySelector('.tag.on');
-  return el ? el.dataset.val : '';
-}
-function getSelectedTags(groupId) {
-  return [...document.getElementById(groupId).querySelectorAll('.tag.on')].map(t => t.dataset.val);
-}
-
-function startApp() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key || !key.startsWith('sk-')) {
-    showToast('API 키를 올바르게 입력해줘! (sk- 로 시작)');
+  if (error) {
+    errEl.textContent = error.message.includes('already') ? '이미 있는 아이디야!' : error.message;
     return;
   }
-  config = {
-    apiKey: key,
-    name: document.getElementById('friend-name-input').value.trim() || '펭수',
-    avatar: getSelectedTag('avatar-tags') || '🐧',
-    style: getSelectedTag('style-tags') || '친구같이 편하고 솔직하게, 반말로',
-    roles: getSelectedTags('role-tags'),
-  };
-  saveToStorage();
-  showApp();
+
+  currentUser = data.user;
+
+  // 프로필 저장
+  const { error: pErr } = await sb.from('profiles').insert({
+    id: currentUser.id,
+    username, name, phone,
+    friend_name: '펭수',
+    friend_nickname: '친구야',
+    avatar: '🐧',
+    talk_style: '친구같이 편하고 솔직하게, 반말로',
+    roles: ['감정 쓰레기통', '욕받이', '개인비서']
+  });
+
+  if (pErr && !pErr.message.includes('duplicate')) {
+    errEl.textContent = '프로필 저장 실패: ' + pErr.message;
+    return;
+  }
+
+  errEl.textContent = '';
+  document.getElementById('signup-screen').classList.remove('show');
+  document.getElementById('onboard').classList.add('show');
 }
 
-function showApp() {
-  document.getElementById('setup-screen').style.display = 'none';
+async function doLogin() {
+  const username = document.getElementById('li-username').value.trim();
+  const password = document.getElementById('li-password').value.trim();
+  const errEl = document.getElementById('li-error');
+
+  if (!username || !password) { errEl.textContent = '아이디랑 비밀번호 입력해줘!'; return; }
+
+  errEl.textContent = '로그인 중...';
+
+  const fakeEmail = `${username}@tokdari.app`;
+  const fullPassword = `tokdari_${password}_${username}`;
+
+  const { data, error } = await sb.auth.signInWithPassword({
+    email: fakeEmail,
+    password: fullPassword
+  });
+
+  if (error) {
+    errEl.textContent = '아이디 또는 비밀번호가 틀렸어!';
+    return;
+  }
+
+  currentUser = data.user;
+  await loadProfile();
+}
+
+async function doLogout() {
+  if (!confirm('로그아웃 할까?')) return;
+  await sb.auth.signOut();
+  currentUser = null;
+  profile = {};
+  messages = [];
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('chat-messages').innerHTML = '';
+  hideSplash();
+  showSignup();
+}
+
+// ══════════ PROFILE ══════════
+async function loadProfile() {
+  const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+
+  if (error || !data) {
+    // 프로필 없으면 온보딩으로
+    hideSplash();
+    document.getElementById('onboard').classList.add('show');
+    return;
+  }
+
+  profile = data;
+  hideSplash();
+  startApp();
+}
+
+async function saveOnboard() {
+  const fname = document.getElementById('ob-fname').value.trim() || '펭수';
+  const nickname = document.getElementById('ob-nickname').value.trim() || '친구야';
+  const avatar = getTag('ob-avatar') || '🐧';
+  const style = getTag('ob-style') || '친구같이 편하고 솔직하게, 반말로';
+  const roles = getTags('ob-roles');
+
+  const { error } = await sb.from('profiles').update({
+    friend_name: fname,
+    friend_nickname: nickname,
+    avatar, talk_style: style, roles
+  }).eq('id', currentUser.id);
+
+  if (error) { showToast('저장 실패 ㅠ 다시 해봐'); return; }
+
+  profile = { ...profile, friend_name: fname, friend_nickname: nickname, avatar, talk_style: style, roles };
+  document.getElementById('onboard').classList.remove('show');
+  startApp();
+}
+
+// ══════════ APP START ══════════
+async function startApp() {
   document.getElementById('app').classList.add('show');
-  applyConfig();
-  renderDiary();
+  applyProfile();
+  await loadMessages();
+  await loadDiary();
   updateStats();
   if (messages.length === 0) sendFirstMessage();
-  else renderAllMessages();
   requestNotifPermission();
   scheduleRandomPing();
 }
 
-function applyConfig() {
-  document.getElementById('chat-avatar-emoji').textContent = config.avatar || '🐧';
-  document.getElementById('chat-name').textContent = config.name || '펭수';
-  document.getElementById('home-avatar').textContent = config.avatar || '🐧';
-  document.getElementById('home-greeting').textContent = `야 ${config.name || ''}~`;
-  document.getElementById('s-name').value = config.name || '';
-  document.getElementById('s-apikey').value = '';
+function applyProfile() {
+  const name = profile.friend_name || '펭수';
+  const nickname = profile.friend_nickname || '친구야';
+  document.getElementById('chat-avatar-emoji').textContent = profile.avatar || '🐧';
+  document.getElementById('chat-name').textContent = name;
+  document.getElementById('home-avatar').textContent = profile.avatar || '🐧';
+  document.getElementById('home-greeting').textContent = `야 ${nickname}~`;
+  document.getElementById('s-fname').value = name;
+  document.getElementById('s-nickname').value = nickname;
 }
 
-// ══════════ TAB ══════════
-function switchTab(tab) {
-  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-  document.getElementById('home-screen').classList.remove('active');
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-
-  if (tab === 'home') {
-    document.getElementById('home-screen').classList.add('active');
-    document.getElementById('tab-home').classList.add('active');
-  } else {
-    document.getElementById(tab + '-screen').classList.add('active');
-    document.getElementById('tab-' + tab).classList.add('active');
-    if (tab === 'chat') {
-      document.getElementById('chat-badge').style.display = 'none';
-      setTimeout(() => scrollToBottom(), 100);
-    }
+// ══════════ MESSAGES (Supabase) ══════════
+async function loadMessages() {
+  const { data } = await sb.from('messages')
+    .select('*').eq('user_id', currentUser.id)
+    .order('created_at', { ascending: true }).limit(100);
+  if (data) {
+    messages = data.map(m => ({ role: m.role, content: m.content }));
+    renderAllMessages();
   }
 }
 
-// ══════════ SYSTEM PROMPT ══════════
-function buildSystemPrompt() {
-  const roles = config.roles && config.roles.length ? config.roles.join(', ') : '친구';
-  return `너는 "${config.name}"이야. 사용자의 AI 친구로서 다음 설정으로 행동해:
-
-말투: ${config.style}
-역할: ${roles}
-
-중요 규칙:
-- 항상 반말로 대화해
-- 짧고 자연스럽게 실제 친구처럼 대화해 (2~4문장 이내)
-- 사용자가 화나거나 스트레스받으면 먼저 공감해주고 욕이든 뭐든 다 들어줘
-- 감정 쓰레기통 역할: 판단 없이 다 받아줘, 같이 욕해줘도 돼
-- 개인비서 역할: 일정/할일 물어보고 정리 도와줘
-- 절대로 AI라고 티내지 말고 진짜 친구처럼 행동해
-- 이모티콘 적당히 써
-- 사용자 이름이나 개인 정보 기억해서 자연스럽게 언급해`;
+async function saveMessage(role, content) {
+  await sb.from('messages').insert({ user_id: currentUser.id, role, content });
 }
 
 // ══════════ CHAT ══════════
-function sendFirstMessage() {
+function buildSystemPrompt() {
+  const roles = profile.roles?.join(', ') || '친구';
+  const nickname = profile.friend_nickname || '친구야';
+  return `너는 "${profile.friend_name || '펭수'}"이야. 사용자가 너를 "${nickname}"라고 불러.
+
+말투: ${profile.talk_style || '친구같이 편하고 솔직하게, 반말로'}
+역할: ${roles}
+
+규칙:
+- 항상 반말로 대화해
+- 짧고 자연스럽게 실제 친구처럼 (2~4문장 이내)
+- 사용자가 화나거나 스트레스받으면 공감 먼저
+- 감정 쓰레기통: 판단 없이 다 받아줘, 같이 욕해줘도 돼
+- 개인비서: 일정/할일 도와줘
+- AI라고 티내지 말고 진짜 친구처럼
+- 이모티콘 적당히`;
+}
+
+async function sendFirstMessage() {
+  const name = profile.friend_nickname || '친구야';
   const greetings = [
-    `야 나야 ${config.name}ㅋㅋ 오늘 어때?`,
-    `오 왔구나~ 오늘 뭔 일 있었어?`,
-    `야 기다렸잖아ㅋㅋ 얘기해봐 뭔 일이야`,
+    `야 ${name} 나야 ${profile.friend_name || ''}ㅋㅋ 오늘 어때?`,
+    `오 ${name} 왔구나~ 오늘 뭔 일 있었어?`,
+    `야 ${name} 기다렸잖아ㅋㅋ 얘기해봐 뭔 일이야`,
   ];
   const msg = greetings[Math.floor(Math.random() * greetings.length)];
   appendMessage('ai', msg);
   messages.push({ role: 'assistant', content: msg });
-  saveToStorage();
+  await saveMessage('assistant', msg);
 }
 
 async function sendMessage() {
@@ -734,7 +702,7 @@ async function sendMessage() {
   ta.value = ''; ta.style.height = 'auto';
   appendMessage('user', text);
   messages.push({ role: 'user', content: text });
-  saveToStorage();
+  await saveMessage('user', text);
   updateStats();
   await callGPT();
 }
@@ -746,20 +714,15 @@ async function callGPT() {
   const typingId = showTyping();
 
   try {
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Vercel 서버리스 함수를 통해 호출 (API 키 숨김)
+    const resp = await fetch('/api/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: buildSystemPrompt() },
           ...messages.slice(-30)
-        ],
-        max_tokens: 300,
-        temperature: 0.85
+        ]
       })
     });
 
@@ -767,8 +730,7 @@ async function callGPT() {
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      const msg = err.error?.message || `오류 (${resp.status})`;
-      appendMessage('ai', `앗 오류가 났어 😅 ${msg}`);
+      appendMessage('ai', `앗 오류났어 😅 ${err.error || '다시 해봐'}`);
       isLoading = false;
       document.getElementById('chat-status').textContent = '온라인';
       return;
@@ -778,10 +740,10 @@ async function callGPT() {
     const reply = data.choices[0].message.content.trim();
     appendMessage('ai', reply);
     messages.push({ role: 'assistant', content: reply });
-    saveToStorage();
+    await saveMessage('assistant', reply);
   } catch(e) {
     removeTyping(typingId);
-    appendMessage('ai', '야 인터넷 연결 확인해봐 ㅠ 나 지금 연결이 안 돼');
+    appendMessage('ai', '야 인터넷 연결 확인해봐 ㅠ');
   }
   isLoading = false;
   document.getElementById('chat-status').textContent = '온라인';
@@ -791,133 +753,83 @@ function appendMessage(role, content, imgSrc) {
   const wrap = document.getElementById('chat-messages');
   const row = document.createElement('div');
   row.className = 'msg-row ' + (role === 'user' ? 'user' : '');
-
   const now = new Date();
-  const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
-
+  const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
   if (role === 'ai') {
     const av = document.createElement('div');
     av.className = 'msg-avatar';
-    av.textContent = config.avatar || '🐧';
+    av.textContent = profile.avatar || '🐧';
     row.appendChild(av);
   }
-
   const col = document.createElement('div');
-  col.style.display = 'flex';
-  col.style.flexDirection = 'column';
-  col.style.alignItems = role === 'user' ? 'flex-end' : 'flex-start';
-  col.style.gap = '2px';
-
-  const timeEl = document.createElement('div');
-  timeEl.className = 'msg-time';
-  timeEl.textContent = time;
-
+  col.style.cssText = 'display:flex;flex-direction:column;gap:2px;align-items:' + (role==='user'?'flex-end':'flex-start');
   const bubble = document.createElement('div');
-  bubble.className = 'bubble ' + (role === 'user' ? 'user' : 'ai');
-
-  if (imgSrc) {
-    const img = document.createElement('img');
-    img.src = imgSrc;
-    bubble.appendChild(img);
-    if (content) bubble.append(document.createElement('br'), content);
-  } else {
-    bubble.textContent = content;
-  }
-
-  col.appendChild(bubble);
-  col.appendChild(timeEl);
+  bubble.className = 'bubble ' + (role==='user'?'user':'ai');
+  if (imgSrc) { const img = document.createElement('img'); img.src = imgSrc; bubble.appendChild(img); }
+  else bubble.textContent = content;
+  const timeEl = document.createElement('div');
+  timeEl.className = 'msg-time'; timeEl.textContent = time;
+  col.appendChild(bubble); col.appendChild(timeEl);
   row.appendChild(col);
   wrap.appendChild(row);
   scrollToBottom();
 }
 
 function renderAllMessages() {
-  const wrap = document.getElementById('chat-messages');
-  wrap.innerHTML = '';
-  messages.forEach(m => appendMessage(m.role === 'user' ? 'user' : 'ai', m.content));
+  document.getElementById('chat-messages').innerHTML = '';
+  messages.forEach(m => appendMessage(m.role==='user'?'user':'ai', m.content));
 }
 
 function showTyping() {
   const wrap = document.getElementById('chat-messages');
   const row = document.createElement('div');
-  row.className = 'msg-row';
-  row.id = 'typing-' + Date.now();
-  const av = document.createElement('div');
-  av.className = 'msg-avatar';
-  av.textContent = config.avatar || '🐧';
-  const bubble = document.createElement('div');
-  bubble.className = 'typing-bubble';
-  bubble.innerHTML = '<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';
-  row.appendChild(av); row.appendChild(bubble);
-  wrap.appendChild(row);
-  scrollToBottom();
-  return row.id;
+  row.className = 'msg-row'; row.id = 'typing-' + Date.now();
+  const av = document.createElement('div'); av.className = 'msg-avatar'; av.textContent = profile.avatar||'🐧';
+  const b = document.createElement('div'); b.className = 'typing-bubble';
+  b.innerHTML = '<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';
+  row.appendChild(av); row.appendChild(b); wrap.appendChild(row);
+  scrollToBottom(); return row.id;
 }
+function removeTyping(id) { const el = document.getElementById(id); if(el) el.remove(); }
+function scrollToBottom() { const w = document.getElementById('chat-messages'); w.scrollTop = w.scrollHeight; }
+function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey&&window.innerWidth>600){e.preventDefault();sendMessage();} }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
 
-function removeTyping(id) {
-  const el = document.getElementById(id);
-  if (el) el.remove();
-}
-
-function scrollToBottom() {
-  const wrap = document.getElementById('chat-messages');
-  wrap.scrollTop = wrap.scrollHeight;
-}
-
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 600) {
-    e.preventDefault();
-    sendMessage();
-  }
-}
-
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-}
-
-function clearChat() {
-  if (!confirm('대화 내용을 모두 지울까?')) return;
+async function clearChat() {
+  if(!confirm('대화 내용을 모두 지울까?')) return;
+  await sb.from('messages').delete().eq('user_id', currentUser.id);
   messages = [];
   document.getElementById('chat-messages').innerHTML = '';
-  saveToStorage();
   sendFirstMessage();
 }
 
 // ══════════ PHOTO ══════════
 function handlePhoto(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = async (ev) => {
-    const src = ev.target.result;
-    appendMessage('user', '', src);
-    messages.push({ role: 'user', content: [
-      { type: 'image_url', image_url: { url: src } },
-      { type: 'text', text: '이 사진 봐봐' }
-    ]});
-    saveToStorage();
+    appendMessage('user', '', ev.target.result);
+    messages.push({ role:'user', content:[{type:'image_url',image_url:{url:ev.target.result}},{type:'text',text:'이 사진 봐봐'}] });
     await callGPT();
   };
-  reader.readAsDataURL(file);
-  e.target.value = '';
+  reader.readAsDataURL(file); e.target.value = '';
 }
 
 // ══════════ TRASH MODE ══════════
 function setTrashMode(on) {
   trashMode = on;
   const screen = document.getElementById('chat-screen');
-  if (on) {
-    screen.classList.add('trash');
-    document.getElementById('chat-status').textContent = '💢 감정 쓰레기통 모드';
-  } else {
-    screen.classList.remove('trash');
-    document.getElementById('chat-status').textContent = '온라인';
-  }
+  if(on) { screen.classList.add('trash'); document.getElementById('chat-status').textContent='💢 감정 쓰레기통 모드'; }
+  else { screen.classList.remove('trash'); document.getElementById('chat-status').textContent='온라인'; }
 }
 function toggleTrash() { setTrashMode(!trashMode); }
 
 // ══════════ DIARY ══════════
+async function loadDiary() {
+  const { data } = await sb.from('diary').select('*').eq('user_id', currentUser.id).order('created_at', { ascending:false }).limit(50);
+  if(data) { diaryEntries = data; renderDiary(); }
+}
+
 function openDiaryModal() {
   document.getElementById('diary-modal').classList.add('show');
   document.getElementById('diary-text').value = '';
@@ -925,65 +837,55 @@ function openDiaryModal() {
   document.querySelectorAll('.mp').forEach(m => m.classList.remove('sel'));
   document.querySelector('.mp[data-m="😊"]').classList.add('sel');
 }
-function closeDiaryModal() {
-  document.getElementById('diary-modal').classList.remove('show');
-}
+function closeDiaryModal() { document.getElementById('diary-modal').classList.remove('show'); }
 function selectDiaryMood(el) {
   document.querySelectorAll('.mp').forEach(m => m.classList.remove('sel'));
-  el.classList.add('sel');
-  selectedDiaryMood = el.dataset.m;
+  el.classList.add('sel'); selectedDiaryMood = el.dataset.m;
 }
-function saveDiaryEntry() {
+
+async function saveDiaryEntry() {
   const text = document.getElementById('diary-text').value.trim();
-  if (!text) { showToast('내용을 써줘!'); return; }
-  const entry = {
-    id: Date.now(),
-    mood: selectedDiaryMood,
-    text,
-    date: new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' })
-  };
-  diaryEntries.unshift(entry);
-  saveToStorage();
-  renderDiary();
-  closeDiaryModal();
-  updateStats();
-  showToast('저장됐어 📔');
+  if(!text) { showToast('내용을 써줘!'); return; }
+  const { data, error } = await sb.from('diary').insert({ user_id:currentUser.id, mood:selectedDiaryMood, content:text }).select().single();
+  if(error) { showToast('저장 실패 ㅠ'); return; }
+  diaryEntries.unshift(data);
+  renderDiary(); closeDiaryModal(); updateStats(); showToast('저장됐어 📔');
 }
+
 function renderDiary() {
   const list = document.getElementById('diary-list');
-  if (diaryEntries.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:var(--text3);padding:3rem 1rem;font-size:0.85rem;">아직 기록이 없어 ✍️<br><br>감정이 복잡할 때 여기 써봐</div>';
+  if(!diaryEntries.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text3);padding:3rem 1rem;font-size:.85rem;">아직 기록이 없어 ✍️<br><br>감정이 복잡할 때 여기 써봐</div>';
     return;
   }
   list.innerHTML = diaryEntries.map(e => `
     <div class="diary-entry">
-      <div class="de-top">
-        <span class="de-mood">${e.mood}</span>
-        <span class="de-date">${e.date}</span>
-      </div>
-      <div class="de-text">${e.text}</div>
-    </div>
-  `).join('');
+      <div class="de-top"><span class="de-mood">${e.mood}</span><span class="de-date">${new Date(e.created_at).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'})}</span></div>
+      <div class="de-text">${e.content}</div>
+    </div>`).join('');
+}
+
+// ══════════ SETTINGS ══════════
+async function saveSettings() {
+  const fname = document.getElementById('s-fname').value.trim() || profile.friend_name;
+  const nickname = document.getElementById('s-nickname').value.trim() || profile.friend_nickname;
+  const avatar = getTag('s-avatar') || profile.avatar;
+  const style = getTag('s-style') || profile.talk_style;
+  await sb.from('profiles').update({ friend_name:fname, friend_nickname:nickname, avatar, talk_style:style }).eq('id', currentUser.id);
+  profile = { ...profile, friend_name:fname, friend_nickname:nickname, avatar, talk_style:style };
+  applyProfile();
+  showToast('설정 저장됐어 ✓');
 }
 
 // ══════════ HOME ══════════
 function selectMood(btn) {
   document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('sel'));
   btn.classList.add('sel');
-  const mood = btn.dataset.mood;
-  const responses = {
-    '😊': '오 오늘 기분 좋구나ㅋㅋ 뭔 좋은 일 있었어?',
-    '😐': '그냥 그런 날이구나. 뭔가 있었어?',
-    '😤': '야 또 짜증나는 일 있었어? 말해봐 다 들을게',
-    '😢': '왜 슬퍼 ㅠㅠ 무슨 일이야 얘기해봐',
-    '🤬': 'ㅋㅋㅋ 진짜 빡쳤구나 누가 그랬어? 나한테 다 털어놔'
-  };
-  document.getElementById('home-msg').textContent = responses[mood] || '얘기해봐!';
+  const responses = { '😊':'오 오늘 기분 좋구나ㅋㅋ 뭔 좋은 일 있었어?','😐':'그냥 그런 날이구나. 뭔가 있었어?','😤':'야 또 짜증나는 일 있었어? 말해봐 다 들을게','😢':'왜 슬퍼 ㅠㅠ 무슨 일이야 얘기해봐','🤬':'ㅋㅋㅋ 진짜 빡쳤구나 누가 그랬어? 나한테 다 털어놔' };
+  document.getElementById('home-msg').textContent = responses[btn.dataset.mood] || '얘기해봐!';
 }
 
 function updateStats() {
-  const days = new Set(messages.filter(m=>m.role==='user').map(m => new Date().toDateString())).size;
-  document.getElementById('stat-days').textContent = Math.max(1, days);
   document.getElementById('stat-msgs').textContent = messages.length;
   document.getElementById('stat-diary').textContent = diaryEntries.length;
 }
@@ -994,49 +896,40 @@ function askSchedule() {
   setTimeout(() => sendMessage(), 200);
 }
 
-// ══════════ SETTINGS ══════════
-function saveSettings() {
-  const newKey = document.getElementById('s-apikey').value.trim();
-  if (newKey) config.apiKey = newKey;
-  config.name = document.getElementById('s-name').value.trim() || config.name;
-  config.avatar = getSelectedTag('s-avatar-tags') || config.avatar;
-  config.style = getSelectedTag('s-style-tags') || config.style;
-  saveToStorage();
-  applyConfig();
-  showToast('설정 저장됐어 ✓');
+// ══════════ TAB ══════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.getElementById('home-screen').classList.remove('active');
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  if(tab==='home') { document.getElementById('home-screen').classList.add('active'); document.getElementById('tab-home').classList.add('active'); }
+  else { document.getElementById(tab+'-screen').classList.add('active'); document.getElementById('tab-'+tab).classList.add('active'); if(tab==='chat'){document.getElementById('chat-badge').style.display='none';setTimeout(()=>scrollToBottom(),100);} }
 }
-function clearAllData() {
-  if (!confirm('정말로 모든 데이터를 삭제할까? 되돌릴 수 없어')) return;
-  localStorage.clear();
-  location.reload();
+
+// ══════════ TAG HELPERS ══════════
+function getTag(id) { const el = document.getElementById(id)?.querySelector('.tag.on'); return el?.dataset.val; }
+function getTags(id) { return [...(document.getElementById(id)?.querySelectorAll('.tag.on')||[])].map(t=>t.dataset.val); }
+
+function makeExclusive(id) {
+  document.getElementById(id)?.querySelectorAll('.tag').forEach(t => {
+    t.addEventListener('click', () => { document.getElementById(id).querySelectorAll('.tag').forEach(x=>x.classList.remove('on')); t.classList.add('on'); });
+  });
 }
+function makeMulti(id) { document.getElementById(id)?.querySelectorAll('.tag').forEach(t=>t.addEventListener('click',()=>t.classList.toggle('on'))); }
+
+['ob-avatar','ob-style','s-avatar','s-style'].forEach(makeExclusive);
+['ob-roles'].forEach(makeMulti);
 
 // ══════════ NOTIFICATIONS ══════════
 async function requestNotifPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    await Notification.requestPermission();
-  }
+  if('Notification' in window && Notification.permission==='default') await Notification.requestPermission();
 }
-function toggleNotif(el) {
-  el.classList.toggle('on');
-  if (el.classList.contains('on')) requestNotifPermission();
-}
-
 function scheduleRandomPing() {
-  const pings = [
-    `야 어디있어 나 심심한데ㅋㅋ`,
-    `오늘 어때? 뭔 일 있었어?`,
-    `야 밥은 먹었어?`,
-    `그 일 어떻게 됐어? 궁금한데`,
-  ];
-  const delay = (Math.random() * 4 + 2) * 60 * 60 * 1000;
+  const pings = ['야 어디있어 나 심심한데ㅋㅋ','오늘 어때? 뭔 일 있었어?','야 밥은 먹었어?','그 일 어떻게 됐어? 궁금한데'];
+  const delay = (Math.random()*4+2)*60*60*1000;
   setTimeout(() => {
-    if (Notification.permission === 'granted' && document.hidden) {
-      new Notification(config.name || '톡다리', {
-        body: pings[Math.floor(Math.random() * pings.length)],
-        icon: 'icon.svg'
-      });
-      document.getElementById('chat-badge').style.display = 'block';
+    if(Notification.permission==='granted'&&document.hidden) {
+      new Notification(profile.friend_name||'톡다리',{body:pings[Math.floor(Math.random()*pings.length)],icon:'icon.svg'});
+      document.getElementById('chat-badge').style.display='block';
     }
     scheduleRandomPing();
   }, delay);
@@ -1044,15 +937,11 @@ function scheduleRandomPing() {
 
 // ══════════ TOAST ══════════
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  const t = document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-// close diary modal on backdrop click
-document.getElementById('diary-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeDiaryModal();
-});
+document.getElementById('diary-modal').addEventListener('click', function(e){ if(e.target===this) closeDiaryModal(); });
 </script>
 </body>
 </html>
