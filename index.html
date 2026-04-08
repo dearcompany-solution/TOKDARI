@@ -638,13 +638,13 @@ function applyProfile() {
 
 // ══════════ MESSAGES (Supabase) ══════════
 async function loadMessages() {
+  if (!currentUser?.id) return;
   const { data } = await sb.from('messages')
-    .select('*').eq('user_id', currentUser.id)
-    .order('created_at', { ascending: true }).limit(100);
-  if (data) {
-    messages = data.map(m => ({ role: m.role, content: m.content }));
-    renderAllMessages();
-  }
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: true })
+    .limit(100);
+  if (data) messages = data;
 }
 
 async function saveMessage(role, content) {
