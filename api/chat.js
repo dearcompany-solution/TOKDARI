@@ -1,17 +1,27 @@
 // api/chat.js
 export default async function handler(req, res) {
-  // Vercel 환경 변수에서 안전하게 키를 가져옵니다.
-  const apiKey = process.env.OPENAI_API_KEY;
+  if (req.method !== 'POST') return res.status(405).end();
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify(req.body)
-  });
+  const { messages } = req.body;
 
-  const data = await response.json();
-  res.status(200).json(data);
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages,
+        max_tokens: 300
+      })
+    });
+
+    const data = await response.json();
+    res.status(200).json(data);
+
+  } catch (e) {
+    res.status(500).json({ error: '서버 오류' });
+  }
 }
