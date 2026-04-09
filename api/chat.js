@@ -13,28 +13,23 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // 마지막 유저 메시지에서 검색 필요 여부 판단
     const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')?.content || '';
-    // 검색 불필요한 것 (감정/일상 대화)
-const noSearchNeeded = /힘들어|피곤|슬퍼|기뻐|화나|보고싶|사랑|ㅋㅋ|ㅠㅠ|밥|잠|자야|놀자|심심/.test(lastUserMsg);
+    const systemMsg = messages.find(m => m.role === 'system')?.content || '';
 
-// 사실/정보 관련이면 검색
-// 마지막 시스템 메시지에서 페르소나 확인
-const systemMsg = messages.find(m => m.role === 'system')?.content || '';
-const isExpertMode = /척척박사|뉴스박사|건강박사|경제박사/.test(systemMsg);
+    // 박사 페르소나 확인
+    const isExpertMode = /척척박사|뉴스박사|건강박사|경제박사/.test(systemMsg);
 
-// 감정/일상 대화 (검색 불필요)
-const noSearchNeeded = !isExpertMode && /힘들어|피곤|슬퍼|기뻐|화나|보고싶|사랑|ㅋㅋ|ㅠㅠ|밥|잠|자야|놀자|심심/.test(lastUserMsg);
+    // 감정/일상 대화 (검색 불필요)
+    const noSearchNeeded = !isExpertMode && /힘들어|피곤|슬퍼|기뻐|화나|보고싶|사랑|ㅋㅋ|ㅠㅠ|밥|잠|자야|놀자|심심/.test(lastUserMsg);
 
-// 박사 모드는 무조건 검색, 아니면 정보성 질문만 검색
-const needsSearch = isExpertMode || (
-  !noSearchNeeded &&
-  lastUserMsg.length > 10 &&
-  /뭐야|뭔데|어때|알아|맞아|언제|어디|누구|얼마|몇|어떻게|왜|뉴스|최신|요즘|트렌드|연예|스포츠|주가|날씨|정보|알려줘|찾아봐|검색/.test(lastUserMsg)
-);
+    // 검색 필요 여부
+    const needsSearch = isExpertMode || (
+      !noSearchNeeded &&
+      lastUserMsg.length > 10 &&
+      /뭐야|뭔데|어때|알아|맞아|언제|어디|누구|얼마|몇|어떻게|왜|뉴스|최신|요즘|트렌드|연예|스포츠|주가|날씨|정보|알려줘|찾아봐|검색/.test(lastUserMsg)
+    );
 
-// 박사 모드는 검색 결과 더 많이 가져오기
-const searchCount = isExpertMode ? 5 : 3;
+    const searchCount = isExpertMode ? 5 : 3;
 
     let searchContext = '';
     if (needsSearch && process.env.BRAVE_API_KEY) {
@@ -50,19 +45,18 @@ const searchCount = isExpertMode ? 5 : 3;
           }
         );
         const searchData = await searchResp.json();
-        const results = searchData.web?.results?.slice(0, 3)
+        const results = searchData.web?.results?.slice(0, searchCount)
           .map(r => `${r.title}: ${r.description}`)
           .join('\n') || '';
         if (results) {
-          searchContext = `\n\n[실시간 검색 결과]\n${results}\n위 내용을 참고해서 자연스럽게 답해줘.`;
+          searchContext = isExpertMode
+            ? `\n\n[실시간 검색 결과 - 정확한 정보로 답해줘]\n${results}`
+            : `\n\n[실시간 검색 결과]\n${results}\n위 내용을 참고해서 자연스럽게 답해줘.`;
         }
-      } catch(e) {
-        // 검색 실패해도 계속 진행
-      }
+      } catch(e) {}
     }
 
-    // 시스템 메시지에 검색 결과 추가
-    const messagesWithSearch = messages.map((m, i) => {
+    const messagesWithSearch = messages.map(m => {
       if (m.role === 'system' && searchContext) {
         return { ...m, content: m.content + searchContext };
       }
@@ -76,10 +70,10 @@ const searchCount = isExpertMode ? 5 : 3;
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: isExpertMode ? 'gpt-4o' : 'gpt-4o-mini',
         messages: messagesWithSearch,
-        max_tokens: 500,
-        temperature: 0.9,
+        max_tokens: isExpertMode ? 800 : 500,
+        temperature: isExpertMode ? 0.3 : 0.9,
         presence_penalty: 0.6,
         frequency_penalty: 0.3
       })
