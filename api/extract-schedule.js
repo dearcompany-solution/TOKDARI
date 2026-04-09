@@ -21,11 +21,13 @@ export default async function handler(req, res) {
             role: 'system',
             content: `오늘 날짜: ${today}
 대화에서 일정/약속/마감/할일을 추출해. JSON만 반환해. 없으면 {"schedules":[]} 반환.
-형식: {"schedules":[{"title":"일정 제목","date":"YYYY-MM-DD 또는 null"}]}`
+confidence는 날짜가 명확하면 "high", 불확실하면 "low"로 설정해.
+형식:
+{"schedules":[{"title":"일정 제목","date":"YYYY-MM-DD 또는 null","confidence":"high 또는 low"}]}`
           },
           { role: 'user', content: text }
         ],
-        max_tokens: 200,
+        max_tokens: 300,
         temperature: 0.3
       })
     });
