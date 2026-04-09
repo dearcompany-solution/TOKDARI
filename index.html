@@ -1308,7 +1308,10 @@ function scheduleRandomPing(){
 }
 // ══════════ REALTIME SYNC ══════════
 function setupRealtimeSync(){
-  // 채팅방 목록 실시간 동기화
+  // 💡 1. 핵심: 기존에 엉켜있을 수 있는 동기화 채널을 싹 비워줍니다. (중복 충돌 방지)
+  sb.removeAllChannels();
+
+  // 2. 채팅방 목록 실시간 동기화
   sb.channel('chatrooms-sync')
     .on('postgres_changes',{
       event:'*',
@@ -1322,28 +1325,30 @@ function setupRealtimeSync(){
     })
     .subscribe();
 
-  // 현재 열린 채팅방 메시지 실시간 동기화
+  // 3. 메시지 실시간 동기화 (절대 화면을 지우지 않고 밑에 '추가'만 함!)
   sb.channel('messages-sync')
     .on('postgres_changes',{
       event:'INSERT',
       schema:'public',
       table:'messages'
     }, payload=>{
-      if(!currentRoom) return; // 방에 안 들어가 있으면 무시
+      // 현재 채팅방이 안 열려있으면 무시
+      if(!currentRoom) return; 
       
-      // 💡 중요: 방 번호 타입(숫자/문자)이 달라서 인식이 안 되는 문제 방지
+      // 방 번호가 다르면 무시 (숫자/문자 타입 섞임 방지)
       if(String(payload.new.chatroom_id) !== String(currentRoom.id)) return;
       
-      const newMsg=payload.new;
+      const newMsg = payload.new;
       
-      // 화면에 이미 렌더링된 메시지인지 확인
-      const alreadyShown=messages.some(
-        m=>m.role===newMsg.role && m.content===newMsg.content
+      // 이미 내 기기 화면에 떠있는 메시지인지 확인 (중복 렌더링 방지)
+      const alreadyShown = messages.some(
+        m => m.role === newMsg.role && m.content === newMsg.content
       );
       
+      // 내 화면에 없는 완전히 새로운 메시지일 때만 화면 맨 아래에 덧붙여줍니다.
       if(!alreadyShown){
-        messages.push({role:newMsg.role, content:newMsg.content});
-        appendMessage(newMsg.role==='user'?'user':'ai', newMsg.content);
+        messages.push({role: newMsg.role, content: newMsg.content});
+        appendMessage(newMsg.role === 'user' ? 'user' : 'ai', newMsg.content);
         setTimeout(scrollToBottom, 100);
       }
     })
