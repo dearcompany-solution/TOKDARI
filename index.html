@@ -199,6 +199,19 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 #chat-screen.trash .bubble.ai{background:#1a0505}
 #chat-screen.trash .input-bar{background:#1a0505;border-top-color:rgba(239,68,68,.25)}
 #chat-screen.trash .input-bar textarea{background:#2a0808;border-color:rgba(239,68,68,.3)}
+/* 이모티콘 패널 */
+.emoji-panel{display:none;position:absolute;bottom:100%;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:8px;z-index:20}
+.emoji-panel.show{display:block}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:4px;max-height:140px;overflow-y:auto}
+.emoji-btn{font-size:1.4rem;padding:4px;border-radius:8px;cursor:pointer;background:none;border:none;line-height:1}
+.emoji-btn:active{background:var(--bg3)}
+.input-wrap{position:relative;flex:1;display:flex;flex-direction:column}
+
+/* 이미지 미리보기 */
+.img-preview{position:relative;display:inline-block;margin-bottom:6px}
+.img-preview img{max-height:80px;border-radius:10px;display:block}
+.img-preview-del{position:absolute;top:-6px;right:-6px;width:18px;height:18px;background:#f87171;border-radius:50%;border:none;color:#fff;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.attach-btn{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -295,9 +308,18 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
     </div>
     <div id="chat-messages"></div>
     <div class="input-bar">
-      <textarea id="msg-input" placeholder="메시지 입력..." rows="1" oninput="autoResize(this)"></textarea>
-      <button class="send-btn" onclick="sendMessage()">↑</button>
+  <button class="attach-btn" onclick="document.getElementById('photo-input').click()">📷</button>
+  <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+  <div class="input-wrap">
+    <div class="emoji-panel" id="emoji-panel">
+      <div class="emoji-grid" id="emoji-grid"></div>
     </div>
+    <div id="img-preview-wrap"></div>
+    <textarea id="msg-input" placeholder="메시지 입력..." rows="1" oninput="autoResize(this)"></textarea>
+  </div>
+  <button class="attach-btn" onclick="toggleEmojiPanel()">😊</button>
+  <button class="send-btn" onclick="sendMessage()">↑</button>
+</div>
   </div>
 
   <!-- 탭 콘텐츠 -->
@@ -1219,13 +1241,40 @@ async function sendFirstMessage(){
 }
 
 async function sendMessage(){
-  const ta=document.getElementById('msg-input');
-  const text=ta.value.trim();
-  if(!text||isLoading) return;
-  ta.value='';ta.style.height='auto';
-  appendMessage('user',text);
-  messages.push({role:'user',content:text});
-  await saveMessage('user',text);
+  const ta = document.getElementById('msg-input');
+  const text = ta.value.trim();
+  if(!text && !pendingImage) return;
+  if(isLoading) return;
+
+  // 이모지 패널 닫기
+  document.getElementById('emoji-panel')?.classList.remove('show');
+
+  // 이미지 먼저 전송
+  if(pendingImage){
+    appendMessage('user', '', pendingImage);
+    messages.push({
+      role:'user',
+      content:[
+        {type:'image_url', image_url:{url:pendingImage}},
+        {type:'text', text: text || '이 사진 봐봐'}
+      ]
+    });
+    await saveMessage('user', text || '이 사진 봐봐');
+    clearImgPreview();
+  }
+
+  // 텍스트 전송
+  if(text){
+    ta.value=''; ta.style.height='auto';
+    if(!pendingImage){ // 이미지 없을때만 별도 텍스트 메시지
+      appendMessage('user', text);
+      messages.push({role:'user', content:text});
+      await saveMessage('user', text);
+    }
+  } else {
+    ta.value=''; ta.style.height='auto';
+  }
+
   await callGPT();
 }
 
@@ -1282,8 +1331,24 @@ function appendMessage(role,content,imgSrc){
   }
   const col=document.createElement('div');col.className='msg-col';
   const bubble=document.createElement('div');bubble.className='bubble '+(role==='user'?'user':'ai');
-  if(imgSrc){const img=document.createElement('img');img.src=imgSrc;bubble.appendChild(img);}
-  else bubble.textContent=content;
+  if(imgSrc){
+  const img=document.createElement('img');img.src=imgSrc;bubble.appendChild(img);
+} else if(typeof content==='string' && isYoutubeUrl(content)){
+  // 유튜브 링크
+  const videoId = getYoutubeId(content);
+  bubble.innerHTML=`
+    <a href="${content}" target="_blank" style="color:var(--pl);text-decoration:underline;font-size:.85rem">🎬 ${content}</a>
+    <div style="margin-top:6px;border-radius:10px;overflow:hidden">
+      <img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg"
+        style="width:100%;border-radius:8px;cursor:pointer"
+        onclick="window.open('${content}','_blank')">
+    </div>`;
+} else if(typeof content==='string' && isUrl(content)){
+  // 일반 링크
+  bubble.innerHTML=`<a href="${content}" target="_blank" style="color:var(--pl);text-decoration:underline;word-break:break-all">${content}</a>`;
+} else {
+  bubble.textContent = content;
+}
   const timeEl=document.createElement('div');timeEl.className='msg-time';timeEl.textContent=time;
   col.appendChild(bubble);col.appendChild(timeEl);
   row.appendChild(col);
@@ -1586,13 +1651,99 @@ function setupRealtimeSync(){
     })
     .subscribe();
 }
-// ══════════ TOAST ══════════
+// ══════════ EMOJI ══════════
+const EMOJIS = [
+  '😊','😂','🤣','😍','🥰','😘','😎','🤩','😜','😏',
+  '😢','😭','😤','😡','🤬','😱','😰','😓','🥺','😩',
+  '👍','👎','👏','🙏','🤝','💪','✌️','🫶','❤️','💔',
+  '🔥','✨','💯','🎉','🎊','💀','👀','🤔','😴','🤤',
+  'ㅋㅋ','ㅎㅎ','ㅠㅠ','ㅜㅜ','^^','^^;','~','!','?','...',
+  '🍕','🍔','🍣','🍜','🍺','☕','🎮','⚽','🎵','🎬'
+];
+
+function initEmojiPanel(){
+  const grid = document.getElementById('emoji-grid');
+  if(!grid) return;
+  grid.innerHTML = EMOJIS.map(e=>
+    `<button class="emoji-btn" onclick="insertEmoji('${e}')">${e}</button>`
+  ).join('');
+}
+
+function toggleEmojiPanel(){
+  const panel = document.getElementById('emoji-panel');
+  if(!panel) return;
+  panel.classList.toggle('show');
+  if(panel.classList.contains('show')) initEmojiPanel();
+}
+
+function insertEmoji(emoji){
+  const ta = document.getElementById('msg-input');
+  if(!ta) return;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  ta.value = ta.value.slice(0,start) + emoji + ta.value.slice(end);
+  ta.selectionStart = ta.selectionEnd = start + emoji.length;
+  ta.focus();
+  autoResize(ta);
+}
+
+// 이모티콘 패널 외부 클릭 닫기
+document.addEventListener('click', e=>{
+  const panel = document.getElementById('emoji-panel');
+  if(!panel) return;
+  if(!panel.contains(e.target) && !e.target.closest('.attach-btn')) {
+    panel.classList.remove('show');
+  }
+});
+
+// ══════════ PHOTO ══════════
+let pendingImage = null;
+
+function handlePhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    pendingImage = ev.target.result;
+    showImgPreview(pendingImage);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function showImgPreview(src){
+  const wrap = document.getElementById('img-preview-wrap');
+  if(!wrap) return;
+  wrap.innerHTML = `
+    <div class="img-preview">
+      <img src="${src}">
+      <button class="img-preview-del" onclick="clearImgPreview()">✕</button>
+    </div>`;
+}
+
+function clearImgPreview(){
+  pendingImage = null;
+  const wrap = document.getElementById('img-preview-wrap');
+  if(wrap) wrap.innerHTML = '';
+}
+  // ══════════ TOAST ══════════
 function showToast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-// ══════════ TAG HELPERS ══════════
+// URL 감지 헬퍼
+function isUrl(text){
+  return /^https?:\/\//i.test(text?.trim());
+}
+function isYoutubeUrl(text){
+  return /youtube\.com|youtu\.be/i.test(text);
+}
+function getYoutubeId(url){
+  const m = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/);
+  return m ? m[1] : '';
+}
+  // ══════════ TAG HELPERS ══════════
 function getTag(id){return document.getElementById(id)?.querySelector('.tag.on')?.dataset.val;}
   function getTags(id){
   return [...(document.getElementById(id)?.querySelectorAll('.tag.on')||[])].map(t=>t.dataset.val);
