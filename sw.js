@@ -12,13 +12,14 @@ self.addEventListener('fetch', e => {
 
 // 푸시 알림 수신
 self.addEventListener('push', e => {
-  const data = e.data ? e.data.json() : { title: '톡다리', body: '야 어디있어? 나 심심한데ㅋㅋ' };
+  const data = e.data ? e.data.json() : { title: '톡다리', body: '야 어디있어?' };
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
       icon: '/icon.png',
       badge: '/icon.png',
-      vibrate: [200, 100, 200],
+      vibrate: data.vibrate ? [200, 100, 200] : [],
+      silent: !data.sound,
       data: { url: self.location.origin }
     })
   );
