@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" id="status-bar-meta" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="톡다리">
-<meta name="theme-color" content="#0d0d1a">
+<meta name="theme-color" id="theme-color-meta" content="#1a1a1a">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
@@ -1488,25 +1488,36 @@ function setupRealtimeSync(){
 function toggleDarkMode(el){
   el.classList.toggle('on');
   const isDark = el.classList.contains('on');
+  const meta = document.getElementById('theme-color-meta');
+  const statusMeta = document.getElementById('status-bar-meta');
   if(isDark){
     document.body.classList.remove('light');
+    if(meta) meta.setAttribute('content','#1a1a1a');
+    if(statusMeta) statusMeta.setAttribute('content','black-translucent');
   } else {
     document.body.classList.add('light');
+    if(meta) meta.setAttribute('content','#ffffff');
+    if(statusMeta) statusMeta.setAttribute('content','default');
   }
   localStorage.setItem('tokdari_darkmode', isDark ? '1' : '0');
 }
 
 function applyDarkMode(){
   const saved = localStorage.getItem('tokdari_darkmode');
-  // 기본값은 다크모드
   const isDark = saved === null ? true : saved === '1';
   const toggle = document.getElementById('toggle-dark');
+  const meta = document.getElementById('theme-color-meta');
+  const statusMeta = document.getElementById('status-bar-meta');
   if(isDark){
     document.body.classList.remove('light');
     if(toggle) toggle.classList.add('on');
+    if(meta) meta.setAttribute('content','#1a1a1a');
+    if(statusMeta) statusMeta.setAttribute('content','black-translucent');
   } else {
     document.body.classList.add('light');
     if(toggle) toggle.classList.remove('on');
+    if(meta) meta.setAttribute('content','#ffffff');
+    if(statusMeta) statusMeta.setAttribute('content','default');
   }
 }
 // ══════════ SCHEDULE MANUAL ADD ══════════
