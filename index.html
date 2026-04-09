@@ -702,12 +702,12 @@ function switchTab(tab){
 }
 
 function openChat(roomId){
-  // 💡 roomId를 문자로 변환해서 안전하게 비교
+  // roomId를 문자로 변환해서 안전하게 비교
   const room=chatrooms.find(r=>String(r.id)===String(roomId));
   if(!room) return;
   currentRoom=room;
   
-  // 상태 비우기
+  // 상태 초기화
   messages=[];
   document.getElementById('chat-messages').innerHTML='';
   document.getElementById('chat-emoji').textContent=(room.avatar||'👦').split(' ')[0];
@@ -716,9 +716,11 @@ function openChat(roomId){
   document.getElementById('chat-screen').classList.add('active');
 
   // 대화 내용 불러오기
-  loadRoomMessages(room.id).then(()=>{
-    // DB에 저장된 메시지가 진짜 하나도 없을 때만 첫 인사
-    if(messages.length===0) sendFirstMessage();
+  loadRoomMessages(room.id).then((isSuccess)=>{
+    // 💡 DB 통신에 성공했고, 진짜로 대화가 0개일 때만 첫인사를 건네도록 수정!
+    if(isSuccess && messages.length===0) {
+        sendFirstMessage();
+    }
   });
 }
 
@@ -729,18 +731,22 @@ async function loadRoomMessages(roomId){
     .order('created_at',{ascending:true})
     .limit(100);
     
+  // 💡 DB에서 불러오기 실패했다면 (RLS 에러 등) false를 반환
   if(error){
-    console.error('메시지 로드 실패:', error);
-    return;
+    console.error('메시지 로드 실패:', error.message);
+    showToast('메시지를 불러오지 못했어요. DB 설정을 확인해주세요!');
+    return false; 
   }
   
-  // 💡 데이터가 불러와졌을 때만 렌더링
   if(data && data.length > 0){
     messages=data.map(m=>({role:m.role, content:m.content}));
-    document.getElementById('chat-messages').innerHTML=''; // 혹시 모를 중복 방지
+    document.getElementById('chat-messages').innerHTML=''; 
     renderAllMessages();
     setTimeout(scrollToBottom, 100);
   }
+  
+  // 💡 에러 없이 정상적으로 확인했다면 true 반환
+  return true; 
 }
 
 function goBackFromChat(){
