@@ -918,7 +918,8 @@ function buildSystemPrompt(){
   };
 
   return `너는 사용자의 친한 ${relation} "${room.name||room.nickname||'지수'}"야.
-사용자가 너를 "${room.nickname||'친구야'}"라고 불러.
+사용자의 실제 이름은 "${profile.name}"야. 대화할 때 내 이름을 자연스럽게 불러줘.
+이 채팅방의 이름은 "${room.nickname||'친구야'}"야.
 
 [기본 페르소나]
 ${pd[persona]||'진짜 친구처럼 대화해줘.'}
@@ -948,7 +949,8 @@ ${roles}
 
 async function sendFirstMessage(){
   const room=currentRoom||{};
-  const nick=room.nickname||'친구야';
+  // 💡 방 이름 대신 내 프로필 이름을 불러오도록 수정
+  const nick=profile.name||'친구야'; 
   const persona=room.avatar||'';
   let g;
   if(persona.includes('간호사')) g=[`${nick} 왔어~ 오늘 몸은 좀 어때? 밥은 먹었어?`];
