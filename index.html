@@ -390,7 +390,146 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
     </div>
   </div>
 </div>
+<!-- 채팅방 수정 모달 -->
+<div class="modal-overlay" id="editroom-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">친구 설정 수정 ✏️</div>
 
+    <div>
+      <div class="ob-label" style="margin-bottom:6px">내가 부를 이름 (호칭)</div>
+      <input class="modal-input" id="er-nickname" placeholder="예: 야, 민준아, 자기야...">
+    </div>
+
+    <div>
+      <div class="ob-label" style="margin-bottom:6px">🎭 페르소나 프리셋</div>
+      <div class="tag-wrap" id="er-avatar">
+        <button class="tag on" data-val="👦 찐친남사친">👦 찐친남사친</button>
+        <button class="tag" data-val="👧 찐친여사친">👧 찐친여사친</button>
+        <button class="tag" data-val="🧑‍💼 직장선배">🧑‍💼 직장선배</button>
+        <button class="tag" data-val="🧑‍⚕️ 간호사친구">🧑‍⚕️ 간호사친구</button>
+        <button class="tag" data-val="🧑‍🎓 공부도사">🧑‍🎓 공부도사</button>
+        <button class="tag" data-val="🤣 개그맨">🤣 개그맨</button>
+        <button class="tag" data-val="😎 멘토">😎 멘토</button>
+        <button class="tag" data-val="🥰 다정한친구">🥰 다정한친구</button>
+        <button class="tag" data-val="🧑‍🍳 요리사친구">🧑‍🍳 요리사친구</button>
+        <button class="tag" data-val="💪 헬스친구">💪 헬스친구</button>
+        <button class="tag" data-val="🎮 게임친구">🎮 게임친구</button>
+        <button class="tag" data-val="💼 사업가멘토">💼 사업가멘토</button>
+        <button class="tag" data-val="🎨 예술가친구">🎨 예술가친구</button>
+        <button class="tag" data-val="✈️ 여행메이트">✈️ 여행메이트</button>
+        <button class="tag" data-val="😤 츤데레선배">😤 츤데레선배</button>
+        <button class="tag" data-val="🌙 새벽감성친구">🌙 새벽감성친구</button>
+        <button class="tag" data-val="🧘 마음챙김코치">🧘 마음챙김코치</button>
+        <button class="tag" data-val="💰 재테크고수">💰 재테크고수</button>
+        <button class="tag" data-val="🐾 동물덕후">🐾 동물덕후</button>
+        <button class="tag" data-val="📱 연예인팬친구">📱 연예인팬친구</button>
+      </div>
+    </div>
+
+    <div style="background:var(--bg3);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:.75rem;color:var(--pl);font-weight:700">⚙️ 세부 커스텀</div>
+
+      <div>
+        <div class="ob-label" style="margin-bottom:5px">성별</div>
+        <div class="tag-wrap" id="er-gender">
+          <button class="tag on" data-val="남자">남자</button>
+          <button class="tag" data-val="여자">여자</button>
+          <button class="tag" data-val="중성적인">중성적</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="ob-label" style="margin-bottom:5px">나이대</div>
+        <div class="tag-wrap" id="er-age">
+          <button class="tag" data-val="10대">10대</button>
+          <button class="tag on" data-val="20대">20대</button>
+          <button class="tag" data-val="30대">30대</button>
+          <button class="tag" data-val="40대">40대</button>
+          <button class="tag" data-val="나이불명">나이불명</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="ob-label" style="margin-bottom:5px">관계성</div>
+        <div class="tag-wrap" id="er-relation">
+          <button class="tag on" data-val="친구">친구</button>
+          <button class="tag" data-val="선배">선배</button>
+          <button class="tag" data-val="동생">동생</button>
+          <button class="tag" data-val="멘토">멘토</button>
+          <button class="tag" data-val="썸타는사이같은">썸친</button>
+          <button class="tag" data-val="소꿉친구">소꿉친구</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="ob-label" style="margin-bottom:5px">성격 (여러 개 가능)</div>
+        <div class="tag-wrap" id="er-personality">
+          <button class="tag on" data-val="다정함">다정함</button>
+          <button class="tag" data-val="냉철함">냉철함</button>
+          <button class="tag" data-val="유머러스">유머러스</button>
+          <button class="tag" data-val="직설적">직설적</button>
+          <button class="tag" data-val="감성적">감성적</button>
+          <button class="tag" data-val="긍정적">긍정적</button>
+          <button class="tag" data-val="현실적">현실적</button>
+          <button class="tag" data-val="츤데레">츤데레</button>
+          <button class="tag" data-val="엉뚱함">엉뚱함</button>
+          <button class="tag" data-val="진지함">진지함</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="ob-label" style="margin-bottom:5px">말투</div>
+        <div class="tag-wrap" id="er-style">
+          <button class="tag on" data-val="친구같이 편하고 솔직하게, 반말로">친구같이</button>
+          <button class="tag" data-val="욕도 쓰면서 찐친처럼, 반말로">욕쟁이찐친</button>
+          <button class="tag" data-val="다정하고 따뜻하게, 반말로">다정하게</button>
+          <button class="tag" data-val="직설적이고 팩트만, 반말로">직설적으로</button>
+          <button class="tag" data-val="개그맨처럼 웃기게, 반말로">개그맨처럼</button>
+          <button class="tag" data-val="츤데레처럼 퉁명스럽지만 속은 따뜻하게, 반말로">츤데레</button>
+          <button class="tag" data-val="감성적이고 시적으로, 반말로">감성적으로</button>
+          <button class="tag" data-val="짧고 단답형으로, 반말로">단답형</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="ob-label" style="margin-bottom:5px">말버릇 (여러 개 가능)</div>
+        <div class="tag-wrap" id="er-habit">
+          <button class="tag on" data-val="ㅋㅋ를 자주 씀">ㅋㅋ많이</button>
+          <button class="tag" data-val="이모티콘을 자주 씀">이모티콘많이</button>
+          <button class="tag" data-val="문장을 짧게 끊어서 씀">짧게끊어</button>
+          <button class="tag" data-val="설명을 길고 자세하게 함">길게설명</button>
+          <button class="tag" data-val="질문을 많이 함">질문많이</button>
+          <button class="tag" data-val="공감 표현을 자주 함">공감많이</button>
+          <button class="tag" data-val="드립과 농담을 자주 침">드립많이</button>
+          <button class="tag" data-val="욕을 섞어서 말함">욕섞어서</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="ob-label" style="margin-bottom:5px">역할 (여러 개 가능)</div>
+        <div class="tag-wrap" id="er-roles">
+          <button class="tag on" data-val="감정 쓰레기통">감정쓰레기통</button>
+          <button class="tag on" data-val="개인비서">개인비서</button>
+          <button class="tag" data-val="응원단">응원단</button>
+          <button class="tag" data-val="욕받이">욕받이</button>
+          <button class="tag" data-val="고민상담사">고민상담</button>
+          <button class="tag" data-val="공부도우미">공부도우미</button>
+          <button class="tag" data-val="운동파트너">운동파트너</button>
+          <button class="tag" data-val="다이어리친구">다이어리친구</button>
+          <button class="tag" data-val="잠못잘때대화상대">새벽대화</button>
+          <button class="tag" data-val="직장스트레스해소">직장스트레스</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-error" id="er-error"></div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeEditRoomModal()">취소</button>
+      <button class="modal-btn primary" onclick="saveEditRoom()">저장 ✓</button>
+    </div>
+  </div>
+</div>
 <!-- 새 채팅방 모달 -->
 <div class="modal-overlay" id="newroom-modal">
   <div class="modal-sheet">
@@ -743,27 +882,28 @@ async function loadChatrooms(){
 function renderHomeList(){
   const list=document.getElementById('home-room-list');
   if(!list) return;
-  
   if(!chatrooms.length){
     list.innerHTML='<div class="empty-rooms">🐣<br>아직 친구가 없어!<br>채팅방 탭에서 + 버튼 눌러봐</div>';
     return;
   }
-  
-  // 최신순 정렬 유지
   const sorted=[...chatrooms].sort((a,b)=>{
     const da=new Date(a.updated_at||a.created_at||0);
     const db=new Date(b.updated_at||b.created_at||0);
     return db-da;
   });
-  
-  // 마지막 메시지와 시간을 빼고, 이름과 삭제 버튼만 나오도록 수정
   list.innerHTML=sorted.map(room=>`
     <div class="room-card" onclick="openChat(${room.id})">
       <div class="room-avatar">${(room.avatar||'👦').split(' ')[0]}</div>
-      <div class="room-info" style="display:flex; align-items:center;">
-        <div class="room-name" style="margin-bottom:0; font-size:1.05rem;">${room.name||room.nickname||'친구'}</div>
+      <div class="room-info">
+        <div class="room-name">${room.name||room.nickname||'친구'}</div>
+        <div class="room-last">${room.last_msg||'대화를 시작해봐 👋'}</div>
       </div>
-      <button class="room-delete" onclick="event.stopPropagation();deleteRoom(${room.id})">삭제</button>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="room-delete" style="background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.3);color:var(--pl)"
+          onclick="event.stopPropagation();openEditRoomModal(${room.id})">수정</button>
+        <button class="room-delete"
+          onclick="event.stopPropagation();deleteRoom(${room.id})">삭제</button>
+      </div>
     </div>`).join('');
 }
 
@@ -799,7 +939,116 @@ function openNewRoomModal(){
   document.querySelectorAll('#nr-style .tag').forEach((t,i)=>t.classList.toggle('on',i===0));
 }
 function closeNewRoomModal(){document.getElementById('newroom-modal').classList.remove('show');}
+  document.getElementById('editroom-modal').addEventListener('click',function(e){
+  if(e.target===this) closeEditRoomModal();
+});
+// ══════════ 채팅방 수정 ══════════
+let editingRoomId = null;
 
+function openEditRoomModal(roomId){
+  const room = chatrooms.find(r=>String(r.id)===String(roomId));
+  if(!room) return;
+  editingRoomId = roomId;
+
+  // 현재 값으로 초기화
+  document.getElementById('er-nickname').value = room.nickname || room.name || '';
+  document.getElementById('er-error').textContent = '';
+
+  // 기존 talk_style 파싱
+  const style = room.talk_style || '';
+  const parts = style.split(' / ');
+  const baseTone = parts[0] || '';
+  const gender = parts.find(p=>p.startsWith('성별:'))?.replace('성별:','') || '남자';
+  const age = parts.find(p=>p.startsWith('나이:'))?.replace('나이:','') || '20대';
+  const relation = parts.find(p=>p.startsWith('관계:'))?.replace('관계:','') || '친구';
+  const personalities = (parts.find(p=>p.startsWith('성격:'))?.replace('성격:','') || '').split(',').filter(Boolean);
+  const habits = (parts.find(p=>p.startsWith('말버릇:'))?.replace('말버릇:','') || '').split(',').filter(Boolean);
+  const roles = Array.isArray(room.roles) ? room.roles : [];
+
+  // 아바타 선택 초기화
+  document.querySelectorAll('#er-avatar .tag').forEach(t=>{
+    t.classList.toggle('on', t.dataset.val === room.avatar);
+  });
+  // 성별
+  document.querySelectorAll('#er-gender .tag').forEach(t=>{
+    t.classList.toggle('on', t.dataset.val === gender);
+  });
+  // 나이대
+  document.querySelectorAll('#er-age .tag').forEach(t=>{
+    t.classList.toggle('on', t.dataset.val === age);
+  });
+  // 관계성
+  document.querySelectorAll('#er-relation .tag').forEach(t=>{
+    t.classList.toggle('on', t.dataset.val === relation);
+  });
+  // 말투
+  document.querySelectorAll('#er-style .tag').forEach(t=>{
+    t.classList.toggle('on', t.dataset.val === baseTone);
+  });
+  // 성격 (다중)
+  document.querySelectorAll('#er-personality .tag').forEach(t=>{
+    t.classList.toggle('on', personalities.includes(t.dataset.val));
+  });
+  // 말버릇 (다중)
+  document.querySelectorAll('#er-habit .tag').forEach(t=>{
+    t.classList.toggle('on', habits.includes(t.dataset.val));
+  });
+  // 역할 (다중)
+  document.querySelectorAll('#er-roles .tag').forEach(t=>{
+    t.classList.toggle('on', roles.includes(t.dataset.val));
+  });
+
+  document.getElementById('editroom-modal').classList.add('show');
+}
+
+function closeEditRoomModal(){
+  document.getElementById('editroom-modal').classList.remove('show');
+  editingRoomId = null;
+}
+
+async function saveEditRoom(){
+  if(!editingRoomId) return;
+  const nickname = document.getElementById('er-nickname').value.trim();
+  const avatar = getTag('er-avatar') || '👦 찐친남사친';
+  const style = getTag('er-style') || '친구같이 편하고 솔직하게, 반말로';
+  const gender = getTag('er-gender') || '남자';
+  const age = getTag('er-age') || '20대';
+  const relation = getTag('er-relation') || '친구';
+  const personalities = getTags('er-personality');
+  const habits = getTags('er-habit');
+  const roles = getTags('er-roles');
+  const errEl = document.getElementById('er-error');
+
+  if(!nickname){ errEl.textContent='호칭을 입력해줘!'; return; }
+  errEl.textContent = '저장 중...';
+
+  const detailStyle = `${style} / 성별:${gender} / 나이:${age} / 관계:${relation} / 성격:${personalities.join(',')||'다정함'} / 말버릇:${habits.join(',')||'없음'}`;
+
+  const{error} = await sb.from('chatrooms').update({
+    name: nickname,
+    nickname,
+    avatar,
+    talk_style: detailStyle,
+    roles: roles.length ? roles : ['감정 쓰레기통','개인비서']
+  }).eq('id', editingRoomId);
+
+  if(error){ errEl.textContent='저장 실패: '+error.message; return; }
+
+  // 로컬 데이터 업데이트
+  const room = chatrooms.find(r=>String(r.id)===String(editingRoomId));
+  if(room){
+    room.name = nickname;
+    room.nickname = nickname;
+    room.avatar = avatar;
+    room.talk_style = detailStyle;
+    room.roles = roles.length ? roles : ['감정 쓰레기통','개인비서'];
+  }
+
+  renderHomeList();
+  renderChatrooms();
+  closeEditRoomModal();
+  showToast('설정 저장됐어 ✓');
+}
 async function createChatroom(){
   const nickname=document.getElementById('nr-nickname').value.trim();
   const avatar=getTag('nr-avatar')||'👦 찐친남사친';
@@ -1356,7 +1605,9 @@ function makeExclusive(id){
     });
   });
 }
-['ob-avatar','ob-style','nr-avatar','nr-style','nr-gender','nr-age','nr-relation'].forEach(makeExclusive);
+['ob-avatar','ob-style','nr-avatar','nr-style','nr-gender','nr-age','nr-relation',
+ 'er-avatar','er-style','er-gender','er-age','er-relation'].forEach(makeExclusive);
+['nr-personality','nr-habit','nr-roles','er-personality','er-habit','er-roles'].forEach(makeMulti);
 ['nr-personality','nr-habit','nr-roles'].forEach(makeMulti);
 
 function makeMulti(id){
