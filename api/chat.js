@@ -19,16 +19,28 @@ module.exports = async function handler(req, res) {
 const noSearchNeeded = /힘들어|피곤|슬퍼|기뻐|화나|보고싶|사랑|ㅋㅋ|ㅠㅠ|밥|잠|자야|놀자|심심/.test(lastUserMsg);
 
 // 사실/정보 관련이면 검색
-const needsSearch = !noSearchNeeded && (
-  lastUserMsg.length > 10 && // 너무 짧은 건 검색 안 함
-  /뭐야|뭔데|어때|알아|맞아|언제|어디|누구|얼마|몇|어떻게|왜|뉴스|최신|요즘|트렌드|요새|지금|현재|오늘|어제|이번주|연예|스포츠|주가|날씨|새로나온|신작|개봉|출시|정보|알려줘|찾아봐|검색/.test(lastUserMsg)
+// 마지막 시스템 메시지에서 페르소나 확인
+const systemMsg = messages.find(m => m.role === 'system')?.content || '';
+const isExpertMode = /척척박사|뉴스박사|건강박사|경제박사/.test(systemMsg);
+
+// 감정/일상 대화 (검색 불필요)
+const noSearchNeeded = !isExpertMode && /힘들어|피곤|슬퍼|기뻐|화나|보고싶|사랑|ㅋㅋ|ㅠㅠ|밥|잠|자야|놀자|심심/.test(lastUserMsg);
+
+// 박사 모드는 무조건 검색, 아니면 정보성 질문만 검색
+const needsSearch = isExpertMode || (
+  !noSearchNeeded &&
+  lastUserMsg.length > 10 &&
+  /뭐야|뭔데|어때|알아|맞아|언제|어디|누구|얼마|몇|어떻게|왜|뉴스|최신|요즘|트렌드|연예|스포츠|주가|날씨|정보|알려줘|찾아봐|검색/.test(lastUserMsg)
 );
+
+// 박사 모드는 검색 결과 더 많이 가져오기
+const searchCount = isExpertMode ? 5 : 3;
 
     let searchContext = '';
     if (needsSearch && process.env.BRAVE_API_KEY) {
       try {
         const searchResp = await fetch(
-          `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(lastUserMsg)}&count=3&search_lang=ko&country=KR`,
+          `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(lastUserMsg)}&count=${searchCount}&search_lang=ko&country=KR`,
           {
             headers: {
               'Accept': 'application/json',
