@@ -702,12 +702,9 @@ function switchTab(tab){
 }
 
 function openChat(roomId){
-  // roomId를 문자로 변환해서 안전하게 비교
   const room=chatrooms.find(r=>String(r.id)===String(roomId));
   if(!room) return;
   currentRoom=room;
-  
-  // 상태 초기화
   messages=[];
   document.getElementById('chat-messages').innerHTML='';
   document.getElementById('chat-emoji').textContent=(room.avatar||'👦').split(' ')[0];
@@ -715,39 +712,12 @@ function openChat(roomId){
   document.getElementById('chat-status').textContent='온라인';
   document.getElementById('chat-screen').classList.add('active');
 
-  // 대화 내용 불러오기
   loadRoomMessages(room.id).then((isSuccess)=>{
-    // 💡 DB 통신에 성공했고, 진짜로 대화가 0개일 때만 첫인사를 건네도록 수정!
-    if(isSuccess && messages.length===0) {
-        sendFirstMessage();
-    }
+    if(isSuccess && messages.length===0) sendFirstMessage();
   });
 }
 
-async function loadRoomMessages(roomId){
-  const{data, error}=await sb.from('messages')
-    .select('*')
-    .eq('chatroom_id', roomId)
-    .order('created_at',{ascending:true})
-    .limit(100);
-    
-  // 💡 DB에서 불러오기 실패했다면 (RLS 에러 등) false를 반환
-  if(error){
-    console.error('메시지 로드 실패:', error.message);
-    showToast('메시지를 불러오지 못했어요. DB 설정을 확인해주세요!');
-    return false; 
-  }
-  
-  if(data && data.length > 0){
-    messages=data.map(m=>({role:m.role, content:m.content}));
-    document.getElementById('chat-messages').innerHTML=''; 
-    renderAllMessages();
-    setTimeout(scrollToBottom, 100);
-  }
-  
-  // 💡 에러 없이 정상적으로 확인했다면 true 반환
-  return true; 
-}
+
 
 function goBackFromChat(){
   document.getElementById('chat-screen').classList.remove('active');
@@ -875,20 +845,23 @@ async function deleteRoom(roomId){
 
 // ══════════ MESSAGES ══════════
 async function loadRoomMessages(roomId){
-  const{data, error}=await sb.from('messages')
+  const{data,error}=await sb.from('messages')
     .select('*')
     .eq('chatroom_id', roomId)
     .order('created_at',{ascending:true})
-    .limit(100);
+    .limit(200);
   if(error){
-    console.error('메시지 로드 실패:', error);
-    return;
+    console.error('메시지 로드 실패:', error.message);
+    showToast('대화를 불러오지 못했어 ㅠ DB 설정 확인해봐');
+    return false;
   }
   if(data && data.length > 0){
-    messages=data.map(m=>({role:m.role, content:m.content}));
+    messages=data.map(m=>({role:m.role,content:m.content}));
+    document.getElementById('chat-messages').innerHTML='';
     renderAllMessages();
-    setTimeout(scrollToBottom, 100);
+    setTimeout(scrollToBottom,100);
   }
+  return true;
 }
 
 async function saveMessage(role, content){
@@ -1309,10 +1282,9 @@ function scheduleRandomPing(){
 }
 // ══════════ REALTIME SYNC ══════════
 function setupRealtimeSync(){
-  // 💡 1. 핵심: 기존에 엉켜있을 수 있는 동기화 채널을 싹 비워줍니다. (중복 충돌 방지)
   sb.removeAllChannels();
 
-  // 2. 채팅방 목록 실시간 동기화
+  // 채팅방 목록 실시간 동기화
   sb.channel('chatrooms-sync')
     .on('postgres_changes',{
       event:'*',
@@ -1326,31 +1298,41 @@ function setupRealtimeSync(){
     })
     .subscribe();
 
-  // 3. 메시지 실시간 동기화 (절대 화면을 지우지 않고 밑에 '추가'만 함!)
+  // 메시지 실시간 동기화 - 현재 열린 방만
   sb.channel('messages-sync')
     .on('postgres_changes',{
       event:'INSERT',
       schema:'public',
       table:'messages'
     }, payload=>{
-      // 현재 채팅방이 안 열려있으면 무시
-      if(!currentRoom) return; 
-      
-      // 방 번호가 다르면 무시 (숫자/문자 타입 섞임 방지)
-      if(String(payload.new.chatroom_id) !== String(currentRoom.id)) return;
-      
-      const newMsg = payload.new;
-      
-      // 이미 내 기기 화면에 떠있는 메시지인지 확인 (중복 렌더링 방지)
-      const alreadyShown = messages.some(
-        m => m.role === newMsg.role && m.content === newMsg.content
+      if(!currentRoom) return;
+      if(String(payload.new.chatroom_id)!==String(currentRoom.id)) return;
+
+      const newMsg=payload.new;
+      // 이미 화면에 있는 메시지 중복 방지
+      // content + role + created_at 기준으로 체크
+      const alreadyShown=messages.some(
+        m=>m.role===newMsg.role &&
+           m.content===newMsg.content &&
+           m._id===newMsg.id
       );
-      
-      // 내 화면에 없는 완전히 새로운 메시지일 때만 화면 맨 아래에 덧붙여줍니다.
       if(!alreadyShown){
-        messages.push({role: newMsg.role, content: newMsg.content});
-        appendMessage(newMsg.role === 'user' ? 'user' : 'ai', newMsg.content);
-        setTimeout(scrollToBottom, 100);
+        // _id를 함께 저장해서 중복 체크 정확도 높임
+        messages.push({
+          role:newMsg.role,
+          content:newMsg.content,
+          _id:newMsg.id
+        });
+        appendMessage(newMsg.role==='user'?'user':'ai', newMsg.content);
+        setTimeout(scrollToBottom,100);
+
+        // 채팅방 목록 최신화
+        const room=chatrooms.find(r=>String(r.id)===String(newMsg.chatroom_id));
+        if(room){
+          room.last_msg=typeof newMsg.content==='string'?newMsg.content.slice(0,50):'';
+          room.updated_at=newMsg.created_at;
+          renderHomeList();
+        }
       }
     })
     .subscribe();
