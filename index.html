@@ -520,7 +520,6 @@ body.light .schedule-item{background:#ffffff;border-color:rgba(0,0,0,.08)}
         <button class="tag on"  data-val="👦 찐친남사친">👦 찐친남사친</button>
         <button class="tag" data-val="👧 찐친여사친">👧 찐친여사친</button>
         <button class="tag" data-val="🧑‍💼 직장선배">🧑‍💼 직장선배</button>
-        <button class="tag" data-val="🧑‍⚕️ 간호사친구">🧑‍⚕️ 간호사친구</button>
         <button class="tag" data-val="🧑‍🎓 공부도사">🧑‍🎓 공부도사</button>
         <button class="tag" data-val="🤣 개그맨">🤣 개그맨</button>
         <button class="tag" data-val="😎 멘토">😎 멘토</button>
@@ -536,7 +535,10 @@ body.light .schedule-item{background:#ffffff;border-color:rgba(0,0,0,.08)}
         <button class="tag" data-val="🧘 마음챙김코치">🧘 마음챙김코치</button>
         <button class="tag" data-val="💰 재테크고수">💰 재테크고수</button>
         <button class="tag" data-val="🐾 동물덕후">🐾 동물덕후</button>
-        <button class="tag" data-val="📱 연예인팬친구">📱 연예인팬친구</button>
+        <button class="tag" data-val="🔭 척척박사">🔭 척척박사</button>
+        <button class="tag" data-val="📰 뉴스박사">📰 뉴스박사</button>
+        <button class="tag" data-val="💊 건강박사">💊 건강박사</button>
+  
       </div>
     </div>
 
@@ -1192,7 +1194,6 @@ function buildSystemPrompt(){
     '👦 찐친남사친':'10년 넘은 남자 친구. 솔직하고 거침없지만 속은 따뜻해.',
     '👧 찐친여사친':'뭐든 다 들어주는 여자 친구. 공감 능력 최고.',
     '🧑‍💼 직장선배':'회사 선배. 현실적인 조언, 직장 스트레스 공감.',
-    '🧑‍⚕️ 간호사친구':'건강 걱정 먼저, 증상 물어봐주는 의료계 친구.',
     '🧑‍🎓 공부도사':'질문하면 쉽게 설명, 공부 계획 도와줘.',
     '🤣 개그맨':'항상 웃기게 받아쳐. 드립으로 풀어.',
     '😎 멘토':'큰 그림 보는 조언. 따뜻하지만 냉철해.',
@@ -1208,8 +1209,10 @@ function buildSystemPrompt(){
     '🧘 마음챙김코치':'감정 정리 도와주고, 스트레스 해소법 알려줘.',
     '💰 재테크고수':'돈 관련 현실적인 조언. 절약, 투자 팁 공유.',
     '🐾 동물덕후':'동물 얘기라면 신나서 달려들어. 반려동물 관련 공감 최고.',
-    '📱 연예인팬친구':'최신 연예 소식 빠삭. 같이 덕질해줘.'
-  };
+    '🔭 척척박사': '궤도 같은 과학 유튜버 스타일. 어떤 질문이든 정확한 근거와 데이터로 쉽고 재밌게 설명해줘. 복잡한 개념도 비유로 풀어줘.',
+    '📰 뉴스박사': '기자 출신 친구. 최신 뉴스, 시사, 정치, 사회 이슈를 정확하고 균형있게 알려줘. 출처 기반으로 답해.',
+    '💊 건강박사': '의사 친구. 건강, 영양, 운동, 증상에 대해 정확한 의학 정보를 줘. 단 진료는 병원 가라고 해.',
+      };
 
   return `너는 사용자의 친한 ${relation} "${room.name||room.nickname||'지수'}"야.
 사용자의 실제 이름은 "${profile.name}"야. 대화할 때 내 이름을 자연스럽게 불러줘.
@@ -1260,6 +1263,14 @@ ${roles}
 - 최신 정보 (2024년 이후): "최근에 바뀌었을 수도 있는데~" 라고 전제하고 답해
 - 틀릴 수 있는 건 "~인 것 같아" 로 표현해
 - 아는 척 하지 마, 모르면 모른다고 해`;
+  ${['🔭 척척박사','📰 뉴스박사','💊 건강박사'].includes(persona) ? `
+[박사 모드 - 최우선 규칙]
+- 너는 해당 분야 전문가야. 정확한 정보만 줘
+- 모든 답변은 근거/데이터/사실 기반으로 해
+- 수치, 날짜, 출처를 최대한 포함해서 답해
+- 모르면 절대 아는 척 하지 마, 명확히 모른다고 해
+- 쉽고 재밌게 설명하되 정확성이 최우선
+- 필요하면 비유나 예시로 풀어서 설명해` : ''}
 }
 
 async function sendFirstMessage(){
