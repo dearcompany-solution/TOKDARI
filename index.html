@@ -656,15 +656,25 @@ async function saveOnboard(){
 
 // ══════════ APP START ══════════
 async function startApp(){
-  ['signup-screen','login-screen','onboard'].forEach(id=>document.getElementById(id)?.classList.remove('show'));
+  ['signup-screen','login-screen','onboard'].forEach(id=>
+    document.getElementById(id)?.classList.remove('show')
+  );
   const appEl=document.getElementById('app');
-  appEl.classList.add('show');appEl.style.display='flex';
+  appEl.classList.add('show');
+  appEl.style.display='flex';
   hideSplash();
   applyProfile();
-  await Promise.all([loadChatrooms(),loadSchedule()]);
+
+  // 채팅방이랑 일정 불러오기
+  await loadChatrooms();
+  await loadSchedule();
+
+  // 홈 화면 먼저 보여주고
   switchTab('home');
-  // 실시간 동기화 구독
-setupRealtimeSync();
+  renderHomeList();
+  renderChatrooms();
+
+  setupRealtimeSync();
   requestNotifPermission();
   scheduleRandomPing();
 }
@@ -717,7 +727,14 @@ function goBackFromChat(){
 
 // ══════════ CHATROOMS ══════════
 async function loadChatrooms(){
-  const{data}=await sb.from('chatrooms').select('*').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
+  const{data, error}=await sb.from('chatrooms')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at',{ascending:false});
+  if(error){
+    console.error('채팅방 로드 실패:', error);
+    return;
+  }
   if(data) chatrooms=data;
 }
 
@@ -728,11 +745,17 @@ function renderHomeList(){
     list.innerHTML='<div class="empty-rooms">🐣<br>아직 친구가 없어!<br>채팅방 탭에서 + 버튼 눌러봐</div>';
     return;
   }
-  list.innerHTML=chatrooms.map(room=>`
+  // updated_at 또는 created_at 기준 최신순 정렬
+  const sorted=[...chatrooms].sort((a,b)=>{
+    const da=new Date(a.updated_at||a.created_at||0);
+    const db=new Date(b.updated_at||b.created_at||0);
+    return db-da;
+  });
+  list.innerHTML=sorted.map(room=>`
     <div class="room-card" onclick="openChat(${room.id})">
       <div class="room-avatar">${(room.avatar||'👦').split(' ')[0]}</div>
       <div class="room-info">
-        <div class="room-name">${room.name||room.nickname}</div>
+        <div class="room-name">${room.name||room.nickname||'친구'}</div>
         <div class="room-last">${room.last_msg||'대화를 시작해봐 👋'}</div>
       </div>
       <div class="room-meta">
@@ -819,11 +842,15 @@ async function deleteRoom(roomId){
 
 // ══════════ MESSAGES ══════════
 async function loadRoomMessages(roomId){
-  const{data}=await sb.from('messages')
+  const{data, error}=await sb.from('messages')
     .select('*')
     .eq('chatroom_id', roomId)
     .order('created_at',{ascending:true})
     .limit(100);
+  if(error){
+    console.error('메시지 로드 실패:', error);
+    return;
+  }
   if(data && data.length > 0){
     messages=data.map(m=>({role:m.role, content:m.content}));
     renderAllMessages();
