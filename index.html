@@ -930,8 +930,95 @@ function openNewRoomModal(){
   document.querySelectorAll('#nr-avatar .tag').forEach((t,i)=>t.classList.toggle('on',i===0));
   document.querySelectorAll('#nr-style .tag').forEach((t,i)=>t.classList.toggle('on',i===0));
 }
-function closeNewRoomModal(){document.getElementById('newroom-modal').classList.remove('show');}
+function closeNewRoomModal(){
+  editingRoomId = null;
+  document.querySelector('#newroom-modal .modal-title').textContent = '새 친구 만들기 🐣';
+  const primaryBtn = document.querySelector('#newroom-modal .modal-btn.primary');
+  if(primaryBtn){
+    primaryBtn.textContent = '만들기 🚀';
+    primaryBtn.onclick = createChatroom;
+  }
+  document.getElementById('newroom-modal').classList.remove('show');
+}
+// ══════════ 채팅방 수정 ══════════
+let editingRoomId = null;
 
+function openEditRoomModal(roomId){
+  const room = chatrooms.find(r=>String(r.id)===String(roomId));
+  if(!room) return;
+  editingRoomId = roomId;
+
+  document.getElementById('nr-nickname').value = room.nickname || room.name || '';
+  document.getElementById('nr-error').textContent = '';
+
+  // 기존 설정 파싱
+  const style = room.talk_style || '';
+  const parts = style.split(' / ');
+  const baseTone = parts[0] || '';
+  const gender = parts.find(p=>p.startsWith('성별:'))?.replace('성별:','') || '남자';
+  const age = parts.find(p=>p.startsWith('나이:'))?.replace('나이:','') || '20대';
+  const relation = parts.find(p=>p.startsWith('관계:'))?.replace('관계:','') || '친구';
+  const personalities = (parts.find(p=>p.startsWith('성격:'))?.replace('성격:','') || '').split(',').filter(Boolean);
+  const habits = (parts.find(p=>p.startsWith('말버릇:'))?.replace('말버릇:','') || '').split(',').filter(Boolean);
+  const roles = Array.isArray(room.roles) ? room.roles : [];
+
+  // 태그 선택 초기화
+  document.querySelectorAll('#nr-avatar .tag').forEach(t=>{
+    t.classList.toggle('on', t.dataset.val === room.avatar);
+  });
+  document.querySelectorAll('#nr-gender .tag').forEach(t=>{
+    t.classList.toggle('on', t.dataset.val === gender);
+  });
+  document.querySelectorAll('#nr-age .tag').forEach(t=>{
+    t.classList.toggle('on', t.dataset.val === age);
+  });
+  document.querySelectorAll('#nr-relation .tag').forEach(t=>{
+    t.classList.toggle('on', t.dataset.val === relation);
+  });
+  document.querySelectorAll('#nr-style .tag').forEach(t=>{
+    t.classList.toggle('on', t.dataset.val === baseTone);
+  });
+  document.querySelectorAll('#nr-personality .tag').forEach(t=>{
+    t.classList.toggle('on', personalities.includes(t.dataset.val));
+  });
+  document.querySelectorAll('#nr-habit .tag').forEach(t=>{
+    t.classList.toggle('on', habits.includes(t.dataset.val));
+  });
+  document.querySelectorAll('#nr-roles .tag').forEach(t=>{
+    t.classList.toggle('on', roles.includes(t.dataset.val));
+  });
+
+  // 모달 타이틀 변경
+  document.querySelector('#newroom-modal .modal-title').textContent = '친구 설정 수정 ✏️';
+
+  // 만들기 버튼 → 저장 버튼으로 변경
+  const primaryBtn = document.querySelector('#newroom-modal .modal-btn.primary');
+  if(primaryBtn){
+    primaryBtn.textContent = '저장 ✓';
+    primaryBtn.onclick = saveEditRoom;
+  }
+
+  document.getElementById('newroom-modal').classList.add('show');
+}
+
+function closeEditRoomModal(){
+  editingRoomId = null;
+  // 모달 타이틀/버튼 원래대로 복원
+  document.querySelector('#newroom-modal .modal-title').textContent = '새 친구 만들기 🐣';
+  const primaryBtn = document.querySelector('#newroom-modal .modal-btn.primary');
+  if(primaryBtn){
+    primaryBtn.textContent = '만들기 🚀';
+    primaryBtn.onclick = createChatroom;
+  }
+  document.getElementById('newroom-modal').classList.remove('show');
+}
+
+async function saveEditRoom(){
+  if(!editingRoomId) return;
+  const nickname = document.getElementById('nr-nickname').value.trim();
+  const avatar = getTag('nr-avatar') || '👦 찐친남사친';
+  const style = getTag('nr-style') || '친구같이 편하고 솔직하게, 반말로';
+  const gender = getT
 async function createChatroom(){
   const nickname=document.getElementById('nr-nickname').value.trim();
   const avatar=getTag('nr-avatar')||'👦 찐친남사친';
