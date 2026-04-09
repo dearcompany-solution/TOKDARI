@@ -1,30 +1,10 @@
-const CACHE = 'tokdari-v1';
-const ASSETS = ['/', '/index.html', '/manifest.json'];
-
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
-  self.skipWaiting();
-});
-
+// 개발 중 - 캐시 비활성화
+self.addEventListener('install', e => self.skipWaiting());
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-  ));
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('/index.html')))
+  e.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
   );
 });
-
-self.addEventListener('push', e => {
-  const data = e.data ? e.data.json() : { title: '톡다리', body: '야 어디있어? 나 심심한데ㅋㅋ' };
-  e.waitUntil(self.registration.showNotification(data.title, {
-    body: data.body,
-    icon: '/icon.svg',
-    badge: '/icon.svg',
-    vibrate: [200, 100, 200]
-  }));
+self.addEventListener('fetch', e => {
+  e.respondWith(fetch(e.request));
 });
