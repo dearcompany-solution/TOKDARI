@@ -1671,21 +1671,35 @@ function setupRealtimeSync(){
 // ══════════ DARK MODE ══════════
 function toggleDarkMode(el){
   el.classList.toggle('on');
-  const isDark = el.classList.contains('on');
-  const meta = document.getElementById('theme-color-meta');
-  const statusMeta = document.getElementById('status-bar-meta');
+  const isDark=el.classList.contains('on');
+  _applyTheme(isDark);
+  localStorage.setItem('tokdari_darkmode',isDark?'1':'0');
+}
+
+function applyDarkMode(){
+  const saved=localStorage.getItem('tokdari_darkmode');
+  const isDark=saved===null?true:saved==='1';
+  const toggle=document.getElementById('toggle-dark');
+  if(toggle) toggle.classList.toggle('on',isDark);
+  _applyTheme(isDark);
+}
+
+function _applyTheme(isDark){
+  const meta=document.getElementById('theme-color-meta');
+  const statusMeta=document.getElementById('status-bar-meta');
   if(isDark){
     document.body.classList.remove('light');
+    document.body.style.backgroundColor='#1a1a1a';
+    document.documentElement.style.backgroundColor='#1a1a1a';
     if(meta) meta.setAttribute('content','#1a1a1a');
     if(statusMeta) statusMeta.setAttribute('content','black-translucent');
-    document.body.style.backgroundColor = '#1a1a1a';
   } else {
     document.body.classList.add('light');
+    document.body.style.backgroundColor='#ffffff';
+    document.documentElement.style.backgroundColor='#ffffff';
     if(meta) meta.setAttribute('content','#ffffff');
     if(statusMeta) statusMeta.setAttribute('content','default');
-    document.body.style.backgroundColor = '#ffffff';
   }
-  localStorage.setItem('tokdari_darkmode', isDark ? '1' : '0');
 }
 
 function applyDarkMode(){
@@ -1892,17 +1906,18 @@ function clearImgPreview(){
 }
   // ══════════ MESSAGE FORMAT ══════════
 function formatMessageContent(text){
-  if(!text || typeof text !== 'string') return escapeHtml(text||'');
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = text.split(urlRegex);
-  return parts.map(part => {
-    if(!part.startsWith('http')) return escapeHtml(part);
-    if(/youtube\.com|youtu\.be/i.test(part)){
-      const videoId = getYoutubeId(part);
-      return `<a href="${part}" target="_blank" style="color:inherit;text-decoration:underline;font-size:.85rem;word-break:break-all">🎬 ${escapeHtml(part)}</a>${videoId?`<div style="margin-top:6px;cursor:pointer" onclick="window.open('${part}','_blank')"><img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" style="width:100%;max-width:240px;border-radius:8px;display:block"></div>`:''}`;
-    }
-    return `<a href="${part}" target="_blank" style="color:inherit;text-decoration:underline;word-break:break-all">🔗 ${escapeHtml(part)}</a>`;
-  }).join('');
+  if(!text||typeof text!=='string') return '';
+  const urlPattern = /(https?:\/\/[^\s<>"]+)/g;
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(urlPattern, url=>{
+      const rawUrl = url.replace(/&amp;/g,'&');
+      if(/youtube\.com|youtu\.be/i.test(rawUrl)){
+        const m=rawUrl.match(/(?:v=|youtu\.be\/)([^&?/\s]+)/);
+        const vid=m?m[1]:'';
+        return `<a href="${rawUrl}" target="_blank" style="color:var(--kakao);text-decoration:underline;word-break:break-all">🎬 ${url}</a>${vid?`<br><img src="https://img.youtube.com/vi/${vid}/mqdefault.jpg" style="max-width:200px;border-radius:8px;margin-top:4px;cursor:pointer;display:block" onclick="window.open('${rawUrl}','_blank')">` : ''}`;
+      }
+      return `<a href="${rawUrl}" target="_blank" style="color:var(--kakao);text-decoration:underline;word-break:break-all">🔗 ${url}</a>`;
+    });
 }
 
 function escapeHtml(text){
