@@ -1,4 +1,9 @@
 const webpush = require('web-push');
+webpush.setVapidDetails(
+  process.env.VAPID_EMAIL,
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 const { createClient } = require('@supabase/supabase-js');
 const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
 
