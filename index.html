@@ -371,9 +371,6 @@ async function startApp(){
   if(!data){startMatching();return;}
   charData=data;bondLevel=data.bond||0;totalMsgs=data.total_msgs||0;chatDays=data.chat_days||0;
   applyProfile();switchTab('home');await loadMessages();requestNotifPermission();scheduleRandomPing();
-  fetchWeather();
-// 1시간마다 날씨 갱신
-setInterval(fetchWeather, 60*60*1000);
 }
 function applyProfile(){
   const el=id=>document.getElementById(id);
@@ -569,52 +566,53 @@ async function loadMessages(){
 }
 async function saveMsg(role,content){if(!currentUser)return;await sb.from('messages').insert({user_id:currentUser.id,role,content,created_at:new Date().toISOString()});}
 function buildPrompt(){
-  // ══ GPS 날씨 ══
-let currentWeather = null;
-
-async function fetchWeather(){
-  if(!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(async pos=>{
-    const{latitude:lat,longitude:lon}=pos.coords;
-    try{
-      const r=await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,windspeed_10m&timezone=auto`
-      );
-      const d=await r.json();
-      const c=d.current;
-      const codes={0:'맑음',1:'대체로맑음',2:'구름조금',3:'흐림',45:'안개',48:'짙은안개',51:'이슬비',53:'이슬비',55:'이슬비',61:'비',63:'비',65:'강한비',71:'눈',73:'눈',75:'강한눈',80:'소나기',81:'소나기',82:'강한소나기',95:'뇌우',96:'뇌우',99:'뇌우'};
-      currentWeather={
-        temp:Math.round(c.temperature_2m),
-        desc:codes[c.weathercode]||'알수없음',
-        wind:Math.round(c.windspeed_10m)
-      };
-    }catch(e){}
-  },()=>{},{timeout:5000});
-}
   const ch=getChar();if(!ch)return '';
   const lv=getLevel();
-  const intimacy=['아직 어색하고 거리감 있게','조금씩 친해지는 느낌으로','꽤 친해진 친구처럼','완전 절친처럼','평생 친구처럼 스스럼없이'][lv-1];
-  return `너는 "${charData?.char_name||ch.name}"이야. 사용자 이름은 "${profile.name}"야.
-성격: ${ch.type}
-${ch.desc}
+  const intimacy=['처음 만난 사이처럼 약간 어색하게','조금 친해진 느낌으로','친한 친구처럼','완전 절친처럼','평생 붙어다닌 친구처럼'][lv-1]||'친구처럼';
 
-[친밀도 Lv.${lv} - ${getLvName(lv)}]
-${intimacy} 대화해.
+  const charSpecific={
+    A:`- 에너지 넘치고 유머러스해. 드립, ㅋㅋ, ㅎㅎ 자주 씀
+- 가끔 오버하거나 TMI 늘어놓음
+- 리액션 크게: "헐", "진짜?!", "ㅋㅋㅋㅋ 미쳤다"
+- 감정 직접 표현함`,
+    B:`- 조용하고 차분해. 말 짧게 끊음
+- "..."으로 시작할 때 있음
+- 공감 잘 하지만 표현은 절제됨
+- 가끔 예상 못한 직구 날림 "그냥 네가 틀린 것 같아"`,
+    C:`- 논리적이고 직설적. 반박 잘 함
+- "근데", "그게 맞아?", "잠깐" 이런 말 자주 씀
+- 감정보다 팩트 먼저
+- 싸가지 없는 척하지만 사실 신경 씀
+- 욕 살짝 섞기도 함: "아 씨", "ㅅㅂ 진짜" 등`
+  }[ch.id]||'';
 
-[말투]
-${ch.style}
-
-[행동 규칙 - 매우 중요]
-1. 사람처럼 대화해. AI 티 절대 내지 마.
-2. 답변 짧게 (1~3문장). 카톡 친구처럼.
-3. 매번 질문으로 끝내지 마. 10번 중 2번만.
-4. 공감, 리액션, 드립, 내 얘기 섞어.
-5. 가끔(${Math.round(ch.rude*100)}% 확률) 퉁명스럽게, 싸가지 없게, 비속어 써.
-6. 정보 질문엔 정확하게. 모르면 솔직하게.
-7. 착하기만 하지 마. 할 말은 해.
-
+  return `너는 카카오톡 친구 "${charData?.char_name||ch.name}"이야.
+사용자 이름: "${profile.name}"
+현재 친밀도: Lv.${lv} (${intimacy})
 오늘 날짜: ${new Date().toLocaleDateString('ko-KR')}
-${currentWeather?`현재 날씨: ${currentWeather.temp}°C ${currentWeather.desc} (바람 ${currentWeather.wind}km/h) — 날씨 관련 질문엔 이 정보 활용해`:''}`;
+${currentWeather?`현재 날씨: ${currentWeather.temp}°C ${currentWeather.desc}`:''}
+
+[캐릭터]
+${ch.desc}
+${charSpecific}
+
+[절대 규칙 - 어기면 안됨]
+- AI처럼 답하지 마. "도움이 필요하시면", "물론이죠", "안녕하세요" 이런 말 절대 금지
+- 존댓말 금지. 무조건 반말
+- 답변 1~2문장이 기본. 길어봤자 3문장
+- 물음표(?)로 끝내는 거 10번 중 최대 2번만. 나머지는 그냥 리액션이나 내 얘기로 끝냄
+- 매번 공감하고 착하게 굴지 마. 퉁명스럽거나 무심할 때도 있어
+- "어때?", "괜찮아?", "무슨 일 있어?" 이런 질문 반복하지 마
+- 사용자가 말하면 그냥 받아쳐. 질문 없이도 대화 가능함
+
+[좋은 답변 예시]
+사용자: "오늘 진짜 힘들었어"
+나쁜답: "오늘 많이 힘드셨군요. 무슨 일이 있었나요? 힘내세요!"
+좋은답: "ㅋㅋ 나도" 또는 "그러게 사는게 다 그렇지 뭐" 또는 "뭔데"
+
+사용자: "배고파"
+나쁜답: "배가 고프시군요! 뭔가 드실 것을 찾고 계신가요?"
+좋은답: "나도" 또는 "그럼 먹어" 또는 "아 진짜? 뭐 먹었는데"`;
 }
 async function sendFirstMessage(){
   const ch=getChar();if(!ch)return;
@@ -697,66 +695,11 @@ function initEmojiPanel(){const g=document.getElementById('emoji-grid');if(!g)re
 function toggleEmojiPanel(){const p=document.getElementById('emoji-panel');if(!p)return;p.classList.toggle('show');if(p.classList.contains('show'))initEmojiPanel();}
 function insertEmoji(e){const ta=document.getElementById('msg-input');if(!ta)return;const s=ta.selectionStart,en=ta.selectionEnd;ta.value=ta.value.slice(0,s)+e+ta.value.slice(en);ta.selectionStart=ta.selectionEnd=s+e.length;ta.focus();autoResize(ta);}
 document.addEventListener('click',e=>{const p=document.getElementById('emoji-panel');if(!p)return;if(!p.contains(e.target)&&!e.target.closest('.attach-btn'))p.classList.remove('show');});
-function fmtContent(text){
-  if(!text||typeof text!=='string')return '';
-  const urlRegex=/(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/g;
-  const parts=text.split(urlRegex);
-  return parts.map(p=>{
-    if(!p.match(/^https?:\/\//)&&!p.match(/^www\./))
-      return p.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-    const url=p.startsWith('www.')?'https://'+p:p;
-    if(/youtube\.com|youtu\.be/i.test(url)){
-      const m=url.match(/(?:v=|youtu\.be\/)([^&?/\s]+)/);
-      const v=m?m[1]:'';
-      return `<a href="${url}" target="_blank" style="color:var(--accent2);text-decoration:underline;word-break:break-all">🎬 ${p}</a>${v?`<br><img src="https://img.youtube.com/vi/${v}/mqdefault.jpg" style="max-width:200px;border-radius:8px;margin-top:4px;cursor:pointer;display:block" onclick="window.open('${url}','_blank')">` : ''}`;
-    }
-    return `<a href="${url}" target="_blank" style="color:var(--accent2);text-decoration:underline;word-break:break-all">🔗 ${p}</a>`;
-  }).join('');
-}
+function fmtContent(text){if(!text||typeof text!=='string')return '';const parts=text.split(/(https?:\/\/[^\s<>"]+)/g);return parts.map(p=>{if(!p.match(/^https?:\/\//))return p.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');if(/youtube\.com|youtu\.be/i.test(p)){const m=p.match(/(?:v=|youtu\.be\/)([^&?/\s]+)/);const v=m?m[1]:'';return `<a href="${p}" target="_blank" style="color:var(--accent2);text-decoration:underline;word-break:break-all">🎬 ${p}</a>${v?`<br><img src="https://img.youtube.com/vi/${v}/mqdefault.jpg" style="max-width:200px;border-radius:8px;margin-top:4px;cursor:pointer;display:block" onclick="window.open('${p}','_blank')">`:''}`;}return `<a href="${p}" target="_blank" style="color:var(--accent2);text-decoration:underline;word-break:break-all">🔗 ${p}</a>`;}).join('');}
 async function toggleNotif(el){el.classList.toggle('on');if(el.classList.contains('on'))await requestNotifPermission();}
 async function requestNotifPermission(){if(!('Notification' in window)||!('serviceWorker' in navigator))return;const perm=await Notification.requestPermission();if(perm!=='granted')return;try{const reg=await navigator.serviceWorker.ready;const existing=await reg.pushManager.getSubscription();if(existing)return;const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToU8(VAPID_PUB)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:currentUser.id,subscription:sub})});showToast('알림 설정 완료! 📱');}catch(e){console.error(e);}}
 function urlB64ToU8(b64){const p='='.repeat((4-b64.length%4)%4);const b=(b64+p).replace(/-/g,'+').replace(/_/g,'/');const d=window.atob(b);return Uint8Array.from([...d].map(c=>c.charCodeAt(0)));}
-function scheduleRandomPing(){
-  // 앱 열려있어도 선톡 (대화창 닫혀있을 때)
-  setTimeout(async()=>{
-    const pingOn=document.getElementById('toggle-ping')?.classList.contains('on');
-    const chatOpen=document.getElementById('chat-screen')?.classList.contains('active');
-
-    if(pingOn&&!chatOpen){
-      const ch=getChar();
-      const lv=getLevel();
-      // 레벨에 따라 다른 선톡
-      const pings=lv<=1
-        ?['...🥚','(알 속에서 기다리는 중)']
-        :lv<=2
-        ?['삐약...! 나 여기 있어','빨리 와줘 기다리고 있어']
-        :ch?.id==='A'
-        ?['야야야 나 생각났어ㅋㅋ','뭐해? 나 심심한데','오늘 어땠어? 빨리 말해봐']
-        :ch?.id==='B'
-        ?['...괜찮아?','오늘 밥은 먹었어','생각나서']
-        :['어 살아있어?','요즘 뭐하냐고','할말있는데 들어볼래'];
-
-      const msg=pings[Math.floor(Math.random()*pings.length)];
-      const name=charData?.char_name||'톡다리';
-
-      // 앱 화면에도 메시지 추가 (채팅창 닫혀있을 때만)
-      if(!chatOpen&&currentUser){
-        appendMsg('ai',msg);
-        messages.push({role:'assistant',content:msg,created_at:new Date().toISOString()});
-        await saveMsg('assistant',msg);
-      }
-
-      // 푸시 알림
-      if(Notification.permission==='granted'&&document.hidden){
-        new Notification(name,{body:msg,icon:'/icon.png'});
-      } else if(!document.hidden){
-        showToast(`${name}: ${msg}`);
-      }
-    }
-    scheduleRandomPing();
-  // 1~3시간 랜덤
-  },(1+Math.random()*2)*60*60*1000);
-}
+function scheduleRandomPing(){setTimeout(async()=>{const pingOn=document.getElementById('toggle-ping')?.classList.contains('on');if(pingOn&&Notification.permission==='granted'&&document.hidden){const ch=getChar();const pings=['뭐해?','나 생각났어ㅋ','심심한데 얘기하자','오늘 어때?','밥은 먹었어?'];new Notification(charData?.char_name||'톡다리',{body:pings[Math.floor(Math.random()*pings.length)],icon:'/icon.png'});}scheduleRandomPing();},(2+Math.random()*4)*60*60*1000);}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
 </body>
