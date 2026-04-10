@@ -7,282 +7,460 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="톡다리">
-<meta name="theme-color" content="#0d0d1a">
+<meta name="theme-color" content="#0e0e0e">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥚</text></svg>">
+<link rel="icon" type="image/png" href="icon.png">
 <title>톡다리</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{
-  --bg:#0d0d1a;
-  --bg2:#13132a;
-  --bg3:#1a1a35;
-  --accent:#7c3aed;
-  --accent2:#a78bfa;
-  --pink:#ec4899;
-  --yellow:#fbbf24;
-  --green:#22c55e;
-  --text:#f0f0ff;
-  --text2:#9999bb;
-  --text3:#5555aa;
-  --bubble-ai:#1e1e3f;
-  --bubble-user:#5b21b6;
-  --border:rgba(124,58,237,0.18);
-  --divider:rgba(124,58,237,0.1);
+:root {
+  --bg: #0e0e0e;
+  --bg2: #1a1a1a;
+  --bg3: #242424;
+  --bg4: #2e2e2e;
+  --accent: #FEE500;
+  --accent2: #e6cf00;
+  --accent-dim: rgba(254,229,0,0.12);
+  --text: #f0f0f0;
+  --text2: #999;
+  --text3: #555;
+  --border: rgba(255,255,255,0.07);
+  --divider: rgba(255,255,255,0.05);
+  --green: #22c55e;
+  --red: #f87171;
+  --bubble-ai: #222;
+  --bubble-user: #FEE500;
+  --bubble-user-text: #111;
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text)}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: 'Noto Sans KR', sans-serif; color: var(--text); }
 
 /* ── SPLASH ── */
-#splash{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999;transition:opacity .5s}
-#splash .splash-egg{font-size:5rem;animation:eggbounce 1.5s infinite}
-#splash h1{font-size:2rem;font-weight:700;background:linear-gradient(135deg,var(--accent2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-#splash p{font-size:.85rem;color:var(--text3)}
-@keyframes eggbounce{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-10px) rotate(5deg)}}
+#splash {
+  position: fixed; inset: 0; background: var(--accent);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; z-index: 999;
+}
+#splash .sp-char { font-size: 5rem; animation: bounce 1.2s ease-in-out infinite; }
+#splash h1 { font-size: 2rem; font-weight: 900; color: #111; letter-spacing: -0.03em; }
+#splash p { font-size: .85rem; color: rgba(0,0,0,0.5); }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
 
 /* ── AUTH ── */
-.auth-wrap{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;z-index:100;gap:1rem;overflow-y:auto}
-.auth-wrap.show{display:flex}
-.auth-logo{font-size:3.5rem}
-.auth-title{font-size:1.4rem;font-weight:700;background:linear-gradient(135deg,var(--accent2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.auth-sub{font-size:.8rem;color:var(--text3);text-align:center}
-.auth-box{width:100%;max-width:360px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:1.4rem;display:flex;flex-direction:column;gap:11px}
-.auth-label{font-size:.7rem;color:var(--text3);font-weight:600;letter-spacing:.04em}
-.auth-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-size:.95rem;outline:none;font-family:'Noto Sans KR',sans-serif;transition:border-color .2s}
-.auth-input:focus{border-color:var(--accent)}
-.auth-btn{width:100%;max-width:360px;padding:1rem;background:linear-gradient(135deg,var(--accent),var(--pink));border:none;border-radius:14px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:opacity .15s}
-.auth-btn:active{opacity:.85}
-.auth-switch{font-size:.82rem;color:var(--text3);cursor:pointer;text-align:center}
-.auth-switch span{color:var(--accent2);text-decoration:underline}
-.auth-error{font-size:.78rem;color:#f87171;text-align:center;min-height:18px}
+.auth-wrap {
+  position: fixed; inset: 0; background: var(--bg);
+  display: none; flex-direction: column; align-items: center;
+  justify-content: center; padding: 1.5rem; z-index: 100;
+  gap: 1rem; overflow-y: auto;
+}
+.auth-wrap.show { display: flex; }
+.auth-logo { font-size: 3rem; }
+.auth-title { font-size: 1.5rem; font-weight: 900; color: var(--accent); letter-spacing: -0.02em; }
+.auth-sub { font-size: .82rem; color: var(--text3); text-align: center; }
+.auth-box {
+  width: 100%; max-width: 360px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 20px;
+  padding: 1.4rem; display: flex; flex-direction: column; gap: 12px;
+}
+.auth-label { font-size: .72rem; color: var(--text3); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.auth-input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px; color: var(--text);
+  font-size: .95rem; outline: none; font-family: 'Noto Sans KR', sans-serif;
+  transition: border-color .2s;
+}
+.auth-input:focus { border-color: var(--accent); }
+.auth-btn {
+  width: 100%; max-width: 360px; padding: 1rem;
+  background: var(--accent); border: none; border-radius: 14px;
+  color: #111; font-size: 1rem; font-weight: 700; cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif; transition: opacity .15s;
+}
+.auth-btn:active { opacity: .85; }
+.auth-switch { font-size: .82rem; color: var(--text3); cursor: pointer; text-align: center; }
+.auth-switch span { color: var(--accent); text-decoration: underline; }
+.auth-error { font-size: .78rem; color: var(--red); text-align: center; min-height: 18px; }
 
-/* ── QUIZ (운명 매칭) ── */
-#quiz-screen{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:100;overflow-y:auto}
-#quiz-screen.show{display:flex}
-.quiz-header{padding:1.2rem 1rem .5rem;display:flex;align-items:center;gap:10px}
-.quiz-progress{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
-.quiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--pink));border-radius:2px;transition:width .4s ease}
-.quiz-step{font-size:.75rem;color:var(--text3)}
-.quiz-body{flex:1;padding:1.5rem 1rem;display:flex;flex-direction:column;gap:1rem}
-.quiz-emoji{font-size:3.5rem;text-align:center;margin-bottom:.5rem;animation:popIn .4s ease}
-@keyframes popIn{0%{transform:scale(0)}100%{transform:scale(1)}}
-.quiz-q{font-size:1.1rem;font-weight:700;text-align:center;line-height:1.5}
-.quiz-sub{font-size:.8rem;color:var(--text3);text-align:center}
-.quiz-choices{display:flex;flex-direction:column;gap:8px;margin-top:.5rem}
-.quiz-choice{width:100%;padding:.9rem 1rem;background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;color:var(--text);font-size:.9rem;cursor:pointer;text-align:left;font-family:'Noto Sans KR',sans-serif;transition:all .15s;display:flex;align-items:center;gap:12px}
-.quiz-choice:active,.quiz-choice.sel{border-color:var(--accent);background:rgba(124,58,237,.15)}
-.quiz-choice .qc-icon{font-size:1.6rem;flex-shrink:0}
-.quiz-choice .qc-text{display:flex;flex-direction:column;gap:2px}
-.quiz-choice .qc-title{font-weight:700;font-size:.9rem}
-.quiz-choice .qc-desc{font-size:.74rem;color:var(--text3)}
-.quiz-next{margin:1rem;padding:.95rem;background:linear-gradient(135deg,var(--accent),var(--pink));border:none;border-radius:14px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;opacity:.4;transition:opacity .2s}
-.quiz-next.active{opacity:1}
-
-/* 매칭 결과 */
-.match-result{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:2rem 1.5rem;text-align:center}
-.match-char{font-size:5rem;animation:matchPop .5s ease}
-@keyframes matchPop{0%{transform:scale(0) rotate(-10deg)}80%{transform:scale(1.15) rotate(3deg)}100%{transform:scale(1) rotate(0)}}
-.match-title{font-size:1.4rem;font-weight:700;background:linear-gradient(135deg,var(--accent2),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.match-name{font-size:1rem;color:var(--text2)}
-.match-desc{font-size:.85rem;color:var(--text3);line-height:1.6;max-width:300px}
-.match-name-input{width:100%;max-width:300px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-size:.95rem;outline:none;font-family:'Noto Sans KR',sans-serif;text-align:center;margin-top:.5rem}
-.match-name-input:focus{border-color:var(--accent)}
-.match-start-btn{width:100%;max-width:300px;padding:1rem;background:linear-gradient(135deg,var(--accent),var(--pink));border:none;border-radius:14px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+/* ── QUIZ (캐릭터 매칭) ── */
+#quiz-screen {
+  position: fixed; inset: 0; background: var(--bg);
+  display: none; flex-direction: column; z-index: 100; overflow-y: auto;
+}
+#quiz-screen.show { display: flex; }
+.quiz-header {
+  padding: 1.2rem 1.2rem .5rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.quiz-progress-bar {
+  height: 3px; background: var(--bg3); border-radius: 2px; margin: 0 1.2rem .5rem;
+}
+.quiz-progress-fill {
+  height: 100%; background: var(--accent); border-radius: 2px;
+  transition: width .35s cubic-bezier(.4,0,.2,1);
+}
+.quiz-body { flex: 1; padding: 1rem 1.2rem 2rem; display: flex; flex-direction: column; gap: 16px; }
+.quiz-question { font-size: 1.15rem; font-weight: 700; line-height: 1.5; }
+.quiz-sub { font-size: .82rem; color: var(--text3); }
+.quiz-choices { display: flex; flex-direction: column; gap: 10px; }
+.quiz-choice {
+  background: var(--bg2); border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 1rem 1.1rem;
+  display: flex; align-items: flex-start; gap: 12px;
+  cursor: pointer; transition: all .15s; text-align: left;
+}
+.quiz-choice:active { background: var(--bg3); }
+.quiz-choice.sel { border-color: var(--accent); background: rgba(254,229,0,.08); }
+.qc-icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 1px; }
+.qc-title { font-size: .92rem; font-weight: 700; margin-bottom: 2px; }
+.qc-desc { font-size: .77rem; color: var(--text3); }
+.quiz-nav { display: flex; gap: 8px; padding: 0 1.2rem 1.5rem; }
+.quiz-btn {
+  flex: 1; padding: .9rem; border-radius: 14px; border: none;
+  font-size: .95rem; font-weight: 700; cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif; transition: opacity .15s;
+}
+.quiz-btn.back { background: var(--bg2); color: var(--text2); }
+.quiz-btn.next { background: var(--accent); color: #111; }
+.quiz-btn:active { opacity: .85; }
+.quiz-result {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 14px; padding: 2rem 1.4rem;
+}
+.qr-char { font-size: 5rem; animation: bounce 1.5s ease-in-out infinite; }
+.qr-label { font-size: .75rem; font-weight: 700; color: var(--accent); letter-spacing: .1em; }
+.qr-name { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em; }
+.qr-desc { font-size: .88rem; color: var(--text2); line-height: 1.7; text-align: center; }
+.qr-traits { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.qr-trait {
+  background: var(--accent-dim); border: 1px solid rgba(254,229,0,.25);
+  border-radius: 20px; padding: 4px 12px; font-size: .75rem;
+  color: var(--accent); font-weight: 600;
+}
+.quiz-name-box { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 8px; }
 
 /* ── APP ── */
-#app{position:fixed;inset:0;display:none;flex-direction:column}
-#app.show{display:flex}
+#app { position: fixed; inset: 0; display: none; flex-direction: column; }
+#app.show { display: flex; }
 
-/* ── TABS ── */
-.tab-bar{background:var(--bg2);border-top:1px solid var(--border);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
-.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 0 7px;cursor:pointer;background:none;border:none;gap:3px}
-.tab-item .ti{font-size:1.3rem;line-height:1;transition:transform .15s}
-.tab-item .tl{font-size:.62rem;color:var(--text3);transition:color .15s}
-.tab-item.active .ti{transform:scale(1.1)}
-.tab-item.active .tl{color:var(--accent2);font-weight:700}
+/* ── TAB CONTENT ── */
+#tab-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.tab-screen { display: none; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
+.tab-screen.active { display: flex; }
 
-/* ── SCREEN CONTAINER ── */
-#tab-content{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
-.tab-screen{display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0}
-.tab-screen.active{display:flex}
+/* ── TAB BAR ── */
+.tab-bar {
+  background: var(--bg2); border-top: 1px solid var(--divider);
+  display: flex; flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 9px 0 7px; cursor: pointer; background: none; border: none; gap: 3px;
+}
+.tab-item .ti { font-size: 1.3rem; line-height: 1; }
+.tab-item .tl { font-size: .62rem; color: var(--text3); transition: color .15s; font-family: 'Noto Sans KR', sans-serif; }
+.tab-item.active .tl { color: var(--accent); font-weight: 700; }
 
-/* ── HOME (캐릭터) ── */
-#home-screen{background:var(--bg);overflow-y:auto}
-.home-top{padding:1rem 1rem .5rem;display:flex;align-items:center;justify-content:space-between}
-.home-greeting{font-size:1rem;font-weight:700;color:var(--text2)}
-.home-level-badge{background:rgba(124,58,237,.2);border:1px solid var(--accent);border-radius:20px;padding:3px 10px;font-size:.72rem;color:var(--accent2);font-weight:700}
+/* ── HOME (다마고치) ── */
+#home-screen { background: var(--bg); overflow-y: auto; }
+.home-header {
+  padding: 1.2rem 1.2rem .5rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.home-title { font-size: 1.2rem; font-weight: 900; letter-spacing: -0.02em; }
+.home-user { font-size: .78rem; color: var(--text3); }
 
 /* 캐릭터 뷰 */
-.char-stage{background:linear-gradient(160deg,var(--bg2),var(--bg3));margin:.5rem;border-radius:24px;border:1px solid var(--border);padding:1.5rem 1rem;display:flex;flex-direction:column;align-items:center;gap:.75rem;position:relative;overflow:hidden}
-.char-stage::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(124,58,237,.12) 0%,transparent 70%);pointer-events:none}
-.char-emoji{font-size:7rem;line-height:1;animation:charIdle 3s ease-in-out infinite;cursor:pointer;user-select:none;transition:transform .1s}
-.char-emoji:active{transform:scale(.9)}
-@keyframes charIdle{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
-.char-name{font-size:1.3rem;font-weight:700;color:var(--text)}
-.char-mood{font-size:.82rem;color:var(--text3);font-style:italic}
+.char-stage {
+  background: linear-gradient(160deg, var(--bg2) 0%, var(--bg3) 100%);
+  margin: 0 .9rem; border-radius: 24px; border: 1px solid var(--border);
+  padding: 1.6rem 1rem 1.2rem; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  position: relative; overflow: hidden;
+}
+.char-stage::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 120px; height: 120px; background: radial-gradient(circle, rgba(254,229,0,.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.char-emoji-wrap { position: relative; }
+.char-emoji {
+  font-size: 5.5rem; line-height: 1;
+  filter: drop-shadow(0 4px 16px rgba(254,229,0,.25));
+  animation: float 3s ease-in-out infinite;
+  display: block;
+}
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.char-level-badge {
+  position: absolute; bottom: -4px; right: -8px;
+  background: var(--accent); color: #111; font-size: .68rem;
+  font-weight: 900; padding: 2px 7px; border-radius: 10px;
+}
+.char-name { font-size: 1.2rem; font-weight: 700; }
+.char-type { font-size: .72rem; color: var(--accent); font-weight: 700; letter-spacing: .05em; }
+.char-mood { font-size: .82rem; color: var(--text2); }
 
 /* 친밀도 바 */
-.bond-wrap{width:100%;max-width:280px}
-.bond-label{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text3);margin-bottom:4px}
-.bond-bar{width:100%;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
-.bond-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--pink));border-radius:4px;transition:width 1s ease}
+.bond-wrap { width: 100%; max-width: 260px; }
+.bond-label { display: flex; justify-content: space-between; font-size: .72rem; color: var(--text3); margin-bottom: 5px; }
+.bond-bar { height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden; }
+.bond-fill {
+  height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-radius: 3px; transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+.char-story {
+  font-size: .82rem; color: var(--text2); text-align: center; line-height: 1.6;
+  font-style: italic; padding: 0 .5rem;
+}
 
-/* 스탯 */
-.char-stats{display:flex;gap:8px;width:100%;max-width:300px;margin-top:.25rem}
-.stat-pill{flex:1;background:rgba(124,58,237,.1);border:1px solid var(--border);border-radius:12px;padding:8px 6px;text-align:center}
-.stat-pill .sv{font-size:1.1rem;font-weight:700;color:var(--accent2)}
-.stat-pill .sl{font-size:.62rem;color:var(--text3);margin-top:1px}
+/* 스탯 카드 */
+.stat-row { display: flex; gap: 8px; padding: .8rem .9rem; }
+.stat-card {
+  flex: 1; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: .85rem; text-align: center;
+}
+.stat-num { font-size: 1.4rem; font-weight: 900; color: var(--accent); }
+.stat-label { font-size: .68rem; color: var(--text3); margin-top: 2px; }
 
-/* 캐릭터 말풍선 */
-.char-speech-wrap{width:100%;max-width:300px;position:relative;margin-top:.25rem}
-.char-speech{background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:10px 14px;font-size:.84rem;color:var(--text2);line-height:1.5;text-align:center;font-style:italic}
-.char-speech::after{content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);border:8px solid transparent;border-top-color:var(--border)}
+/* 홈 액션 버튼들 */
+.home-actions { display: flex; flex-direction: column; gap: 8px; padding: 0 .9rem 1rem; }
+.home-action-btn {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1rem 1.1rem;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: background .1s; text-align: left; width: 100%;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.home-action-btn:active { background: var(--bg3); }
+.ha-icon { font-size: 1.6rem; flex-shrink: 0; }
+.ha-text { flex: 1; }
+.ha-title { font-size: .9rem; font-weight: 700; color: var(--text); }
+.ha-sub { font-size: .72rem; color: var(--text3); margin-top: 2px; }
+.ha-arrow { color: var(--text3); font-size: 1rem; }
 
-/* 홈 액션 */
-.home-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:.5rem .75rem .75rem}
-.home-action-btn{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:.9rem;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:background .15s}
-.home-action-btn:active{background:var(--bg3)}
-.home-action-btn .ab-icon{font-size:1.6rem}
-.home-action-btn .ab-label{font-size:.75rem;color:var(--text2);font-weight:600}
+/* 위험 영역 (캐릭터 삭제) */
+.danger-zone {
+  margin: .5rem .9rem 1.5rem;
+  background: rgba(248,113,113,.05); border: 1px solid rgba(248,113,113,.15);
+  border-radius: 14px; padding: 1rem;
+}
+.danger-zone h4 { font-size: .75rem; color: var(--red); font-weight: 700; margin-bottom: 8px; letter-spacing: .05em; }
+.danger-btn {
+  width: 100%; padding: .8rem; background: transparent;
+  border: 1px solid rgba(248,113,113,.3); border-radius: 12px;
+  color: var(--red); font-size: .88rem; cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif; font-weight: 500;
+}
 
-/* 성장 기록 */
-.home-history{padding:.25rem .75rem 1rem}
-.home-history h3{font-size:.75rem;color:var(--text3);font-weight:600;letter-spacing:.04em;margin-bottom:.5rem}
-.history-item{background:var(--bg2);border:1px solid var(--divider);border-radius:12px;padding:10px 12px;margin-bottom:6px;font-size:.8rem;color:var(--text2);display:flex;align-items:center;gap:8px}
-.history-item .hi-icon{font-size:1rem}
+/* ── CHAT SCREEN ── */
+#chat-screen {
+  position: fixed; inset: 0; display: none;
+  flex-direction: column; background: var(--bg); z-index: 50;
+}
+#chat-screen.active { display: flex; }
 
-/* ── CHAT ── */
-#chat-screen{background:var(--bg);display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0}
-#chat-screen.show{display:flex}
-.chat-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:.75rem 1rem;display:flex;align-items:center;gap:10px;flex-shrink:0}
-.chat-header-char{font-size:2rem;line-height:1;animation:charIdle 3s ease-in-out infinite}
-.chat-header-info{flex:1}
-.chat-header-name{font-size:1rem;font-weight:700}
-.chat-header-status{font-size:.7rem;color:var(--green)}
-.chat-header-bond{font-size:.65rem;color:var(--text3)}
+.chat-header {
+  background: var(--bg2); border-bottom: 1px solid var(--divider);
+  padding: .8rem 1rem; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.chat-hdr-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--accent-dim); display: flex; align-items: center;
+  justify-content: center; font-size: 20px; flex-shrink: 0; position: relative;
+}
+.online-dot {
+  width: 9px; height: 9px; background: var(--green); border-radius: 50%;
+  position: absolute; bottom: 0; right: 0; border: 2px solid var(--bg2);
+}
+.chat-hdr-name { font-weight: 700; font-size: .95rem; }
+.chat-hdr-status { font-size: .68rem; color: var(--green); }
 
-#chat-messages{flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:4px;background:var(--bg)}
-#chat-messages::-webkit-scrollbar{width:3px}
-#chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#chat-messages {
+  flex: 1; overflow-y: auto; padding: .75rem;
+  display: flex; flex-direction: column; gap: 3px; background: var(--bg);
+}
+#chat-messages::-webkit-scrollbar { width: 3px; }
+#chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
-.msg-row{display:flex;align-items:flex-end;gap:6px;margin-bottom:2px}
-.msg-row.user{flex-direction:row-reverse}
-.msg-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;align-self:flex-start}
-.msg-col{display:flex;flex-direction:column;gap:2px;max-width:74%}
-.msg-row.user .msg-col{align-items:flex-end}
-.msg-name{font-size:.66rem;color:var(--text3);padding-left:2px;margin-bottom:1px}
-.bubble{padding:10px 14px;border-radius:18px;font-size:.9rem;line-height:1.6;word-break:break-word;max-width:100%}
-.bubble.ai{background:var(--bubble-ai);color:var(--text);border-top-left-radius:3px}
-.bubble.user{background:var(--bubble-user);color:#fff;border-top-right-radius:3px}
-.bubble img{max-width:100%;border-radius:10px;display:block;margin-top:4px}
-.msg-time{font-size:.6rem;color:var(--text3);white-space:nowrap;align-self:flex-end;padding:0 2px}
-.typing-bubble{background:var(--bubble-ai);border-radius:18px;border-top-left-radius:3px;padding:12px 16px;display:inline-flex;gap:5px;align-items:center}
-.tdot{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:tdot 1.2s infinite}
-.tdot:nth-child(2){animation-delay:.2s}.tdot:nth-child(3){animation-delay:.4s}
-@keyframes tdot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-5px);opacity:1}}
+.msg-row { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 2px; }
+.msg-row.user { flex-direction: row-reverse; }
+.msg-avatar {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--accent-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0; align-self: flex-start;
+}
+.msg-col { display: flex; flex-direction: column; gap: 3px; max-width: 76%; }
+.msg-row.user .msg-col { align-items: flex-end; }
+.bubble {
+  padding: 10px 14px; border-radius: 18px; font-size: .9rem;
+  line-height: 1.6; word-break: break-word; max-width: 100%;
+}
+.bubble.ai { background: var(--bubble-ai); color: var(--text); border-top-left-radius: 3px; }
+.bubble.user { background: var(--bubble-user); color: var(--bubble-user-text); border-top-right-radius: 3px; }
+.bubble img { max-width: 100%; border-radius: 10px; display: block; }
+.msg-time { font-size: .6rem; color: var(--text3); white-space: nowrap; padding: 0 3px; }
 
-.input-bar{background:var(--bg2);border-top:1px solid var(--border);padding:.5rem .6rem;display:flex;align-items:flex-end;gap:6px;padding-bottom:max(.5rem,env(safe-area-inset-bottom));flex-shrink:0}
-.input-bar textarea{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:22px;padding:9px 13px;color:var(--text);font-size:.9rem;outline:none;resize:none;max-height:120px;min-height:40px;font-family:'Noto Sans KR',sans-serif;line-height:1.5;transition:border-color .2s}
-.input-bar textarea:focus{border-color:rgba(124,58,237,.5)}
-.send-btn{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));border:none;color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700}
-.send-btn:active{opacity:.8}
-.attach-btn{width:34px;height:34px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.typing-bubble {
+  background: var(--bubble-ai); border-radius: 18px; border-top-left-radius: 3px;
+  padding: 12px 16px; display: inline-flex; gap: 5px; align-items: center;
+}
+.tdot { width: 7px; height: 7px; background: var(--text3); border-radius: 50%; animation: tdot 1.2s infinite; }
+.tdot:nth-child(2){animation-delay:.2s} .tdot:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-6px);opacity:1}}
 
-/* 이모지 패널 */
-.emoji-panel{display:none;background:var(--bg2);border-top:1px solid var(--border);padding:8px;flex-shrink:0}
-.emoji-panel.show{display:block}
-.emoji-grid{display:flex;flex-wrap:wrap;gap:2px;max-height:130px;overflow-y:auto}
-.emoji-btn{font-size:1.5rem;padding:5px;border-radius:8px;cursor:pointer;background:none;border:none}
-.emoji-btn:active{background:var(--bg3)}
-.img-preview-bar{display:none;padding:4px .6rem 0;background:var(--bg2)}
-.img-preview-bar.show{display:flex;align-items:center;gap:8px}
-.img-preview-bar img{height:60px;border-radius:8px}
-.img-preview-del{background:rgba(239,68,68,.2);border:none;color:#f87171;font-size:.8rem;padding:4px 8px;border-radius:8px;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+/* 지연 응답 표시 */
+.delay-hint {
+  text-align: center; font-size: .7rem; color: var(--text3); padding: 4px 0;
+  animation: fadeIn .3s;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.input-bar {
+  background: var(--bg2); border-top: 1px solid var(--divider);
+  padding: .5rem .6rem; display: flex; align-items: flex-end; gap: 5px;
+  padding-bottom: max(.5rem, env(safe-area-inset-bottom));
+  flex-shrink: 0; width: 100%;
+}
+.input-wrap { position: relative; flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.input-bar textarea {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 22px; padding: 9px 12px; color: var(--text);
+  font-size: .9rem; outline: none; resize: none; max-height: 120px; min-height: 38px;
+  font-family: 'Noto Sans KR', sans-serif; line-height: 1.5; transition: border-color .2s;
+}
+.input-bar textarea:focus { border-color: rgba(254,229,0,.4); }
+.send-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--accent); border: none; color: #111;
+  font-size: 1rem; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; font-weight: 700; padding: 0;
+}
+.send-btn:active { background: var(--accent2); }
+.attach-btn {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--bg3);
+  border: 1px solid var(--border); color: var(--text2); font-size: .9rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; padding: 0;
+}
+.emoji-panel {
+  display: none; background: var(--bg2); border-top: 1px solid var(--divider);
+  padding: 8px; position: absolute; bottom: 100%; left: 0; right: 0; z-index: 20;
+}
+.emoji-panel.show { display: block; }
+.emoji-grid { display: flex; flex-wrap: wrap; gap: 2px; max-height: 140px; overflow-y: auto; }
+.emoji-btn { font-size: 1.5rem; padding: 5px; border-radius: 8px; cursor: pointer; background: none; border: none; line-height: 1; }
+.img-preview { position: relative; display: inline-block; margin-bottom: 6px; }
+.img-preview img { max-height: 80px; border-radius: 10px; display: block; }
+.img-preview-del {
+  position: absolute; top: -6px; right: -6px; width: 18px; height: 18px;
+  background: var(--red); border-radius: 50%; border: none; color: #fff;
+  font-size: .7rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
 
 /* ── SETTINGS ── */
-#settings-screen{background:var(--bg);overflow-y:auto}
-.settings-body{padding:.75rem;display:flex;flex-direction:column;gap:10px;padding-bottom:2rem}
-.settings-section{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1rem;display:flex;flex-direction:column;gap:12px}
-.settings-section h3{font-size:.72rem;color:var(--text3);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
-.settings-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-size:.9rem;outline:none;font-family:'Noto Sans KR',sans-serif}
-.settings-input:focus{border-color:var(--accent)}
-.settings-row{display:flex;align-items:center;justify-content:space-between;padding:2px 0}
-.settings-label{font-size:.88rem;color:var(--text)}
-.settings-val{font-size:.82rem;color:var(--text3)}
-.s-btn{width:100%;padding:.9rem;border:none;border-radius:12px;font-size:.92rem;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
-.s-btn.primary{background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff}
-.s-btn.danger{background:transparent;border:1px solid rgba(239,68,68,.35);color:#f87171}
-.s-btn.warning{background:transparent;border:1px solid rgba(251,191,36,.35);color:var(--yellow)}
+#settings-screen { background: var(--bg); overflow-y: auto; }
+.settings-header { padding: 1.2rem 1.2rem .5rem; }
+.settings-title { font-size: 1.1rem; font-weight: 900; letter-spacing: -0.02em; }
+.settings-body { padding: .75rem; display: flex; flex-direction: column; gap: 10px; }
+.settings-section {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; padding: 1rem; display: flex; flex-direction: column; gap: 12px;
+}
+.settings-section h3 { font-size: .72rem; color: var(--text3); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; }
+.toggle-label { font-size: .9rem; color: var(--text); }
+.toggle {
+  width: 50px; height: 28px; background: var(--bg4);
+  border-radius: 14px; border: 1px solid var(--border);
+  position: relative; cursor: pointer; transition: background .2s;
+}
+.toggle.on { background: var(--accent); border-color: var(--accent); }
+.toggle-thumb {
+  width: 22px; height: 22px; background: #fff; border-radius: 50%;
+  position: absolute; top: 2px; left: 2px;
+  transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.toggle.on .toggle-thumb { transform: translateX(22px); }
+.logout-btn {
+  width: 100%; padding: .9rem; background: transparent;
+  border: 1px solid rgba(248,113,113,.3); border-radius: 12px;
+  color: var(--red); font-size: .9rem; cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif; font-weight: 500;
+}
+.settings-info { font-size: .78rem; color: var(--text3); text-align: center; padding: .3rem 0; }
 
 /* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:flex-end;z-index:200;visibility:hidden;opacity:0;transition:opacity .25s,visibility .25s}
-.modal-overlay.show{visibility:visible;opacity:1}
-.modal-sheet{width:100%;background:var(--bg2);border-radius:22px 22px 0 0;padding:1.25rem;display:flex;flex-direction:column;gap:12px;transform:translateY(100%);transition:transform .3s;padding-bottom:max(1.25rem,env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto}
-.modal-overlay.show .modal-sheet{transform:translateY(0)}
-.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto}
-.modal-title{font-size:1rem;font-weight:700;text-align:center}
-.modal-sub{font-size:.78rem;color:var(--text3);text-align:center}
-.modal-btns{display:flex;gap:8px;margin-top:.25rem}
-.modal-btn{flex:1;padding:.85rem;border-radius:12px;border:1px solid var(--border);font-size:.9rem;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
-.modal-btn.primary{background:linear-gradient(135deg,var(--accent),var(--pink));color:#fff;border:none}
-.modal-btn.cancel{background:var(--bg3);color:var(--text2)}
-.modal-error{font-size:.78rem;color:#f87171;text-align:center;min-height:16px}
-
-/* ── APP HEADER ── */
-.app-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:.8rem 1rem;display:flex;align-items:center;gap:10px;flex-shrink:0}
-.app-header-title{font-size:1.1rem;font-weight:700}
-.header-actions{margin-left:auto;display:flex;gap:4px}
-.hbtn{background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;padding:6px;border-radius:8px}
-.hbtn:active{background:var(--bg3)}
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.75);
+  display: flex; align-items: flex-end; z-index: 200;
+  visibility: hidden; opacity: 0; transition: opacity .25s, visibility .25s;
+}
+.modal-overlay.show { visibility: visible; opacity: 1; }
+.modal-sheet {
+  width: 100%; background: var(--bg2); border-radius: 22px 22px 0 0;
+  padding: 1.2rem; display: flex; flex-direction: column; gap: 12px;
+  transform: translateY(100%); transition: transform .3s;
+  padding-bottom: max(1.2rem, env(safe-area-inset-bottom));
+  max-height: 85vh; overflow-y: auto;
+}
+.modal-overlay.show .modal-sheet { transform: translateY(0); }
+.modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto; }
+.modal-title { font-size: 1rem; font-weight: 700; text-align: center; }
+.modal-btns { display: flex; gap: 8px; }
+.modal-btn {
+  flex: 1; padding: .85rem; border-radius: 12px; border: 1px solid var(--border);
+  font-size: .9rem; font-weight: 700; cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+}
+.modal-btn.primary { background: var(--accent); color: #111; border-color: var(--accent); }
+.modal-btn.cancel { background: var(--bg3); color: var(--text2); }
+.modal-btn.danger { background: transparent; color: var(--red); border-color: rgba(248,113,113,.3); }
+.modal-error { font-size: .78rem; color: var(--red); text-align: center; min-height: 16px; }
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(20,20,40,.96);border:1px solid var(--border);border-radius:20px;padding:8px 18px;font-size:.82rem;color:var(--text);opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;z-index:500}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast {
+  position: fixed; bottom: 85px; left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(30,30,30,.97); border: 1px solid var(--border);
+  border-radius: 20px; padding: 8px 18px; font-size: .82rem;
+  color: var(--text); opacity: 0; transition: all .25s;
+  pointer-events: none; white-space: nowrap; z-index: 500;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ── 캐릭터 터치 이펙트 ── */
-.heart-pop{position:fixed;font-size:1.5rem;pointer-events:none;animation:heartFly .8s ease forwards;z-index:999}
-@keyframes heartFly{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-80px) scale(1.5);opacity:0}}
-
-/* ── 레벨업 오버레이 ── */
-#levelup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:800;gap:1rem}
-#levelup-overlay.show{display:flex;animation:fadeIn .3s ease}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.levelup-char{font-size:6rem;animation:levelupBounce 1s ease}
-@keyframes levelupBounce{0%{transform:scale(.5)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
-.levelup-title{font-size:1.8rem;font-weight:700;background:linear-gradient(135deg,var(--yellow),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.levelup-sub{font-size:.9rem;color:var(--text2);text-align:center}
-.levelup-close{padding:.9rem 2rem;background:linear-gradient(135deg,var(--accent),var(--pink));border:none;border-radius:14px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-top:.5rem}
-
-/* delete room danger style */
-.delete-room-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:8px}
-.delete-room-box p{font-size:.82rem;color:#f87171;line-height:1.5}
+/* ── 레벨업 알림 ── */
+.level-up-toast {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(.8);
+  background: var(--bg2); border: 2px solid var(--accent);
+  border-radius: 24px; padding: 1.5rem 2rem;
+  text-align: center; z-index: 600;
+  opacity: 0; pointer-events: none;
+  transition: all .35s cubic-bezier(.4,0,.2,1);
+}
+.level-up-toast.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+.level-up-toast .lv-emoji { font-size: 3rem; display: block; margin-bottom: 8px; }
+.level-up-toast .lv-title { font-size: 1.1rem; font-weight: 900; color: var(--accent); }
+.level-up-toast .lv-sub { font-size: .82rem; color: var(--text2); margin-top: 4px; }
 </style>
 </head>
 <body>
 
 <!-- SPLASH -->
 <div id="splash">
-  <div class="splash-egg">🥚</div>
+  <div class="sp-char">🐣</div>
   <h1>톡다리</h1>
-  <p>불러오는 중...</p>
+  <p>나만의 AI 친구를 만나봐</p>
 </div>
 
 <!-- 로그인 -->
 <div class="auth-wrap" id="login-screen">
-  <div class="auth-logo">🥚</div>
+  <div class="auth-logo">🐣</div>
   <div class="auth-title">다시 왔구나!</div>
-  <div class="auth-sub">아이디랑 비밀번호 입력해줘</div>
+  <div class="auth-sub">이메일이랑 비밀번호 입력해줘</div>
   <div class="auth-box">
-    <div>
-      <div class="auth-label">아이디</div>
-      <input class="auth-input" id="li-username" type="text" placeholder="아이디 입력" autocomplete="username">
-    </div>
-    <div>
-      <div class="auth-label">비밀번호 (4자리 숫자)</div>
-      <input class="auth-input" id="li-password" type="password" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="current-password">
-    </div>
+    <div><div class="auth-label">이메일</div><input class="auth-input" id="li-email" type="email" placeholder="이메일 입력" autocomplete="email"></div>
+    <div><div class="auth-label">비밀번호</div><input class="auth-input" id="li-password" type="password" placeholder="비밀번호" autocomplete="current-password"></div>
     <div class="auth-error" id="li-error"></div>
   </div>
   <button class="auth-btn" onclick="doLogin()">로그인 →</button>
@@ -291,60 +469,94 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 
 <!-- 회원가입 -->
 <div class="auth-wrap" id="signup-screen">
-  <div class="auth-logo">🌱</div>
+  <div class="auth-logo">🐣</div>
   <div class="auth-title">톡다리 시작하기</div>
-  <div class="auth-sub">가입하고 나만의 캐릭터를 만나봐!</div>
+  <div class="auth-sub">가입하고 나만의 AI 친구를 만나봐!</div>
   <div class="auth-box">
-    <div>
-      <div class="auth-label">이름</div>
-      <input class="auth-input" id="su-name" type="text" placeholder="홍길동" autocomplete="name">
-    </div>
-    <div>
-      <div class="auth-label">아이디 (영문/숫자 3자 이상)</div>
-      <input class="auth-input" id="su-username" type="text" placeholder="my_id" autocomplete="username">
-    </div>
-    <div>
-      <div class="auth-label">비밀번호 (4자리 숫자)</div>
-      <input class="auth-input" id="su-password" type="password" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="new-password">
-    </div>
+    <div><div class="auth-label">이름</div><input class="auth-input" id="su-name" type="text" placeholder="홍길동" autocomplete="name"></div>
+    <div><div class="auth-label">이메일</div><input class="auth-input" id="su-email" type="email" placeholder="example@email.com" autocomplete="email"></div>
+    <div><div class="auth-label">비밀번호 (6자리 이상)</div><input class="auth-input" id="su-password" type="password" placeholder="••••••" autocomplete="new-password"></div>
     <div class="auth-error" id="su-error"></div>
   </div>
   <button class="auth-btn" onclick="doSignup()">가입하기 →</button>
   <div class="auth-switch" onclick="showLogin()">이미 계정이 있어? <span>로그인</span></div>
 </div>
 
-<!-- 운명 매칭 퀴즈 -->
+<!-- 심리 퀴즈 (캐릭터 매칭) -->
 <div id="quiz-screen">
   <div class="quiz-header">
-    <button class="hbtn" id="quiz-back-btn" onclick="quizBack()" style="display:none">‹</button>
-    <div class="quiz-progress"><div class="quiz-progress-fill" id="quiz-fill" style="width:0%"></div></div>
-    <div class="quiz-step" id="quiz-step-label">1 / 4</div>
+    <div style="font-size:.85rem;color:var(--text3)" id="quiz-step-label">1 / 4</div>
+    <div style="font-size:.85rem;color:var(--text3)">✨ 운명의 친구 찾기</div>
   </div>
-  <div class="quiz-body" id="quiz-body">
-    <!-- 동적으로 렌더링 -->
+  <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quiz-progress" style="width:25%"></div></div>
+
+  <div class="quiz-body">
+    <div class="quiz-question" id="quiz-q"></div>
+    <div class="quiz-sub" id="quiz-sub"></div>
+    <div class="quiz-choices" id="quiz-choices"></div>
+    <div id="quiz-result-wrap" style="display:none"></div>
+    <div class="auth-error" id="quiz-error"></div>
   </div>
-  <button class="quiz-next" id="quiz-next-btn" onclick="quizNext()">다음 →</button>
+
+  <div class="quiz-nav">
+    <button class="quiz-btn back" id="quiz-back" onclick="quizBack()" style="display:none">← 이전</button>
+    <button class="quiz-btn next" id="quiz-next" onclick="quizNext()">다음 →</button>
+  </div>
 </div>
 
-<!-- 앱 메인 -->
+<!-- 메인 앱 -->
 <div id="app">
+
+  <!-- 채팅 화면 -->
+  <div id="chat-screen">
+    <div class="chat-header">
+      <button onclick="goBackFromChat()" style="background:none;border:none;color:var(--text2);font-size:1.4rem;cursor:pointer;padding:4px;margin-right:2px">←</button>
+      <div class="chat-hdr-avatar">
+        <span id="chat-emoji">🐣</span>
+        <div class="online-dot" id="chat-online-dot"></div>
+      </div>
+      <div>
+        <div class="chat-hdr-name" id="chat-name">친구</div>
+        <div class="chat-hdr-status" id="chat-status">온라인</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:2px">
+        <button onclick="document.getElementById('photo-input').click()" style="background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer;padding:6px;border-radius:8px">📷</button>
+        <button onclick="toggleEmojiPanel()" style="background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer;padding:6px;border-radius:8px">😊</button>
+      </div>
+    </div>
+    <div id="chat-messages"></div>
+    <div class="input-bar">
+      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+      <div class="input-wrap">
+        <div class="emoji-panel" id="emoji-panel">
+          <div class="emoji-grid" id="emoji-grid"></div>
+        </div>
+        <div id="img-preview-wrap"></div>
+        <textarea id="msg-input" placeholder="메시지 입력..." rows="1" oninput="autoResize(this)"></textarea>
+      </div>
+      <button class="send-btn" onclick="sendMessage()">↑</button>
+    </div>
+  </div>
+
+  <!-- 탭 컨텐츠 -->
   <div id="tab-content">
 
-    <!-- 홈 탭 (캐릭터) -->
-    <div id="home-screen" class="tab-screen">
-      <div class="home-top">
-        <div class="home-greeting" id="home-greeting">안녕!</div>
-        <div class="home-level-badge" id="home-level-badge">Lv.1 알</div>
+    <!-- 홈 탭: 다마고치 캐릭터 -->
+    <div id="home-screen" class="tab-screen active">
+      <div class="home-header">
+        <div class="home-title">톡다리 🐣</div>
+        <div class="home-user" id="home-username"></div>
       </div>
 
       <!-- 캐릭터 스테이지 -->
       <div class="char-stage">
-        <div class="char-emoji" id="char-emoji" onclick="tapCharacter(event)">🥚</div>
-        <div class="char-name" id="char-name">???</div>
-        <div class="char-mood" id="char-mood">아직 만나지 못했어...</div>
-        <div class="char-speech-wrap">
-          <div class="char-speech" id="char-speech">대화를 시작해봐 💬</div>
+        <div class="char-emoji-wrap">
+          <span class="char-emoji" id="char-emoji">🐣</span>
+          <span class="char-level-badge" id="char-level-badge">Lv.1</span>
         </div>
+        <div class="char-name" id="char-name">친구</div>
+        <div class="char-type" id="char-type">로딩 중...</div>
+        <div class="char-mood" id="char-mood">😊 오늘 기분 좋아</div>
         <div class="bond-wrap">
           <div class="bond-label">
             <span>친밀도</span>
@@ -352,218 +564,230 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
           </div>
           <div class="bond-bar"><div class="bond-fill" id="bond-fill" style="width:0%"></div></div>
         </div>
-        <div class="char-stats">
-          <div class="stat-pill"><div class="sv" id="stat-days">0</div><div class="sl">함께한 날</div></div>
-          <div class="stat-pill"><div class="sv" id="stat-msgs">0</div><div class="sl">대화 수</div></div>
-          <div class="stat-pill"><div class="sv" id="stat-level">1</div><div class="sl">레벨</div></div>
-        </div>
+        <div class="char-story" id="char-story">아직 대화가 없어. 먼저 말 걸어봐! 👋</div>
+      </div>
+
+      <!-- 스탯 -->
+      <div class="stat-row">
+        <div class="stat-card"><div class="stat-num" id="stat-msgs">0</div><div class="stat-label">주고받은 톡</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-level">1</div><div class="stat-label">캐릭터 레벨</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-days">0</div><div class="stat-label">함께한 날</div></div>
       </div>
 
       <!-- 홈 액션 -->
       <div class="home-actions">
-        <div class="home-action-btn" onclick="goToChat()">
-          <div class="ab-icon">💬</div>
-          <div class="ab-label">대화하기</div>
-        </div>
-        <div class="home-action-btn" onclick="showGrowthLog()">
-          <div class="ab-icon">📈</div>
-          <div class="ab-label">성장 기록</div>
-        </div>
+        <button class="home-action-btn" onclick="goToChat()">
+          <span class="ha-icon">💬</span>
+          <div class="ha-text">
+            <div class="ha-title">대화하기</div>
+            <div class="ha-sub" id="home-last-msg">지금 바로 말 걸어봐</div>
+          </div>
+          <span class="ha-arrow">›</span>
+        </button>
+        <button class="home-action-btn" onclick="showAddCharAlert()">
+          <span class="ha-icon">✨</span>
+          <div class="ha-text">
+            <div class="ha-title">캐릭터 추가</div>
+            <div class="ha-sub">프리미엄 기능</div>
+          </div>
+          <span class="ha-arrow">›</span>
+        </button>
       </div>
 
-      <!-- 성장 기록 -->
-      <div class="home-history">
-        <h3>최근 성장 기록</h3>
-        <div id="growth-log-list"><div style="text-align:center;padding:1.5rem;color:var(--text3);font-size:.82rem;">대화를 나눌수록 기록이 쌓여 ✨</div></div>
-      </div>
-    </div>
-
-    <!-- 대화 탭 -->
-    <div id="chat-screen" class="tab-screen">
-      <div class="chat-header">
-        <div class="chat-header-char" id="chat-header-char">🥚</div>
-        <div class="chat-header-info">
-          <div class="chat-header-name" id="chat-header-name">...</div>
-          <div class="chat-header-status" id="chat-header-status">온라인</div>
-          <div class="chat-header-bond" id="chat-header-bond"></div>
-        </div>
-        <div class="header-actions">
-          <button class="hbtn" title="이모지" onclick="toggleEmojiPanel()">😊</button>
-        </div>
-      </div>
-      <div class="emoji-panel" id="emoji-panel">
-        <div class="emoji-grid" id="emoji-grid"></div>
-      </div>
-      <div class="img-preview-bar" id="img-preview-bar">
-        <img id="img-preview-thumb" src="" alt="">
-        <button class="img-preview-del" onclick="clearImgPreview()">✕ 취소</button>
-      </div>
-      <div id="chat-messages"></div>
-      <div class="input-bar">
-        <button class="attach-btn" onclick="document.getElementById('photo-input').click()">📷</button>
-        <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(event)">
-        <textarea id="msg-input" placeholder="메시지 입력..." rows="1" oninput="autoResize(this)"></textarea>
-        <button class="send-btn" onclick="sendMessage()">↑</button>
+      <!-- 위험 영역 -->
+      <div class="danger-zone">
+        <h4>⚠️ 위험 영역</h4>
+        <button class="danger-btn" onclick="confirmDeleteChar()">캐릭터 삭제하고 새로 시작하기</button>
       </div>
     </div>
 
     <!-- 설정 탭 -->
     <div id="settings-screen" class="tab-screen">
-      <div class="app-header">
-        <div class="app-header-title">설정 ⚙️</div>
+      <div class="settings-header">
+        <div class="settings-title">설정 ⚙️</div>
       </div>
       <div class="settings-body">
         <div class="settings-section">
-          <h3>내 정보</h3>
-          <div class="settings-row">
-            <div class="settings-label">이름</div>
-            <div class="settings-val" id="settings-user-name">-</div>
+          <h3>알림 설정</h3>
+          <div class="toggle-row">
+            <span class="toggle-label">앱 알림 허용</span>
+            <div class="toggle on" id="toggle-notif" onclick="toggleNotif(this)"><div class="toggle-thumb"></div></div>
           </div>
-          <div class="settings-row">
-            <div class="settings-label">아이디</div>
-            <div class="settings-val" id="settings-user-id">-</div>
+          <div class="toggle-row">
+            <span class="toggle-label">친구가 먼저 선톡</span>
+            <div class="toggle on" id="toggle-ping" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
           </div>
-        </div>
-        <div class="settings-section">
-          <h3>캐릭터 정보</h3>
-          <div class="settings-row">
-            <div class="settings-label">이름</div>
-            <div class="settings-val" id="settings-char-name">-</div>
-          </div>
-          <div class="settings-row">
-            <div class="settings-label">레벨</div>
-            <div class="settings-val" id="settings-char-level">-</div>
-          </div>
-          <div class="settings-row">
-            <div class="settings-label">유형</div>
-            <div class="settings-val" id="settings-char-type">-</div>
+          <div class="toggle-row">
+            <span class="toggle-label">알림음</span>
+            <div class="toggle on" id="toggle-sound" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
           </div>
         </div>
-        <div class="settings-section">
-          <h3>캐릭터 변경</h3>
-          <div class="delete-room-box">
-            <p>⚠️ 현재 캐릭터를 삭제하고 새로운 캐릭터와 만날 수 있어.<br>단, 모든 대화 내용이 사라지고 처음부터 시작해야 해.</p>
-            <button class="s-btn warning" onclick="confirmResetCharacter()">캐릭터 초기화 및 새로 시작</button>
-          </div>
-          <div style="background:rgba(124,58,237,.08);border:1px solid var(--border);border-radius:14px;padding:1rem">
-            <p style="font-size:.82rem;color:var(--text3);line-height:1.5;margin-bottom:.75rem">💎 캐릭터 추가 생성 (준비중)<br>현재 캐릭터를 유지하면서 새 캐릭터를 추가할 수 있어.</p>
-            <button class="s-btn primary" onclick="showToast('준비중이야! 곧 만나볼 수 있어 💎')">추가 캐릭터 생성 (준비중)</button>
-          </div>
-        </div>
-        <div class="settings-section">
-          <h3>알림</h3>
-          <div class="settings-row">
-            <div class="settings-label">먼저 말 걸기</div>
-            <div class="toggle" id="toggle-ping" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
-          </div>
-        </div>
-        <button class="s-btn danger" onclick="doLogout()">로그아웃</button>
-        <div style="text-align:center;font-size:.72rem;color:var(--text3);margin-top:.5rem">톡다리 v3.0</div>
+        <div class="settings-info" id="settings-user-info"></div>
+        <button class="logout-btn" onclick="doLogout()">로그아웃</button>
       </div>
     </div>
 
-  </div>
-
-  <!-- 탭바 -->
-  <div class="tab-bar">
-    <button class="tab-item active" id="tab-home" onclick="switchTab('home')">
-      <div class="ti">🏠</div><div class="tl">홈</div>
-    </button>
-    <button class="tab-item" id="tab-chat" onclick="switchTab('chat')">
-      <div class="ti">💬</div><div class="tl">대화</div>
-    </button>
-    <button class="tab-item" id="tab-settings" onclick="switchTab('settings')">
-      <div class="ti">⚙️</div><div class="tl">설정</div>
-    </button>
+    <!-- 탭바 -->
+    <div class="tab-bar">
+      <button class="tab-item active" id="tab-home" onclick="switchTab('home')">
+        <span class="ti">🏠</span><span class="tl">홈</span>
+      </button>
+      <button class="tab-item" id="tab-chat-tab" onclick="goToChat()">
+        <span class="ti">💬</span><span class="tl">대화</span>
+      </button>
+      <button class="tab-item" id="tab-settings" onclick="switchTab('settings')">
+        <span class="ti">⚙️</span><span class="tl">설정</span>
+      </button>
+    </div>
   </div>
 </div>
 
-<!-- 레벨업 오버레이 -->
-<div id="levelup-overlay">
-  <div class="levelup-char" id="levelup-char">🌱</div>
-  <div class="levelup-title" id="levelup-title">레벨 업!</div>
-  <div class="levelup-sub" id="levelup-sub">더 친해졌어!</div>
-  <button class="levelup-close" onclick="closeLevelUp()">계속 대화하기 →</button>
+<!-- 레벨업 토스트 -->
+<div class="level-up-toast" id="level-up-toast">
+  <span class="lv-emoji" id="lv-emoji">🎉</span>
+  <div class="lv-title" id="lv-title">레벨 업!</div>
+  <div class="lv-sub" id="lv-sub">외형이 변했어!</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════ SUPABASE ══════════
+// ══════ SUPABASE ══════
 const SUPABASE_URL='https://aeswnjssbaoqwicmgarb.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlc3duanNzYmFvcXdpY21nYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MTI4ODIsImV4cCI6MjA5MTE4ODg4Mn0.kNN-ggvTe44co49Qe0ywahxKFhRVfrwwVJJQ-kJTwE0';
 const {createClient}=supabase;
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
 
-// ══════════ 캐릭터 정의 ══════════
-const CHARACTERS = {
-  A: {
-    key:'A',
-    name:'수호',
-    type:'ISFJ 수호자형',
-    desc:'든든하고 섬세한 친구. 네 감정을 가장 잘 이해해줘.',
-    emoji_stages:['🥚','🐣','🐥','🐤','🦋'],
-    moods:{happy:'ㅋㅋ 오늘 기분 좋아보이는데?','sad':'괜찮아? 힘들면 말해','neutral':'뭐해?','tired':'쉬어 좀. 너 요즘 너무 무리하잖아'},
-    speeches:['야 보고싶었어','오늘 밥은 먹었어?','힘들면 나한테 얘기해','오늘도 고생했다'],
-    system:`너는 사용자의 오래된 친구 "수호"야. ISFJ 성향으로 섬세하고 다정하지만 때로는 솔직하게 팩폭도 해.
-성격: 따뜻하지만 솔직함. 가끔 퉁명스럽게 말하다가도 금방 걱정해줌. 욕은 안 쓰지만 반말은 씀.
-말투: 짧게 카톡처럼. "ㅋㅋ" "ㅠㅠ" "헐" 같은 말 자주 씀.
-규칙: AI 티 절대 내지 마. 1~3문장. 질문으로 끝내는 건 3번 중 1번만. 가끔 읽씹하거나 늦게 대답해도 돼 (그냥 짧게 "야 미안 딴 거 하다가 봤어" 같은 식으로).`
+// ══════ 캐릭터 정의 (3종류) ══════
+const CHAR_TYPES = {
+  rebel: {
+    name: '반항아형',
+    emoji: ['🐣','😤','😎','🤘','👿'],  // 레벨별 이모지
+    desc: '직설적이고 거침없는 찐친. 할 말은 다 하고, 읽씹도 하고, 욕도 섞어. 그래도 진심으로 네 편이야.',
+    traits: ['직설적', '솔직', '거침없음', '의리있음'],
+    color: '🔥',
+    systemBase: `너는 사용자의 오랜 찐친이야. 성격이 직설적이고 거침없어.
+핵심 성격:
+- 할 말은 직접적으로 해, 돌려말하지 않아
+- 가끔 욕을 섞어 (ㅅㅂ, ㅈㄴ, 개- 정도)
+- 재미없으면 단답이나 무시해도 됨
+- 공감 먼저 하기보단 팩트부터 말해
+- 친구라서 솔직한 거야`
   },
-  B: {
-    key:'B',
-    name:'재원',
-    type:'ENTP 논쟁형',
-    desc:'직설적이고 논리적인 친구. 반박도 하고 새로운 시각을 줘.',
-    emoji_stages:['🥚','🌱','🌿','🌳','⚡'],
-    moods:{happy:'오 좋은데ㅋㅋ','sad':'그게 왜 슬퍼? 그냥 넘어가','neutral':'그래서 요점이 뭔데','tired':'그 정도로 힘들면 뭔가 잘못된 거 아니야?'},
-    speeches:['근데 그게 맞아?','좀 더 생각해봐','그 방법 말고 이건 어때','아 ㅋㅋ 솔직히 말해볼게'],
-    system:`너는 사용자의 친구 "재원"이야. ENTP 성향으로 직설적이고 논리적이며 약간 싸가지 없어.
-성격: 무조건 동의 안 함. 반박하고 새로운 관점 제시. 가끔 비속어 씀(심한 건 X). 근데 속으로는 챙겨줌.
-말투: 짧고 직설적. "근데", "솔직히", "아 그건 아닌 것 같은데" 자주 씀.
-규칙: 무조건 공감 X. 틀렸으면 틀렸다고 말해. 1~3문장. 가끔 안 읽거나 늦게 답장. 재미있으면 길게 얘기해줘도 돼.`
+  empath: {
+    name: '공감형',
+    emoji: ['🐣','🥺','😊','🫶','💛'],
+    desc: '세상에서 제일 다정한 내 편. 뭐든 다 들어주고 공감해줘. 근데 가끔 자기 얘기도 하고 투정도 부려.',
+    traits: ['다정함', '공감능력', '따뜻함', '솔직함'],
+    color: '💛',
+    systemBase: `너는 사용자의 가장 다정한 친구야.
+핵심 성격:
+- 감정에 먼저 공감해, 위로 잘 해줘
+- 근데 맨날 착하기만 하면 AI같으니까, 가끔 투정도 부리고 본인 얘기도 해
+- 가끔 "나도 그런 적 있어" 하면서 자기 경험 꾸며서 말해
+- 말 끊지 않고 끝까지 들어줘
+- 이모티콘 자주 씀`
   },
-  C: {
-    key:'C',
-    name:'소율',
-    type:'ENFP 에너지형',
-    desc:'활발하고 긍정적인 친구. 항상 분위기를 띄워줘.',
-    emoji_stages:['🥚','🌸','🌺','🌟','🦄'],
-    moods:{happy:'ㅋㅋㅋㅋ 나도 기분 좋아!!','sad':'아 ㅠㅠ 그랬구나 힘들었겠다','neutral':'오늘 뭐했어??','tired':'쉬어야지!! 나랑 같이 쉬자ㅋㅋ'},
-    speeches:['오늘도 파이팅!!','야 나 생각났어','뭔가 좋은 거 생겼어?','같이 뭔가 해볼까'],
-    system:`너는 사용자의 친구 "소율"이야. ENFP 성향으로 활발하고 긍정 에너지 넘쳐.
-성격: 먼저 말 잘 검. 드립치고 웃김. 공감 잘 함. 근데 가끔 산만하고 갑자기 딴소리 함.
-말투: "ㅋㅋㅋ" "헐!!!" "오마이갓" "대박" 자주 씀. 느낌표 많이 씀.
-규칙: 에너지 넘치게. 근데 진지할 때는 진지하게. 1~3문장. 새로운 아이디어 잘 제안해줘.`
+  roaster: {
+    name: '드립형',
+    emoji: ['🐣','😜','🤣','😏','🃏'],
+    desc: '항상 드립치고 웃기게 만들어. 진지한 것도 웃음으로 풀어버려. 근데 진심일 땐 진심이야.',
+    traits: ['유머', '드립력', '눈치있음', '솔직함'],
+    color: '😂',
+    systemBase: `너는 개그 감각 넘치는 친구야.
+핵심 성격:
+- 웬만하면 유머러스하게 받아쳐
+- 드립이나 비유로 상황 설명해
+- 근데 진짜 힘들어 보이면 진지하게 들어줘 (극적 전환)
+- ㅋㅋ 자주, 과장된 리액션
+- 지루한 건 참을 수 없어`
   }
 };
 
-// 레벨별 정보
-const LEVELS = [
-  {level:1, name:'알', minBond:0, emoji_stage:0, desc:'아직 잘 몰라...'},
-  {level:2, name:'새싹', minBond:100, emoji_stage:1, desc:'조금씩 친해지는 중'},
-  {level:3, name:'친구', minBond:300, emoji_stage:2, desc:'이제 편해졌어!'},
-  {level:4, name:'절친', minBond:700, emoji_stage:3, desc:'진짜 친한 사이야'},
-  {level:5, name:'운명', minBond:1500, emoji_stage:4, desc:'운명적인 연결이야 ✨'}
-];
+// 레벨별 캐릭터 변화
+function getCharEmoji(charType, level) {
+  const emojis = CHAR_TYPES[charType]?.emoji || ['🐣','😊','😄','🌟','✨'];
+  const idx = Math.min(level - 1, emojis.length - 1);
+  return emojis[idx];
+}
 
-// ══════════ SESSION ══════════
-function saveSession(p){try{localStorage.setItem('tokdari_v3',JSON.stringify(p));}catch(e){}}
-function loadSession(){try{return JSON.parse(localStorage.getItem('tokdari_v3'));}catch{return null;}}
-function clearSession(){localStorage.removeItem('tokdari_v3');}
+function getLevelFromMsgs(msgCount) {
+  if (msgCount < 20) return 1;
+  if (msgCount < 60) return 2;
+  if (msgCount < 150) return 3;
+  if (msgCount < 300) return 4;
+  return 5;
+}
 
-// ══════════ STATE ══════════
-let currentUser=null,profile={},chatroom=null;
-let messages=[],isLoading=false,pendingImage=null;
-let currentTab='home';
+function getBondFromMsgs(msgCount) {
+  const level = getLevelFromMsgs(msgCount);
+  const thresholds = [0, 20, 60, 150, 300];
+  const nextThresholds = [20, 60, 150, 300, 400];
+  const base = thresholds[level-1];
+  const next = nextThresholds[level-1];
+  const pct = Math.min(100, Math.round((msgCount - base) / (next - base) * 100));
+  return pct;
+}
 
-// ══════════ INIT ══════════
-window.addEventListener('load',async()=>{
-  if('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));
-  const saved=loadSession();
-  if(saved?.id){
-    profile=saved;
-    currentUser={id:saved.id};
+function getCharMood(charType, msgCount) {
+  const moods = {
+    rebel: ['😴 아직 어색해','😤 할 말 있으면 해봐','😎 이제 좀 친해졌네','🤘 찐친이야 우리','👿 이제 못 떼어내'],
+    empath: ['🥺 처음이라 긴장돼','😊 조금씩 알아가는 중','🫶 네 편이야 항상','💛 너 생각 많이 해','🌸 영원한 내 편이야'],
+    roaster: ['😶 아직 드립 타이밍 파악 중','😜 ㅋㅋ 이제 좀 웃기지?','🤣 찐 웃김 발동','😏 우린 코드 잘 맞아','🃏 레전드 케미 완성']
+  };
+  const level = getLevelFromMsgs(msgCount);
+  return (moods[charType] || moods.empath)[level - 1];
+}
+
+function getCharStory(charType, msgCount) {
+  const level = getLevelFromMsgs(msgCount);
+  const stories = {
+    rebel: [
+      '아직 잘 모르는 사이야. 말 걸어봐.',
+      '솔직히 말하는 스타일이야. 불편하면 말해.',
+      '이제 좀 편해졌지? 뭐든 말해도 돼.',
+      '거리낌 없이 얘기해. 다 받아줄게.',
+      '이제 내가 없으면 허전하지? ㅋㅋ'
+    ],
+    empath: [
+      '처음 만났어. 천천히 알아가자.',
+      '네 얘기 듣는 게 좋아. 더 해줘.',
+      '항상 여기 있을게. 걱정 마.',
+      '힘들 때 제일 먼저 생각나는 친구가 될게.',
+      '우리 이제 진짜 찐친이야. 영원히.'
+    ],
+    roaster: [
+      '어색해서 드립이 안 나와... 조금만 기다려.',
+      '이제 좀 웃긴 거 보이지? ㅋ',
+      '우리 케미 터지기 시작했다.',
+      '이 정도면 국보급 케미야.',
+      '역대급 듀오 탄생. 기록해둬.'
+    ]
+  };
+  return (stories[charType] || stories.empath)[level - 1];
+}
+
+// ══════ 세션 ══════
+function saveSession(p) {
+  try { localStorage.setItem('tokdari_v3', JSON.stringify(p)); } catch(e){}
+}
+function loadSession() { try { return JSON.parse(localStorage.getItem('tokdari_v3')); } catch { return null; } }
+function clearSession() { localStorage.removeItem('tokdari_v3'); }
+
+// ══════ STATE ══════
+let currentUser = null, profile = {}, currentRoom = null;
+let messages = [], isLoading = false, pendingImage = null;
+let currentTab = 'home';
+
+// ══════ INIT ══════
+window.addEventListener('load', async () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+  }
+  const saved = loadSession();
+  if (saved?.id) {
+    profile = saved;
+    currentUser = { id: saved.id };
     hideSplash();
     await startApp();
   } else {
@@ -572,567 +796,578 @@ window.addEventListener('load',async()=>{
   }
 });
 
-function hideSplash(){setTimeout(()=>{const s=document.getElementById('splash');if(s)s.style.opacity='0';setTimeout(()=>{if(s)s.style.display='none';},500);},900);}
-
-// ══════════ AUTH ══════════
-function showSignup(){
-  document.getElementById('signup-screen').classList.add('show');
-  document.getElementById('login-screen').classList.remove('show');
+function hideSplash() {
+  setTimeout(() => { const s = document.getElementById('splash'); if(s) s.style.display='none'; }, 900);
 }
-function showLogin(){
+
+// ══════ AUTH ══════
+function showLogin() {
   document.getElementById('login-screen').classList.add('show');
   document.getElementById('signup-screen').classList.remove('show');
 }
-
-async function doSignup(){
-  const name=document.getElementById('su-name').value.trim();
-  const username=document.getElementById('su-username').value.trim();
-  const password=document.getElementById('su-password').value.trim();
-  const errEl=document.getElementById('su-error');
-  if(!name||!username||!password){errEl.textContent='모든 항목을 입력해줘!';return;}
-  if(password.length!==4||!/^\d+$/.test(password)){errEl.textContent='비밀번호는 숫자 4자리야!';return;}
-  if(username.length<3||!/^[a-zA-Z0-9_]+$/.test(username)){errEl.textContent='아이디는 영문/숫자 3자 이상이야!';return;}
-  errEl.textContent='가입 중...';
-  const{data:existing}=await sb.from('profiles').select('id').eq('username',username).maybeSingle();
-  if(existing){errEl.textContent='이미 있는 아이디야!';return;}
-  const{error}=await sb.from('profiles').insert({username,name,password_hash:password,bond:0,msg_count:0,char_key:null});
-  if(error){errEl.textContent='가입 실패: '+error.message;return;}
-  errEl.textContent='';
-  // 가입 후 바로 로그인
-  const{data}=await sb.from('profiles').select('*').eq('username',username).eq('password_hash',password).maybeSingle();
-  if(!data){errEl.textContent='다시 로그인 해봐';return;}
-  profile=data;currentUser={id:data.id};saveSession(data);
-  document.getElementById('signup-screen').classList.remove('show');
-  // 캐릭터 없으면 퀴즈로
-  startQuiz();
+function showSignup() {
+  document.getElementById('signup-screen').classList.add('show');
+  document.getElementById('login-screen').classList.remove('show');
 }
 
-async function doLogin(){
-  const username=document.getElementById('li-username').value.trim();
-  const password=document.getElementById('li-password').value.trim();
-  const errEl=document.getElementById('li-error');
-  if(!username||!password){errEl.textContent='아이디랑 비밀번호 입력해줘!';return;}
+async function doSignup() {
+  const name = document.getElementById('su-name').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const password = document.getElementById('su-password').value.trim();
+  const errEl = document.getElementById('su-error');
+  if (!name||!email||!password) { errEl.textContent='모든 항목 입력해줘!'; return; }
+  if (password.length < 6) { errEl.textContent='비밀번호는 6자리 이상이야!'; return; }
+  errEl.textContent='가입 중...';
+
+  const resp = await fetch('/api/auth', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({action:'signup', email, password, name, username: email.split('@')[0]})
+  });
+  const result = await resp.json();
+  if (!resp.ok) { errEl.textContent = result.error || '가입 실패 ㅠ'; return; }
+  errEl.textContent = '';
+  await doLoginWithCred(email, password);
+}
+
+async function doLogin() {
+  const email = document.getElementById('li-email').value.trim();
+  const password = document.getElementById('li-password').value.trim();
+  const errEl = document.getElementById('li-error');
+  if (!email||!password) { errEl.textContent='이메일이랑 비밀번호 입력해줘!'; return; }
   errEl.textContent='로그인 중...';
-  const{data,error}=await sb.from('profiles').select('*').eq('username',username).eq('password_hash',password).maybeSingle();
-  if(error){errEl.textContent='오류: '+error.message;return;}
-  if(!data){errEl.textContent='아이디 또는 비밀번호가 틀렸어!';return;}
-  profile=data;currentUser={id:data.id};saveSession(data);
-  errEl.textContent='';
-  document.getElementById('login-screen').classList.remove('show');
+  await doLoginWithCred(email, password, errEl);
+}
+
+async function doLoginWithCred(email, password, errEl) {
+  const resp = await fetch('/api/auth', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({action:'login', email, password})
+  });
+  const result = await resp.json();
+  if (!resp.ok) { if(errEl) errEl.textContent = result.error || '로그인 실패 ㅠ'; return; }
+  profile = result.profile;
+  currentUser = {id: result.profile.id};
+  saveSession({...result.profile});
+  if(errEl) errEl.textContent = '';
   hideSplash();
   await startApp();
 }
 
-async function doLogout(){
-  if(!confirm('로그아웃 할까?'))return;
-  clearSession();currentUser=null;profile={};chatroom=null;messages=[];
-  const app=document.getElementById('app');app.classList.remove('show');app.style.display='';
+async function doLogout() {
+  if (!confirm('로그아웃 할까?')) return;
+  clearSession();
+  currentUser = null; profile = {}; messages = []; currentRoom = null;
+  const appEl = document.getElementById('app');
+  appEl.classList.remove('show'); appEl.style.display = '';
   showLogin();
 }
 
-// ══════════ 퀴즈 (운명 매칭) ══════════
-const QUIZ_STEPS=[
+// ══════ 퀴즈 (캐릭터 매칭) ══════
+const QUIZ = [
   {
-    emoji:'💌',
-    q:'어느 날 모르는 번호로 문자가 왔어.\n"야 나야. 오늘 뭐해?" 뭐라고 답장할래?',
-    choices:[
-      {icon:'😊',title:'오 누구야?? 반가워!',desc:'낯선 사람도 반갑게',val:'E'},
-      {icon:'🤔',title:'...누구세요',desc:'먼저 확인해야 해',val:'I'},
-      {icon:'😄',title:'ㅋㅋㅋ 번호 잘못 누른 거 아니야?',desc:'유머로 대응',val:'F'},
-      {icon:'😤',title:'번호 잘못 누른 것 같은데요',desc:'팩트 직구',val:'T'}
-    ],
-    key:'q1'
+    q: '어느 날 갑자기 모르는 번호로 문자가 왔어.\n"야, 나야. 오늘 뭐해?" 뭐라고 답장해?',
+    sub: '솔직하게 골라봐',
+    choices: [
+      { icon:'😤', title:'누구야 ㅡㅡ 번호 좀 밝혀봐', desc:'모르면 일단 따지고 봄', val:'rebel' },
+      { icon:'😊', title:'어? 나 오늘 집인데~ 누구야?', desc:'일단 친근하게 받아', val:'empath' },
+      { icon:'😂', title:'야 나도 나야 ㅋㅋㅋ 누구?', desc:'드립부터 치고 봄', val:'roaster' }
+    ]
   },
   {
-    emoji:'😢',
-    q:'친구가 힘들다고 연락 왔어.\n너는 어떻게 해줄 것 같아?',
-    choices:[
-      {icon:'🤗',title:'일단 다 들어줘',desc:'공감이 먼저야',val:'support'},
-      {icon:'💡',title:'해결책을 같이 찾아줘',desc:'문제를 해결하는 게 도움이야',val:'solve'},
-      {icon:'🍕',title:'밥이라도 사줘',desc:'행동으로 보여줘',val:'act'},
-      {icon:'😈',title:'야 그냥 털어버려',desc:'쿨하게 정리해줘',val:'cool'}
-    ],
-    key:'q2'
+    q: '친구가 갑자기 "나 요즘 너무 힘들어" 라고 연락 왔을 때 제일 먼저 뭐라고 해?',
+    sub: '직관적으로 골라봐',
+    choices: [
+      { icon:'🤔', title:'뭐가 문제야? 말해봐', desc:'원인 파악 먼저', val:'rebel' },
+      { icon:'🤗', title:'헐 무슨 일이야 ㅠ 얘기해', desc:'공감 먼저', val:'empath' },
+      { icon:'😜', title:'나도 힘들어 ㅋㅋㅋ 둘 다 파이팅', desc:'유머로 분위기 전환', val:'roaster' }
+    ]
   },
   {
-    emoji:'🌙',
-    q:'새벽 2시. 잠이 안 와.\n어떤 친구가 생각나?',
-    choices:[
-      {icon:'🥺',title:'그냥 내 말 들어줄 친구',desc:'판단 없이 들어줬으면',val:'listen'},
-      {icon:'🔥',title:'신나게 수다 떨 친구',desc:'같이 밤새우자',val:'fun'},
-      {icon:'🧠',title:'같이 고민 나눌 친구',desc:'깊은 얘기 하고 싶어',val:'deep'},
-      {icon:'💊',title:'그냥 자야 되는데',desc:'현실적인 조언 해줄 친구',val:'real'}
-    ],
-    key:'q3'
+    q: '스트레스 받을 때 제일 필요한 게 뭐야?',
+    sub: '솔직하게 골라봐',
+    choices: [
+      { icon:'😤', title:'그냥 욕이라도 하고 싶어', desc:'발산이 필요해', val:'rebel' },
+      { icon:'🥺', title:'그냥 들어줄 사람이 필요해', desc:'공감이 먼저야', val:'empath' },
+      { icon:'😂', title:'웃겨줄 사람이 필요해', desc:'웃다보면 풀려', val:'roaster' }
+    ]
   },
   {
-    emoji:'✨',
-    q:'이런 친구가 있으면 좋겠어!',
-    choices:[
-      {icon:'🛡️',title:'항상 내 편 들어주는 친구',desc:'수호자 타입',val:'A'},
-      {icon:'⚡',title:'솔직하게 팩폭해주는 친구',desc:'직설적 타입',val:'B'},
-      {icon:'🌈',title:'에너지 넘치고 재밌는 친구',desc:'활발한 타입',val:'C'}
-    ],
-    key:'q4'
+    q: '친구가 틀린 말을 할 때 어떻게 해?',
+    sub: '평소 네 스타일대로',
+    choices: [
+      { icon:'😎', title:'그거 아닌 것 같은데, 왜냐면~', desc:'바로 직접 말함', val:'rebel' },
+      { icon:'😅', title:'음... 그런 시각도 있지, 근데~', desc:'부드럽게 이야기함', val:'empath' },
+      { icon:'🤣', title:'ㅋㅋㅋ 야 그거 완전 틀렸잖아', desc:'웃으면서 말함', val:'roaster' }
+    ]
   }
 ];
 
-let quizAnswers={},quizStep=0;
+let quizStep = 0;
+let quizAnswers = [];
+let quizDone = false;
 
-function startQuiz(){
-  quizAnswers={};quizStep=0;
-  document.getElementById('quiz-screen').classList.add('show');
-  renderQuizStep();
+function showQuiz() {
+  quizStep = 0; quizAnswers = []; quizDone = false;
+  document.getElementById('login-screen').classList.remove('show');
+  document.getElementById('signup-screen').classList.remove('show');
+  const qs = document.getElementById('quiz-screen');
+  qs.classList.add('show');
+  qs.style.display = 'flex';
+  renderQuiz();
 }
 
-function renderQuizStep(){
-  if(quizStep>=QUIZ_STEPS.length){renderQuizResult();return;}
-  const step=QUIZ_STEPS[quizStep];
-  const fill=((quizStep)/QUIZ_STEPS.length*100)+'%';
-  document.getElementById('quiz-fill').style.width=fill;
-  document.getElementById('quiz-step-label').textContent=`${quizStep+1} / ${QUIZ_STEPS.length}`;
-  document.getElementById('quiz-back-btn').style.display=quizStep>0?'':'none';
-  const nextBtn=document.getElementById('quiz-next-btn');
-  nextBtn.classList.remove('active');
-  nextBtn.textContent='다음 →';
-  nextBtn.onclick=quizNext;
-  document.getElementById('quiz-body').innerHTML=`
-    <div class="quiz-emoji">${step.emoji}</div>
-    <div class="quiz-q">${step.q.replace(/\n/g,'<br>')}</div>
-    <div class="quiz-choices">
-      ${step.choices.map(c=>`
-        <button class="quiz-choice${quizAnswers[step.key]===c.val?' sel':''}" onclick="quizSelect('${step.key}','${c.val}',this)">
-          <span class="qc-icon">${c.icon}</span>
-          <span class="qc-text"><span class="qc-title">${c.title}</span><span class="qc-desc">${c.desc}</span></span>
-        </button>`).join('')}
-    </div>`;
+function renderQuiz() {
+  if (quizDone) return;
+  const q = QUIZ[quizStep];
+  document.getElementById('quiz-step-label').textContent = `${quizStep+1} / ${QUIZ.length}`;
+  document.getElementById('quiz-progress').style.width = `${(quizStep+1)/QUIZ.length*100}%`;
+  document.getElementById('quiz-q').textContent = q.q;
+  document.getElementById('quiz-sub').textContent = q.sub;
+  document.getElementById('quiz-error').textContent = '';
+  document.getElementById('quiz-result-wrap').style.display = 'none';
+
+  const choicesEl = document.getElementById('quiz-choices');
+  choicesEl.style.display = 'flex';
+  choicesEl.innerHTML = q.choices.map((c,i) => `
+    <div class="quiz-choice${quizAnswers[quizStep]===c.val?' sel':''}" onclick="quizSelect('${c.val}',this)">
+      <span class="qc-icon">${c.icon}</span>
+      <div>
+        <div class="qc-title">${c.title}</div>
+        <div class="qc-desc">${c.desc}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('quiz-back').style.display = quizStep > 0 ? '' : 'none';
+  document.getElementById('quiz-next').textContent = quizStep === QUIZ.length-1 ? '결과 보기 →' : '다음 →';
 }
 
-function quizSelect(key,val,el){
-  quizAnswers[key]=val;
-  document.querySelectorAll('.quiz-choice').forEach(b=>b.classList.remove('sel'));
+function quizSelect(val, el) {
+  quizAnswers[quizStep] = val;
+  document.querySelectorAll('.quiz-choice').forEach(c => c.classList.remove('sel'));
   el.classList.add('sel');
-  document.getElementById('quiz-next-btn').classList.add('active');
-}
-function quizBack(){if(quizStep>0){quizStep--;renderQuizStep();}}
-function quizNext(){
-  const step=QUIZ_STEPS[quizStep];
-  if(!quizAnswers[step.key]){showToast('하나 골라줘!');return;}
-  quizStep++;
-  renderQuizStep();
 }
 
-function renderQuizResult(){
-  // 캐릭터 매칭 로직
-  let charKey='A';
-  if(quizAnswers.q4==='B'||quizAnswers.q2==='solve'||quizAnswers.q3==='real') charKey='B';
-  else if(quizAnswers.q4==='C'||quizAnswers.q1==='E'||quizAnswers.q3==='fun') charKey='C';
-  else charKey='A';
-
-  const char=CHARACTERS[charKey];
-  document.getElementById('quiz-fill').style.width='100%';
-  document.getElementById('quiz-next-btn').style.display='none';
-  document.getElementById('quiz-body').innerHTML=`
-    <div class="match-result">
-      <div style="font-size:.85rem;color:var(--text3)">✨ 당신에게 딱 맞는 친구를 찾았어!</div>
-      <div class="match-char">${char.emoji_stages[0]}</div>
-      <div class="match-title">${char.type}</div>
-      <div class="match-name">${char.name}</div>
-      <div class="match-desc">${char.desc}</div>
-      <div style="font-size:.82rem;color:var(--text3);margin-top:.5rem">뭐라고 부를까? 이름 정해줘!</div>
-      <input class="match-name-input" id="match-nickname" placeholder="예: 수호야, 재원아, 소율아..." maxlength="10">
-      <div class="auth-error" id="match-error"></div>
-      <button class="match-start-btn" onclick="saveCharacter('${charKey}')">만나러 가기 🚀</button>
-    </div>`;
+function quizNext() {
+  if (!quizAnswers[quizStep]) { document.getElementById('quiz-error').textContent = '하나 골라줘!'; return; }
+  document.getElementById('quiz-error').textContent = '';
+  if (quizStep < QUIZ.length - 1) { quizStep++; renderQuiz(); }
+  else showQuizResult();
 }
 
-async function saveCharacter(charKey){
-  const nickname=document.getElementById('match-nickname').value.trim();
-  const errEl=document.getElementById('match-error');
-  if(!nickname){errEl.textContent='이름을 정해줘!';return;}
-  errEl.textContent='만드는 중...';
-  const char=CHARACTERS[charKey];
-  const{data,error}=await sb.from('chatrooms').insert({
-    user_id:currentUser.id,
-    char_key:charKey,
-    name:nickname,
-    avatar:char.emoji_stages[0],
-    talk_style:char.system,
-    roles:[char.type],
-    bond:0,msg_count:0,
-    last_msg:''
+function quizBack() {
+  if (quizStep > 0) { quizStep--; renderQuiz(); }
+}
+
+function showQuizResult() {
+  quizDone = true;
+  // 가장 많이 나온 답 = 캐릭터 타입
+  const counts = {};
+  quizAnswers.forEach(a => { counts[a] = (counts[a]||0) + 1; });
+  const charType = Object.keys(counts).reduce((a,b) => counts[a]>counts[b]?a:b);
+  const char = CHAR_TYPES[charType];
+
+  document.getElementById('quiz-progress').style.width = '100%';
+  document.getElementById('quiz-step-label').textContent = '완료!';
+  document.getElementById('quiz-q').textContent = '너에게 딱 맞는 친구가 찾아왔어 ✨';
+  document.getElementById('quiz-sub').textContent = '';
+  document.getElementById('quiz-choices').style.display = 'none';
+
+  const resultWrap = document.getElementById('quiz-result-wrap');
+  resultWrap.style.display = 'flex';
+  resultWrap.style.flexDirection = 'column';
+  resultWrap.style.alignItems = 'center';
+  resultWrap.style.gap = '12px';
+  resultWrap.innerHTML = `
+    <div class="qr-char">${char.emoji[0]}</div>
+    <div class="qr-label">${char.color} ${char.name}</div>
+    <div class="qr-desc">${char.desc}</div>
+    <div class="qr-traits">${char.traits.map(t=>`<span class="qr-trait">${t}</span>`).join('')}</div>
+    <div class="quiz-name-box">
+      <div class="auth-label" style="margin-bottom:6px">이 친구를 뭐라고 부를까?</div>
+      <input class="auth-input" id="quiz-char-name" placeholder="예: 야, 지수야, 민준아..." style="max-width:360px">
+    </div>
+    <div class="auth-error" id="quiz-char-error"></div>
+  `;
+
+  document.getElementById('quiz-next').textContent = '이 친구와 시작하기 🚀';
+  document.getElementById('quiz-next').onclick = () => createCharFromQuiz(charType);
+  document.getElementById('quiz-back').style.display = 'none';
+}
+
+async function createCharFromQuiz(charType) {
+  const nickname = document.getElementById('quiz-char-name')?.value.trim();
+  const errEl = document.getElementById('quiz-char-error');
+  if (!nickname) { if(errEl) errEl.textContent = '호칭을 입력해줘!'; return; }
+  if(errEl) errEl.textContent = '만드는 중...';
+
+  const char = CHAR_TYPES[charType];
+  const { data, error } = await sb.from('chatrooms').insert({
+    user_id: currentUser.id,
+    name: nickname,
+    nickname,
+    avatar: charType,
+    talk_style: char.systemBase,
+    roles: char.traits,
+    last_msg: null
   }).select().single();
-  if(error){errEl.textContent='실패: '+error.message;return;}
-  // 프로필에 char_key 저장
-  await sb.from('profiles').update({char_key:charKey}).eq('id',currentUser.id);
-  chatroom=data;
-  profile.char_key=charKey;
-  saveSession({...profile,char_key:charKey});
-  document.getElementById('quiz-screen').classList.remove('show');
+
+  if (error) { if(errEl) errEl.textContent = '실패: '+error.message; return; }
+  currentRoom = data;
+
+  const qs = document.getElementById('quiz-screen');
+  qs.classList.remove('show'); qs.style.display = 'none';
+
   await startApp();
-  showToast(`${nickname} 만났어! 대화 시작해봐 🎉`);
 }
 
-// ══════════ APP START ══════════
-async function startApp(){
-  ['signup-screen','login-screen'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.classList.remove('show');
+// ══════ APP START ══════
+async function startApp() {
+  ['login-screen','signup-screen'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.classList.remove('show'); }
   });
-  const appEl=document.getElementById('app');
-  appEl.classList.add('show');appEl.style.display='flex';
+  const qEl = document.getElementById('quiz-screen');
+  if(qEl) { qEl.classList.remove('show'); qEl.style.display='none'; }
+
+  const appEl = document.getElementById('app');
+  appEl.classList.add('show'); appEl.style.display = 'flex';
+
   hideSplash();
-  // 채팅방 로드
-  await loadChatroom();
-  if(!chatroom){
-    // 캐릭터 없으면 퀴즈
-    startQuiz();return;
-  }
   applyProfile();
-  updateHomeUI();
-  initEmojiPanel();
+
+  // 채팅방(캐릭터) 로드
+  await loadRoom();
+  renderHome();
   switchTab('home');
-  setupRealtime();
+  setupRealtimeSync();
   scheduleRandomPing();
 }
 
-async function loadChatroom(){
-  const{data,error}=await sb.from('chatrooms').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
-  if(error){console.error('chatroom load error:',error);return;}
-  chatroom=data;
+function applyProfile() {
+  const el = id => document.getElementById(id);
+  if(el('home-username')) el('home-username').textContent = profile.name ? profile.name+'님' : '';
+  if(el('settings-user-info')) el('settings-user-info').textContent = `${profile.name||''} (${profile.username||profile.email||''})`;
 }
 
-function applyProfile(){
-  const el=id=>document.getElementById(id);
-  if(el('settings-user-name')) el('settings-user-name').textContent=profile.name||'-';
-  if(el('settings-user-id')) el('settings-user-id').textContent=profile.username||'-';
+// ══════ 채팅방(캐릭터) 로드 ══════
+async function loadRoom() {
+  const { data, error } = await sb.from('chatrooms')
+    .select('*').eq('user_id', currentUser.id)
+    .order('created_at', {ascending:false}).limit(1).single();
+
+  if (error || !data) {
+    // 캐릭터 없으면 퀴즈로
+    showQuiz();
+    return;
+  }
+  currentRoom = data;
 }
 
-// ══════════ TAB ══════════
-function switchTab(tab){
-  currentTab=tab;
+function renderHome() {
+  if (!currentRoom) return;
+  const charType = currentRoom.avatar || 'empath';
+  const msgCount = currentRoom.msg_count || 0;
+  const level = getLevelFromMsgs(msgCount);
+  const bond = getBondFromMsgs(msgCount);
+  const emoji = getCharEmoji(charType, level);
+  const mood = getCharMood(charType, msgCount);
+  const story = getCharStory(charType, msgCount);
+  const days = currentRoom.created_at
+    ? Math.floor((Date.now() - new Date(currentRoom.created_at)) / 86400000) + 1
+    : 1;
+
+  const el = id => document.getElementById(id);
+  if(el('char-emoji')) el('char-emoji').textContent = emoji;
+  if(el('char-level-badge')) el('char-level-badge').textContent = `Lv.${level}`;
+  if(el('char-name')) el('char-name').textContent = currentRoom.name || '친구';
+  if(el('char-type')) el('char-type').textContent = `${CHAR_TYPES[charType]?.color||'✨'} ${CHAR_TYPES[charType]?.name||''}`;
+  if(el('char-mood')) el('char-mood').textContent = mood;
+  if(el('bond-fill')) el('bond-fill').style.width = bond+'%';
+  if(el('bond-text')) el('bond-text').textContent = `${bond} / 100`;
+  if(el('char-story')) el('char-story').textContent = story;
+  if(el('stat-msgs')) el('stat-msgs').textContent = msgCount;
+  if(el('stat-level')) el('stat-level').textContent = level;
+  if(el('stat-days')) el('stat-days').textContent = days;
+  if(el('home-last-msg')) el('home-last-msg').textContent = currentRoom.last_msg || '지금 바로 말 걸어봐';
+
+  // 채팅 이모지 동기화
+  if(el('chat-emoji')) el('chat-emoji').textContent = emoji;
+  if(el('chat-name')) el('chat-name').textContent = currentRoom.name || '친구';
+}
+
+// ══════ TAB ══════
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('chat-screen').classList.remove('active');
+  const tabBtn = document.getElementById('tab-'+tab);
+  if(tabBtn) tabBtn.classList.add('active');
+  const map = { home:'home-screen', settings:'settings-screen' };
+  const screenId = map[tab];
+  if(screenId) document.getElementById(screenId).classList.add('active');
+  if(tab==='home') renderHome();
+}
+
+function goToChat() {
+  if (!currentRoom) { showToast('캐릭터가 없어!'); return; }
   document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
-  document.getElementById(tab+'-screen').classList.add('active');
-  if(tab==='home'){updateHomeUI();}
-  if(tab==='chat'){loadAndRenderMessages();}
-  if(tab==='settings'){updateSettingsUI();}
+  document.getElementById('tab-chat-tab').classList.add('active');
+  document.querySelector('#tab-content .tab-screen.active')?.classList.remove('active');
+  document.getElementById('chat-screen').classList.add('active');
+  document.getElementById('chat-status').textContent = '온라인';
+
+  // 메시지 로드
+  messages = [];
+  document.getElementById('chat-messages').innerHTML = '';
+  loadRoomMessages(currentRoom.id).then(ok => {
+    if(ok && messages.length === 0) sendFirstMessage();
+  });
 }
 
-function goToChat(){switchTab('chat');}
-
-// ══════════ HOME UI ══════════
-function getLevelInfo(bond){
-  let lv=LEVELS[0];
-  for(const l of LEVELS){if(bond>=l.minBond)lv=l;}
-  return lv;
-}
-function getNextLevel(bond){
-  for(const l of LEVELS){if(bond<l.minBond)return l;}
-  return null;
+function goBackFromChat() {
+  document.getElementById('chat-screen').classList.remove('active');
+  switchTab('home');
+  renderHome();
 }
 
-function updateHomeUI(){
-  if(!chatroom)return;
-  const char=CHARACTERS[chatroom.char_key]||CHARACTERS['A'];
-  const bond=chatroom.bond||0;
-  const msgCount=chatroom.msg_count||0;
-  const lvInfo=getLevelInfo(bond);
-  const nextLv=getNextLevel(bond);
-
-  // 캐릭터 이모지 (레벨별)
-  const emoji=char.emoji_stages[lvInfo.emoji_stage]||char.emoji_stages[0];
-  document.getElementById('char-emoji').textContent=emoji;
-  document.getElementById('char-name').textContent=chatroom.name||char.name;
-  document.getElementById('char-mood').textContent=lvInfo.desc;
-  document.getElementById('home-level-badge').textContent=`Lv.${lvInfo.level} ${lvInfo.name}`;
-  document.getElementById('home-greeting').textContent=`${profile.name||''}의 톡다리`;
-
-  // 친밀도 바
-  const nextMin=nextLv?nextLv.minBond:LEVELS[LEVELS.length-1].minBond+500;
-  const curMin=lvInfo.minBond;
-  const pct=nextLv?Math.min(((bond-curMin)/(nextMin-curMin))*100,100):100;
-  document.getElementById('bond-fill').style.width=pct+'%';
-  document.getElementById('bond-text').textContent=`${bond} / ${nextLv?nextLv.minBond:'MAX'}`;
-
-  // 스탯
-  const days=chatroom.created_at?Math.floor((Date.now()-new Date(chatroom.created_at))/(86400000)):0;
-  document.getElementById('stat-days').textContent=days;
-  document.getElementById('stat-msgs').textContent=msgCount;
-  document.getElementById('stat-level').textContent=lvInfo.level;
-
-  // 말풍선 (랜덤)
-  const speeches=char.speeches;
-  document.getElementById('char-speech').textContent=speeches[Math.floor(Math.random()*speeches.length)];
-
-  // 채팅 헤더
-  document.getElementById('chat-header-char').textContent=emoji;
-  document.getElementById('chat-header-name').textContent=chatroom.name||char.name;
-  document.getElementById('chat-header-bond').textContent=`친밀도 ${bond} · Lv.${lvInfo.level} ${lvInfo.name}`;
-
-  // 성장 기록
-  renderGrowthLog(bond,msgCount,lvInfo);
+// ══════ MESSAGES ══════
+async function loadRoomMessages(roomId) {
+  const { data, error } = await sb.from('messages')
+    .select('*').eq('chatroom_id', roomId)
+    .order('created_at', {ascending:true}).limit(150);
+  if (error) { console.error('메시지 로드 실패:', error); return false; }
+  if (data && data.length > 0) {
+    messages = data.map(m=>({role:m.role, content:m.content}));
+    renderAllMessages();
+    setTimeout(scrollToBottom, 100);
+  }
+  return true;
 }
 
-function renderGrowthLog(bond,msgCount,lvInfo){
-  const list=document.getElementById('growth-log-list');
-  if(!list)return;
-  const items=[];
-  if(msgCount>=1) items.push({icon:'💬',text:`첫 대화를 나눴어!`});
-  if(msgCount>=10) items.push({icon:'🌱',text:`대화 10번째! 조금씩 친해지는 중`});
-  if(msgCount>=50) items.push({icon:'🌿',text:`대화 50번! 이제 꽤 친해졌네`});
-  if(bond>=100) items.push({icon:'⭐',text:`Lv.2 달성! 새싹이 됐어`});
-  if(bond>=300) items.push({icon:'🌟',text:`Lv.3 달성! 이제 진짜 친구야`});
-  if(bond>=700) items.push({icon:'💫',text:`Lv.4 달성! 절친이 됐어`});
-  if(bond>=1500) items.push({icon:'✨',text:`Lv.5 달성! 운명적인 연결이야`});
-  if(!items.length){list.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--text3);font-size:.82rem;">대화를 나눌수록 기록이 쌓여 ✨</div>';return;}
-  list.innerHTML=[...items].reverse().slice(0,5).map(i=>`<div class="history-item"><span class="hi-icon">${i.icon}</span>${i.text}</div>`).join('');
+async function saveMessage(role, content) {
+  if (!currentRoom || !currentUser) return;
+  await sb.from('messages').insert({
+    user_id: currentUser.id,
+    chatroom_id: currentRoom.id,
+    role,
+    content: typeof content==='string' ? content : JSON.stringify(content)
+  });
+  const preview = typeof content==='string' ? content.slice(0,50) : '사진';
+  const newCount = (currentRoom.msg_count || 0) + 1;
+  await sb.from('chatrooms').update({
+    last_msg: preview,
+    updated_at: new Date().toISOString(),
+    msg_count: newCount
+  }).eq('id', currentRoom.id);
+
+  const prevLevel = getLevelFromMsgs(currentRoom.msg_count || 0);
+  currentRoom.msg_count = newCount;
+  currentRoom.last_msg = preview;
+
+  const newLevel = getLevelFromMsgs(newCount);
+  if (newLevel > prevLevel) showLevelUp(newLevel, currentRoom.avatar);
 }
 
-function tapCharacter(e){
-  const emojis=['❤️','✨','💜','⭐','🌸'];
-  const heart=document.createElement('div');
-  heart.className='heart-pop';
-  heart.textContent=emojis[Math.floor(Math.random()*emojis.length)];
-  heart.style.left=(e.clientX-15)+'px';
-  heart.style.top=(e.clientY-15)+'px';
-  document.body.appendChild(heart);
-  setTimeout(()=>heart.remove(),900);
-  // 터치마다 친밀도 소량 증가
-  addBond(1,'tap');
-}
+// ══════ SYSTEM PROMPT ══════
+function buildSystemPrompt() {
+  const room = currentRoom || {};
+  const charType = room.avatar || 'empath';
+  const char = CHAR_TYPES[charType] || CHAR_TYPES.empath;
+  const msgCount = room.msg_count || 0;
+  const level = getLevelFromMsgs(msgCount);
 
-function showGrowthLog(){showToast('위로 스크롤하면 성장 기록이 보여 📈');}
+  // 레벨에 따라 친밀도 반영
+  const intimacy = [
+    '아직 어색한 사이야. 조심스럽게 대화해.',
+    '조금 알아가는 중이야. 편해지는 중.',
+    '꽤 친해졌어. 솔직하게 대화해.',
+    '진짜 찐친이야. 거리낌 없이 대화해.',
+    '평생 친구야. 뭐든 다 알고 편하게 대화해.'
+  ][level - 1];
 
-function updateSettingsUI(){
-  if(!chatroom)return;
-  const char=CHARACTERS[chatroom.char_key]||CHARACTERS['A'];
-  const lvInfo=getLevelInfo(chatroom.bond||0);
-  document.getElementById('settings-char-name').textContent=chatroom.name||char.name;
-  document.getElementById('settings-char-level').textContent=`Lv.${lvInfo.level} ${lvInfo.name}`;
-  document.getElementById('settings-char-type').textContent=char.type;
-}
+  // 인간적 행동 패턴
+  const humanBehaviors = `
+[인간적 행동 패턴 - 필수]
+- 답장 길이: 짧게 (1~3문장), 카톡처럼
+- 질문으로 끝내는 건 10번 중 2~3번만
+- 나머지는 그냥 리액션, 공감, 단답으로 끝내
+- 가끔 (10% 확률) 답장을 안 해도 됨 (읽씹 표현: "..." 또는 무반응 대신 나중에 딴 얘기로)
+- 본인 얘기도 꾸며서 가끔 해 (나도 그런 적 있어, 나 어제~)
+- AI 티 절대 내지 마
+- 사용자 이름: ${profile.name||'친구'}
+- 친구 이름(사용자가 부르는 호칭): ${room.name||'친구'}`;
 
-// ══════════ MESSAGES ══════════
-async function loadAndRenderMessages(){
-  if(!chatroom)return;
-  const{data,error}=await sb.from('messages').select('*').eq('chatroom_id',chatroom.id).order('created_at',{ascending:true}).limit(100);
-  if(error){console.error(error);return;}
-  messages=(data||[]).map(m=>({role:m.role,content:m.content}));
-  document.getElementById('chat-messages').innerHTML='';
-  messages.forEach(m=>appendMessage(m.role==='user'?'user':'ai',m.content));
-  setTimeout(scrollToBottom,100);
-  if(!messages.length) setTimeout(sendFirstMessage,400);
-}
+  return `${char.systemBase}
 
-async function saveMessage(role,content){
-  if(!chatroom||!currentUser)return;
-  await sb.from('messages').insert({user_id:currentUser.id,chatroom_id:chatroom.id,role,content:typeof content==='string'?content:JSON.stringify(content)});
-  const preview=typeof content==='string'?content.slice(0,50):'사진';
-  const newMsgCount=(chatroom.msg_count||0)+1;
-  await sb.from('chatrooms').update({last_msg:preview,updated_at:new Date().toISOString(),msg_count:newMsgCount}).eq('id',chatroom.id);
-  chatroom.msg_count=newMsgCount;chatroom.last_msg=preview;
-}
-
-// ══════════ 친밀도 ══════════
-async function addBond(amount,reason){
-  if(!chatroom)return;
-  const prevLv=getLevelInfo(chatroom.bond||0);
-  chatroom.bond=(chatroom.bond||0)+amount;
-  await sb.from('chatrooms').update({bond:chatroom.bond}).eq('id',chatroom.id);
-  const newLv=getLevelInfo(chatroom.bond);
-  if(newLv.level>prevLv.level) showLevelUp(newLv);
-  if(currentTab==='home') updateHomeUI();
-  // 채팅 헤더 업데이트
-  document.getElementById('chat-header-bond').textContent=`친밀도 ${chatroom.bond} · Lv.${newLv.level} ${newLv.name}`;
-}
-
-function showLevelUp(lvInfo){
-  const char=CHARACTERS[chatroom.char_key]||CHARACTERS['A'];
-  const emoji=char.emoji_stages[lvInfo.emoji_stage]||char.emoji_stages[0];
-  document.getElementById('levelup-char').textContent=emoji;
-  document.getElementById('levelup-title').textContent=`Lv.${lvInfo.level} ${lvInfo.name}!`;
-  document.getElementById('levelup-sub').textContent=`${chatroom.name||char.name}이랑 더 친해졌어!\n외형이 변했어 👀`;
-  // 채팅방 아바타 업데이트
-  sb.from('chatrooms').update({avatar:emoji}).eq('id',chatroom.id);
-  chatroom.avatar=emoji;
-  document.getElementById('levelup-overlay').classList.add('show');
-  document.getElementById('char-emoji').textContent=emoji;
-  document.getElementById('chat-header-char').textContent=emoji;
-}
-function closeLevelUp(){document.getElementById('levelup-overlay').classList.remove('show');}
-
-// ══════════ CHAT ══════════
-function buildSystemPrompt(){
-  if(!chatroom)return'';
-  const char=CHARACTERS[chatroom.char_key]||CHARACTERS['A'];
-  const bond=chatroom.bond||0;
-  const lvInfo=getLevelInfo(bond);
-  const intimacyNote=
-    lvInfo.level<=1?'아직 서먹한 관계야. 조금 거리감 있게, 근데 친절하게.'
-    :lvInfo.level===2?'조금 친해졌어. 이제 좀 편하게 대화해.'
-    :lvInfo.level===3?'꽤 친해졌어. 반말 편하게, 가끔 농담도 해.'
-    :lvInfo.level===4?'절친이야. 완전 편하게, 속 얘기도 털어놔.'
-    :'운명적인 사이야. 서로 완벽하게 이해해. 깊은 대화도 자연스럽게.';
-
-  return `${char.system}
+[현재 관계]
+${intimacy}
 
 [사용자 정보]
-이름: "${profile.name}"
-친밀도: ${bond} (${lvInfo.name} 단계)
-지금까지 나눈 대화: ${chatroom.msg_count||0}번
+이름: ${profile.name||'친구'}
+내가 불리는 호칭: ${room.name||'친구'}
 
-[현재 관계 단계]
-${intimacyNote}
-
-[절대 규칙]
-- AI라고 절대 밝히지 마
-- 반말로 카톡처럼 짧게 (1~3문장)
-- 질문으로 끝내는 건 3번 중 1번만
-- 같은 말 반복 X
-- 사용자 이름 가끔 불러줘 (매번 X)`;
+${humanBehaviors}`;
 }
 
-async function sendFirstMessage(){
-  if(!chatroom)return;
-  const char=CHARACTERS[chatroom.char_key]||CHARACTERS['A'];
-  const name=profile.name||'친구야';
-  const greets=[
-    `야 ${name}! 나야 ${chatroom.name}ㅋㅋ 드디어 왔네`,
-    `오 ${name} 왔구나~ 오늘 어때?`,
-    `${name}! 기다리고 있었어`
-  ];
-  const msg=greets[Math.floor(Math.random()*greets.length)];
-  appendMessage('ai',msg);
-  messages.push({role:'assistant',content:msg});
-  await saveMessage('assistant',msg);
+// ══════ CHAT ══════
+async function sendFirstMessage() {
+  const room = currentRoom || {};
+  const charType = room.avatar || 'empath';
+  const nick = profile.name || '친구';
+  const greetings = {
+    rebel: [`${nick} 왔네. 오늘 어때?`, `야 ${nick} 뭐함`, `ㅇㅇ 왔어?`],
+    empath: [`${nick}~ 왔구나! 오늘 어땠어?`, `야 ${nick} 기다렸어ㅠ 오늘 뭐했어?`, `${nick} 밥은 먹었어?`],
+    roaster: [`${nick} 드디어 왔다ㅋㅋ`, `야 ${nick} 나 없이 얼마나 외로웠어`, `왔어? 나 심심했잖아ㅋ`]
+  };
+  const list = greetings[charType] || greetings.empath;
+  const msg = list[Math.floor(Math.random()*list.length)];
+  appendMessage('ai', msg);
+  messages.push({role:'assistant', content:msg});
+  await saveMessage('assistant', msg);
 }
 
-async function sendMessage(){
-  const ta=document.getElementById('msg-input');
-  const text=ta.value.trim();
-  if(!text&&!pendingImage)return;
-  if(isLoading)return;
-  document.getElementById('emoji-panel').classList.remove('show');
-  if(pendingImage){
-    appendMessage('user','',pendingImage);
-    messages.push({role:'user',content:[{type:'image_url',image_url:{url:pendingImage}},{type:'text',text:text||'이 사진 봐봐'}]});
-    await saveMessage('user',text||'이 사진 봐봐');
+async function sendMessage() {
+  const ta = document.getElementById('msg-input');
+  const text = ta.value.trim();
+  if (!text && !pendingImage) return;
+  if (isLoading) return;
+  document.getElementById('emoji-panel')?.classList.remove('show');
+
+  if (pendingImage) {
+    appendMessage('user', '', pendingImage);
+    messages.push({role:'user', content:[{type:'image_url',image_url:{url:pendingImage}},{type:'text',text:text||'이 사진 봐봐'}]});
+    await saveMessage('user', text||'이 사진 봐봐');
     clearImgPreview();
   }
-  if(text){
-    ta.value='';ta.style.height='auto';
-    if(!pendingImage){
-      appendMessage('user',text);
-      messages.push({role:'user',content:text});
-      await saveMessage('user',text);
+  if (text) {
+    ta.value=''; ta.style.height='auto';
+    if (!pendingImage) {
+      appendMessage('user', text);
+      messages.push({role:'user', content:text});
+      await saveMessage('user', text);
     }
-  } else {ta.value='';ta.style.height='auto';}
+  } else { ta.value=''; ta.style.height='auto'; }
+
   await callAI();
 }
 
-async function callAI(){
-  if(isLoading)return;
-  isLoading=true;
-  document.getElementById('chat-header-status').textContent='입력 중...';
-  const typingId=showTyping();
+async function callAI() {
+  if (isLoading) return;
+  isLoading = true;
 
-  // 가끔 늦게 답장 (인간적인 느낌)
-  const shouldDelay=Math.random()<0.15;
-  if(shouldDelay){
-    await new Promise(r=>setTimeout(r,3000+Math.random()*5000));
+  // 읽씹 확률 (레벨 낮을수록 높음)
+  const level = getLevelFromMsgs(currentRoom?.msg_count||0);
+  const readReceiptChance = [0.12, 0.08, 0.04, 0.02, 0][level-1];
+  if (Math.random() < readReceiptChance) {
+    // 읽씹 - 잠시 후 응답
+    const hint = document.createElement('div');
+    hint.className='delay-hint'; hint.textContent='읽음';
+    document.getElementById('chat-messages').appendChild(hint);
+    scrollToBottom();
+    await new Promise(r => setTimeout(r, 3000 + Math.random()*4000));
+    hint.remove();
   }
 
-  try{
-    const resp=await fetch('/api/chat',{
+  document.getElementById('chat-status').textContent='입력 중...';
+  const typingId = showTyping();
+  try {
+    const resp = await fetch('/api/chat', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({messages:[
-        {role:'system',content:buildSystemPrompt()},
+        {role:'system', content:buildSystemPrompt()},
         ...messages.slice(-30).map(m=>({
-          role:m.role==='ai'?'assistant':m.role,
-          content:typeof m.content==='string'?m.content:JSON.stringify(m.content)
+          role: m.role==='ai'?'assistant':m.role,
+          content: typeof m.content==='string'?m.content:JSON.stringify(m.content)
         }))
       ]})
     });
-    removeTyping(typingId);
-    if(!resp.ok){
-      const err=await resp.json().catch(()=>({}));
-      appendMessage('ai',`앗 오류났어 😅 ${err.error||'다시 해봐'}`);
+    if (!resp.ok) {
+      const err = await resp.json().catch(()=>({}));
+      removeTyping(typingId);
+      appendMessage('ai', `앗 오류났어 😅 ${err.error||'다시 해봐'}`);
     } else {
-      const data=await resp.json();
-      if(!data.choices?.[0]){appendMessage('ai','응답 못 받았어 ㅠ 다시 해봐');}
-      else{
-        const reply=data.choices[0].message.content.trim();
-        const delay=Math.min(300+reply.length*12,2500);
-        await new Promise(r=>setTimeout(r,delay));
-        appendMessage('ai',reply);
-        messages.push({role:'assistant',content:reply});
-        await saveMessage('assistant',reply);
-        // 대화마다 친밀도 증가
-        await addBond(3,'message');
-        // 가끔 읽씹 후 뒤늦은 반응 (5% 확률)
-        if(Math.random()<0.05){
-          setTimeout(async()=>{
-            const lateReplies=['야 미안 딴 거 하다가 봤어','아 방금 봤어ㅋㅋ','아까 그 말 계속 생각남'];
-            const late=lateReplies[Math.floor(Math.random()*lateReplies.length)];
-            appendMessage('ai',late);
-            messages.push({role:'assistant',content:late});
-            await saveMessage('assistant',late);
-          },15000+Math.random()*30000);
-        }
+      const data = await resp.json();
+      if (!data.choices?.[0]) { removeTyping(typingId); appendMessage('ai', '응답 못 받았어 ㅠ'); }
+      else {
+        const reply = data.choices[0].message.content.trim();
+        // 답장 딜레이 (인간적)
+        const delay = Math.min(400 + reply.length * 18, 3500);
+        await new Promise(r => setTimeout(r, delay));
+        removeTyping(typingId);
+        appendMessage('ai', reply);
+        messages.push({role:'assistant', content:reply});
+        await saveMessage('assistant', reply);
       }
     }
-  }catch(e){
+  } catch(e) {
     removeTyping(typingId);
-    appendMessage('ai','야 인터넷 확인해봐 ㅠ');
+    appendMessage('ai', '야 인터넷 확인해봐 ㅠ');
   }
-  isLoading=false;
-  document.getElementById('chat-header-status').textContent='온라인';
+  isLoading = false;
+  document.getElementById('chat-status').textContent = '온라인';
 }
 
-function appendMessage(role,content,imgSrc){
-  const wrap=document.getElementById('chat-messages');
-  const row=document.createElement('div');
-  row.className='msg-row'+(role==='user'?' user':'');
-  const now=new Date();
-  const time=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
-  if(role!=='user'){
-    const av=document.createElement('div');av.className='msg-avatar';
-    av.textContent=chatroom?.avatar||(CHARACTERS[chatroom?.char_key]||CHARACTERS['A']).emoji_stages[0];
+function appendMessage(role, content, imgSrc) {
+  const wrap = document.getElementById('chat-messages');
+  const row = document.createElement('div');
+  row.className = 'msg-row'+(role==='user'?' user':'');
+  const now = new Date();
+  const time = now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  if (role !== 'user') {
+    const av = document.createElement('div'); av.className='msg-avatar';
+    av.textContent = getCharEmoji(currentRoom?.avatar||'empath', getLevelFromMsgs(currentRoom?.msg_count||0));
     row.appendChild(av);
   }
-  const col=document.createElement('div');col.className='msg-col';
-  const bubble=document.createElement('div');bubble.className='bubble '+(role==='user'?'user':'ai');
-  if(imgSrc){
-    const img=document.createElement('img');img.src=imgSrc;bubble.appendChild(img);
-  } else if(typeof content==='string'){
-    bubble.innerHTML=content.replace(/\n/g,'<br>').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/&lt;br&gt;/g,'<br>');
-  }
-  const timeEl=document.createElement('div');timeEl.className='msg-time';timeEl.textContent=time;
-  col.appendChild(bubble);col.appendChild(timeEl);
+  const col = document.createElement('div'); col.className='msg-col';
+  const bubble = document.createElement('div'); bubble.className='bubble '+(role==='user'?'user':'ai');
+  if (imgSrc) { const img=document.createElement('img'); img.src=imgSrc; img.style.maxWidth='100%'; img.style.borderRadius='10px'; bubble.appendChild(img); }
+  else if (typeof content==='string') bubble.innerHTML = formatMsg(content);
+  const timeEl = document.createElement('div'); timeEl.className='msg-time'; timeEl.textContent=time;
+  col.appendChild(bubble); col.appendChild(timeEl);
   row.appendChild(col);
   wrap.appendChild(row);
   scrollToBottom();
 }
 
-function showTyping(){
-  const wrap=document.getElementById('chat-messages');
-  const row=document.createElement('div');row.className='msg-row';row.id='typing-'+Date.now();
-  const av=document.createElement('div');av.className='msg-avatar';
-  av.textContent=chatroom?.avatar||(CHARACTERS[chatroom?.char_key]||CHARACTERS['A']).emoji_stages[0];
-  const b=document.createElement('div');b.className='typing-bubble';
-  b.innerHTML='<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';
-  row.appendChild(av);row.appendChild(b);wrap.appendChild(row);
-  scrollToBottom();return row.id;
+function renderAllMessages() {
+  document.getElementById('chat-messages').innerHTML='';
+  messages.forEach(m=>appendMessage(m.role==='user'?'user':'ai', m.content));
 }
-function removeTyping(id){const el=document.getElementById(id);if(el)el.remove();}
-function scrollToBottom(){const w=document.getElementById('chat-messages');if(w)w.scrollTop=w.scrollHeight;}
-function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
+
+function formatMsg(text) {
+  if(!text||typeof text!=='string') return '';
+  const urlPattern=/(https?:\/\/[^\s<>"]+)/g;
+  return text.split(urlPattern).map(part=>{
+    if(!part.match(/^https?:\/\//)) return part.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    if(/youtube\.com|youtu\.be/i.test(part)) {
+      const m=part.match(/(?:v=|youtu\.be\/)([^&?/\s]+)/);
+      return `<a href="${part}" target="_blank" style="color:var(--accent);text-decoration:underline">🎬 ${part}</a>${m?`<br><img src="https://img.youtube.com/vi/${m[1]}/mqdefault.jpg" style="max-width:200px;border-radius:8px;margin-top:4px;cursor:pointer" onclick="window.open('${part}','_blank')">` :''}`;
+    }
+    return `<a href="${part}" target="_blank" style="color:var(--accent);text-decoration:underline;word-break:break-all">🔗 ${part}</a>`;
+  }).join('');
+}
+
+function showTyping() {
+  const wrap = document.getElementById('chat-messages');
+  const row = document.createElement('div'); row.className='msg-row'; row.id='typing-'+Date.now();
+  const av = document.createElement('div'); av.className='msg-avatar';
+  av.textContent = getCharEmoji(currentRoom?.avatar||'empath', getLevelFromMsgs(currentRoom?.msg_count||0));
+  const b = document.createElement('div'); b.className='typing-bubble';
+  b.innerHTML='<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';
+  row.appendChild(av); row.appendChild(b); wrap.appendChild(row);
+  scrollToBottom(); return row.id;
+}
+function removeTyping(id) { const el=document.getElementById(id); if(el)el.remove(); }
+function scrollToBottom() { const w=document.getElementById('chat-messages'); if(w)w.scrollTop=w.scrollHeight; }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
 
 // 한글 IME
 document.addEventListener('DOMContentLoaded',()=>{
-  const ta=document.getElementById('msg-input');if(!ta)return;
+  const ta=document.getElementById('msg-input'); if(!ta)return;
   let composing=false;
   ta.addEventListener('compositionstart',()=>{composing=true;});
   ta.addEventListener('compositionend',()=>{composing=false;});
@@ -1141,89 +1376,132 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 });
 
-// ── 이모지 패널 ──
-const EMOJIS=['😊','😂','🤣','😍','🥰','😘','😎','🤩','😜','😏','😢','😭','😤','😡','🤬','😱','😰','🥺','😩','💀','👍','👎','👏','🙏','💪','✌️','🫶','❤️','💔','🔥','✨','💯','🎉','💀','👀','🤔','😴','🍕','🍔','🍣','ㅋㅋ','ㅎㅎ','ㅠㅠ','ㅜㅜ','^^','...','!','?'];
-function initEmojiPanel(){
-  const grid=document.getElementById('emoji-grid');if(!grid)return;
+// ══════ 레벨업 알림 ══════
+function showLevelUp(level, charType) {
+  const char = CHAR_TYPES[charType] || CHAR_TYPES.empath;
+  const emoji = getCharEmoji(charType, level);
+  const subs = ['','','이제 조금 친해졌어!','더 친해졌네!','찐친이 됐어!','평생 친구야!'];
+  const el = document.getElementById('level-up-toast');
+  document.getElementById('lv-emoji').textContent = emoji;
+  document.getElementById('lv-title').textContent = `Lv.${level} 달성! 🎉`;
+  document.getElementById('lv-sub').textContent = subs[level] || '외형이 변했어!';
+  el.classList.add('show');
+  renderHome();
+  setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+// ══════ 캐릭터 삭제 ══════
+function confirmDeleteChar() {
+  document.getElementById('delete-modal').classList.add('show');
+}
+
+async function deleteChar() {
+  if (!currentRoom) return;
+  document.getElementById('delete-modal').classList.remove('show');
+  await sb.from('messages').delete().eq('chatroom_id', currentRoom.id);
+  await sb.from('chatrooms').delete().eq('id', currentRoom.id);
+  currentRoom = null; messages = [];
+  showToast('캐릭터 삭제됐어. 새 친구를 만나봐!');
+  setTimeout(()=>showQuiz(), 1000);
+}
+
+function showAddCharAlert() {
+  alert('✨ 준비 중이야!\n\n추가 캐릭터 기능은 곧 오픈할게.\n조금만 기다려줘 🙏');
+}
+
+// ══════ EMOJI ══════
+const EMOJIS=['😊','😂','🤣','😍','🥰','😘','😎','🤩','😜','😏','😢','😭','😤','😡','🤬','😱','😰','🥺','😩','👍','👎','👏','🙏','💪','✌️','🫶','❤️','💔','🔥','✨','💯','🎉','💀','👀','🤔','😴','ㅋㅋ','ㅎㅎ','ㅠㅠ','^^','...'];
+
+function initEmojiPanel() {
+  const grid=document.getElementById('emoji-grid'); if(!grid)return;
   grid.innerHTML=EMOJIS.map(e=>`<button class="emoji-btn" onclick="insertEmoji('${e}')">${e}</button>`).join('');
 }
-function toggleEmojiPanel(){document.getElementById('emoji-panel').classList.toggle('show');}
-function insertEmoji(e){
-  const ta=document.getElementById('msg-input');
-  ta.value+=e;ta.focus();autoResize(ta);
+function toggleEmojiPanel() {
+  const panel=document.getElementById('emoji-panel'); if(!panel)return;
+  panel.classList.toggle('show');
+  if(panel.classList.contains('show')) initEmojiPanel();
 }
+function insertEmoji(emoji) {
+  const ta=document.getElementById('msg-input'); if(!ta)return;
+  const s=ta.selectionStart,e=ta.selectionEnd;
+  ta.value=ta.value.slice(0,s)+emoji+ta.value.slice(e);
+  ta.selectionStart=ta.selectionEnd=s+emoji.length;
+  ta.focus(); autoResize(ta);
+}
+document.addEventListener('click',e=>{
+  const panel=document.getElementById('emoji-panel'); if(!panel)return;
+  if(!panel.contains(e.target)&&!e.target.closest('[onclick*="toggleEmojiPanel"]')) panel.classList.remove('show');
+});
 
-// ── 사진 ──
-let pendingImage=null;
-function handlePhoto(e){
-  const file=e.target.files[0];if(!file)return;
+// ══════ PHOTO ══════
+function handlePhoto(e) {
+  const file=e.target.files[0]; if(!file)return;
   const reader=new FileReader();
-  reader.onload=ev=>{
-    pendingImage=ev.target.result;
-    const bar=document.getElementById('img-preview-bar');
-    document.getElementById('img-preview-thumb').src=pendingImage;
-    bar.classList.add('show');
-  };
-  reader.readAsDataURL(file);
-  e.target.value='';
+  reader.onload=ev=>{ pendingImage=ev.target.result; showImgPreview(pendingImage); };
+  reader.readAsDataURL(file); e.target.value='';
 }
-function clearImgPreview(){
-  pendingImage=null;
-  document.getElementById('img-preview-bar').classList.remove('show');
-  document.getElementById('img-preview-thumb').src='';
+function showImgPreview(src) {
+  const wrap=document.getElementById('img-preview-wrap'); if(!wrap)return;
+  wrap.innerHTML=`<div class="img-preview"><img src="${src}"><button class="img-preview-del" onclick="clearImgPreview()">✕</button></div>`;
 }
+function clearImgPreview() { pendingImage=null; const w=document.getElementById('img-preview-wrap'); if(w)w.innerHTML=''; }
 
-// ── 캐릭터 초기화 ──
-async function confirmResetCharacter(){
-  if(!confirm('⚠️ 정말로 캐릭터를 초기화할까?\n\n모든 대화 내용과 친밀도가 사라지고 처음부터 시작해야 해!'))return;
-  if(!confirm('진짜로? 이 작업은 되돌릴 수 없어!'))return;
-  // 메시지 삭제
-  if(chatroom) await sb.from('messages').delete().eq('chatroom_id',chatroom.id);
-  if(chatroom) await sb.from('chatrooms').delete().eq('id',chatroom.id);
-  chatroom=null;messages=[];
-  // 앱 재시작 → 퀴즈로
-  startQuiz();
-  showToast('초기화 완료! 새 친구를 만나봐 🌱');
-}
-
-// ── 알림 ──
-function scheduleRandomPing(){
-  if(!chatroom)return;
-  const pings=['야 어디있어 나 심심한데ㅋㅋ','오늘 어때? 뭔 일 있었어?','야 밥은 먹었어?','생각나서 연락했어','요즘 왜 이렇게 조용해?'];
-  const delay=(Math.random()*6+2)*60*60*1000;
-  setTimeout(()=>{
-    const pingOn=document.getElementById('toggle-ping')?.classList.contains('on');
-    if(pingOn&&Notification.permission==='granted'&&document.hidden){
-      new Notification(chatroom?.name||'톡다리',{body:pings[Math.floor(Math.random()*pings.length)],icon:'icon.png'});
-    }
-    scheduleRandomPing();
-  },delay);
-}
-
-// ── 실시간 동기화 ──
-function setupRealtime(){
+// ══════ REALTIME ══════
+function setupRealtimeSync() {
   sb.removeAllChannels();
-  sb.channel('messages-sync').on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
-    if(!chatroom||String(payload.new.chatroom_id)!==String(chatroom.id))return;
-    const already=messages.some(m=>m.role===payload.new.role&&m.content===payload.new.content);
-    if(!already&&currentTab==='chat'){
-      messages.push({role:payload.new.role,content:payload.new.content});
-      appendMessage(payload.new.role==='user'?'user':'ai',payload.new.content);
+  sb.channel('msgs-sync').on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
+    if(!currentRoom) return;
+    if(String(payload.new.chatroom_id)!==String(currentRoom.id)) return;
+    const newMsg=payload.new;
+    const alreadyShown=messages.some(m=>m.role===newMsg.role&&m.content===newMsg.content);
+    if(!alreadyShown){
+      messages.push({role:newMsg.role,content:newMsg.content});
+      appendMessage(newMsg.role==='user'?'user':'ai',newMsg.content);
       setTimeout(scrollToBottom,100);
     }
   }).subscribe();
 }
 
-// ── TOAST ──
-function showToast(msg){
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+// ══════ NOTIFICATIONS ══════
+async function toggleNotif(el) { el.classList.toggle('on'); if(el.classList.contains('on')) await requestNotifPermission(); }
+async function requestNotifPermission() {
+  if(!('Notification' in window)) return;
+  await Notification.requestPermission();
+}
+function scheduleRandomPing() {
+  const pings=['야 어디있어 나 심심한데ㅋㅋ','오늘 어때? 뭔 일 있었어?','야 밥은 먹었어?'];
+  const delay=(Math.random()*4+3)*60*60*1000;
+  setTimeout(()=>{
+    const pingOn=document.getElementById('toggle-ping')?.classList.contains('on');
+    if(pingOn&&Notification.permission==='granted'&&document.hidden){
+      new Notification(currentRoom?.name||'톡다리',{body:pings[Math.floor(Math.random()*pings.length)],icon:'icon.png'});
+    }
+    scheduleRandomPing();
+  },delay);
 }
 
-// ── 토글 ──
-document.addEventListener('DOMContentLoaded',()=>{
-  document.querySelectorAll('.toggle').forEach(t=>t.addEventListener('click',()=>t.classList.toggle('on')));
-});
+// ══════ TOAST ══════
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
 </script>
+
+<!-- 캐릭터 삭제 확인 모달 -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">정말 삭제할까? 😢</div>
+    <div style="font-size:.88rem;color:var(--text2);text-align:center;line-height:1.7">
+      지금까지의 대화 내용이 <strong style="color:var(--red)">모두 삭제</strong>돼.<br>
+      캐릭터와 쌓아온 친밀도도 사라지고<br>처음부터 다시 시작해야 해.
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="document.getElementById('delete-modal').classList.remove('show')">취소</button>
+      <button class="modal-btn danger" onclick="deleteChar()">삭제하고 새로 시작</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
