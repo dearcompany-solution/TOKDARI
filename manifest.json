@@ -1,24 +1,20 @@
 {
   "name": "톡다리",
   "short_name": "톡다리",
-  "description": "나만의 AI 친구 톡다리",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0d0d1a",
-  "theme_color": "#7c3aed",
-  "orientation": "portrait",
+  "theme_color": "#0d0d1a",
   "icons": [
-  {
-    "src": "icon.png",
-    "sizes": "192x192",
-    "type": "image/png",
-    "purpose": "any"
-  },
-  {
-    "src": "icon.png",
-    "sizes": "512x512",
-    "type": "image/png",
-    "purpose": "maskable"
-  }
-]
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
