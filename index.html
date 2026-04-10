@@ -64,7 +64,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 .header-actions{margin-left:auto;display:flex;gap:2px}
 #home-screen{background:var(--bg);overflow-y:auto}
 .home-inner{display:flex;flex-direction:column;align-items:center;padding:1.2rem 1rem 2rem;gap:1rem}
-.char-stage{width:180px;height:180px;border-radius:50%;background:linear-gradient(135deg,var(--bg2),var(--bg3));border:3px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;margin:.5rem 0;transition:all .5s}
+.char-stage{width:200px;height:200px;border-radius:24px;background:linear-gradient(135deg,var(--bg2),var(--bg3));border:2px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;margin:.5rem 0;transition:all .5s;overflow:hidden}
 .char-emoji{font-size:5rem;transition:all .5s}
 .char-aura{position:absolute;inset:-8px;border-radius:50%;border:2px solid transparent;animation:aura 3s infinite}
 @keyframes aura{0%,100%{border-color:rgba(124,58,237,.2);transform:scale(1)}50%{border-color:rgba(167,139,250,.5);transform:scale(1.04)}}
@@ -151,12 +151,14 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 .lv-glow-3{box-shadow:0 0 35px rgba(167,139,250,.5)}
 .lv-glow-4{box-shadow:0 0 45px rgba(236,72,153,.6)}
 .lv-glow-5{box-shadow:0 0 55px rgba(236,72,153,.8);animation:glow5 2s infinite}
+.lv-glow-6{box-shadow:0 0 70px rgba(255,215,0,.9);animation:glow6 2s infinite}
+@keyframes glow6{0%,100%{box-shadow:0 0 70px rgba(255,215,0,.9)}50%{box-shadow:0 0 90px rgba(255,255,255,1)}}
 @keyframes glow5{0%,100%{box-shadow:0 0 55px rgba(236,72,153,.8)}50%{box-shadow:0 0 70px rgba(167,139,250,1)}}
 </style>
 </head>
 <body>
 <div id="splash">
-  <div class="splash-char" id="splash-char">🌱</div>
+  <div class="splash-char" id="splash-char">🥚</div>
   <h1>톡다리</h1>
   <p>잠깐만, 불러오는 중...</p>
 </div>
@@ -203,7 +205,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
   <div id="chat-screen">
     <div class="app-header">
       <button class="hbtn" onclick="goBackToHome()" style="font-size:1.4rem">←</button>
-      <div class="chat-hdr-av"><span id="chat-char-icon">🌱</span><div class="online-dot"></div></div>
+      <div class="chat-hdr-av"><span id="chat-char-icon">🥚</span><div class="online-dot"></div></div>
       <div>
         <div class="chat-hdr-name" id="chat-char-name">친구</div>
         <div class="chat-hdr-status" id="chat-status">온라인</div>
@@ -235,7 +237,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
       <div class="home-inner">
         <div class="char-stage" id="char-stage">
           <div class="char-aura"></div>
-          <div class="char-emoji" id="char-emoji">🌱</div>
+          <div id="char-svg-wrap" style="width:140px;height:140px;display:flex;align-items:center;justify-content:center"></div>
         </div>
         <div class="char-name-disp" id="char-name-disp">??</div>
         <div class="char-type-disp" id="char-type-disp"></div>
@@ -251,7 +253,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
           <div class="stat-card"><div class="stat-val" id="stat-mood">😊</div><div class="stat-lbl">오늘 기분</div></div>
         </div>
         <div class="today-msg">
-          <div class="today-icon" id="today-icon">🌱</div>
+          <div class="today-icon" id="today-icon">🥚</div>
           <div class="today-text" id="today-text">대화하러 와줘서 기다리고 있었어!</div>
         </div>
         <button class="chat-start-btn" onclick="openChat()">
@@ -290,10 +292,21 @@ const SUPA_URL='https://aeswnjssbaoqwicmgarb.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlc3duanNzYmFvcXdpY21nYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MTI4ODIsImV4cCI6MjA5MTE4ODg4Mn0.kNN-ggvTe44co49Qe0ywahxKFhRVfrwwVJJQ-kJTwE0';
 const VAPID_PUB='BIhrfjbJS3R9LPm8zha8VfPHkebk68TqF5h4XhOJ5KaO3blVj2KnCZnVkO9hrkxROxdFk5vqJDAB9a4sjB-7GeU';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+// 레벨별 펭귄 성장 단계
+// Lv1: 알 🥚 → Lv2: 부화중 🐣 → Lv3: 아기펭귄 🐧 → Lv4: 유아펭귄 → Lv5: 다큰펭귄 → Lv6: 스타펭귄
+const PENGUIN_LEVELS=[
+  {lv:1,icon:'🥚',label:'알',desc:'아직 알 속에 있어... 말을 걸면 깨어날까?'},
+  {lv:2,icon:'🐣',label:'부화중',desc:'껍질이 깨지기 시작했어! 조금만 더!'},
+  {lv:3,icon:'🐧',label:'아기펭귄',desc:'드디어 태어났어! 아직 많이 서툴러.'},
+  {lv:4,icon:'🐧✨',label:'유아펭귄',desc:'점점 말이 많아지고 있어. 친해지고 있나봐.'},
+  {lv:5,icon:'🐧💫',label:'다큰펭귄',desc:'이제 제법 친해졌네. 편하게 얘기해.'},
+  {lv:6,icon:'🐧👑',label:'스타펭귄',desc:'진짜 특별한 사이가 됐어. 운명이었나봐!'}
+];
+
 const CHARS={
-  A:{id:'A',name:'리아',icon:'🌸',type:'ENFP · 에너지 부스터',desc:'활발하고 유머러스해. 어떤 상황도 밝게 만들어주는 찐 에너지 메이커야. 가끔 오버하지만 그게 매력이야.',style:'에너지 넘치고 유머러스하게, 반말로',icons:['🌱','🌸','🌺','🌹','💐'],rude:.3,ignore:.1,slow:.2},
-  B:{id:'B',name:'준',icon:'🌊',type:'ISFJ · 섬세한 수호자',desc:'조용하지만 깊어. 네 말을 끝까지 들어주고, 아무도 못 느끼는 걸 먼저 챙겨줘. 근데 가끔 직구 날려.',style:'다정하지만 직설적으로, 반말로',icons:['🌱','🌊','🌀','💧','🔮'],rude:.15,ignore:.2,slow:.35},
-  C:{id:'C',name:'세진',icon:'⚡',type:'ENTP · 논리적 토론가',desc:'반박 좋아하고 논리적이야. 근데 그게 싫지 않아. 오히려 네 생각을 더 깊게 만들어줘. 가끔 싸가지 없음.',style:'직설적이고 논리적으로, 반말로. 가끔 반박해',icons:['🌱','⚡','🔥','💥','👑'],rude:.5,ignore:.15,slow:.15}
+  A:{id:'A',name:'리아',icon:'🐧',type:'ENFP · 에너지 부스터',desc:'활발하고 유머러스해. 어떤 상황도 밝게 만들어주는 찐 에너지 메이커야. 가끔 오버하지만 그게 매력이야.',style:'에너지 넘치고 유머러스하게, 반말로',icons:['🥚','🐣','🐧','🐧✨','🐧💫','🐧👑'],rude:.3,ignore:.1,slow:.2},
+  B:{id:'B',name:'준',icon:'🐧',type:'ISFJ · 섬세한 수호자',desc:'조용하지만 깊어. 네 말을 끝까지 들어주고, 아무도 못 느끼는 걸 먼저 챙겨줘. 근데 가끔 직구 날려.',style:'다정하지만 직설적으로, 반말로',icons:['🥚','🐣','🐧','🐧✨','🐧💫','🐧👑'],rude:.15,ignore:.2,slow:.35},
+  C:{id:'C',name:'세진',icon:'🐧',type:'ENTP · 논리적 토론가',desc:'반박 좋아하고 논리적이야. 근데 그게 싫지 않아. 오히려 네 생각을 더 깊게 만들어줘. 가끔 싸가지 없음.',style:'직설적이고 논리적으로, 반말로. 가끔 반박해',icons:['🥚','🐣','🐧','🐧✨','🐧💫','🐧👑'],rude:.5,ignore:.15,slow:.15}
 };
 const MATCH_Qs=[
   {scene:'📱 어느 날 갑자기 모르는 번호로 문자가 왔어.',real_q:'뭐라고 적혀있냐면... "야 나 오늘 너무 힘들었어" 넌 어떻게 답할래?',choices:[{text:'ㅋㅋ 누구야? 근데 뭔 일인데, 말해봐',val:'A'},{text:'...일단 무슨 일인지 들어볼게. 괜찮아?',val:'B'},{text:'번호 확인부터. 상황 파악이 먼저 아님?',val:'C'}]},
@@ -401,17 +414,113 @@ async function startWithCharacter(){
   const appEl=document.getElementById('app');appEl.classList.add('show');appEl.style.display='flex';
   applyProfile();switchTab('home');setTimeout(()=>openChat(),600);
 }
+
+// ══ 펭귄 SVG 생성 ══
+function getPenguinSVG(lv){
+  const svgs={
+    1:`<svg viewBox="0 0 100 120" width="120" height="140" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="70" rx="32" ry="40" fill="#f5e6c8" stroke="#d4b896" stroke-width="2"/>
+      <ellipse cx="50" cy="62" rx="20" ry="25" fill="#fef3e0" opacity="0.5"/>
+      <ellipse cx="42" cy="54" rx="6" ry="9" fill="white" opacity="0.4"/>
+      <text x="50" y="118" font-size="10" text-anchor="middle" fill="#a08060">알 속에서 기다리는 중...</text>
+    </svg>`,
+    2:`<svg viewBox="0 0 100 130" width="120" height="145" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="72" rx="32" ry="40" fill="#f5e6c8" stroke="#d4b896" stroke-width="2"/>
+      <path d="M50 35 L44 52 L52 57 L46 72" fill="none" stroke="#c8a06e" stroke-width="2" stroke-linecap="round"/>
+      <path d="M58 42 L65 55 L57 59" fill="none" stroke="#c8a06e" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M50 69 L56 65 L50 75 Z" fill="#f5a623"/>
+      <circle cx="46" cy="61" r="3" fill="#222"/>
+      <circle cx="47" cy="60" r="1" fill="white"/>
+      <text x="50" y="125" font-size="10" text-anchor="middle" fill="#a08060">삐약...!</text>
+    </svg>`,
+    3:`<svg viewBox="0 0 100 145" width="115" height="155" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="95" rx="28" ry="36" fill="#2c2c2c"/>
+      <ellipse cx="50" cy="100" rx="18" ry="24" fill="#f0f0f0"/>
+      <ellipse cx="24" cy="92" rx="10" ry="17" fill="#2c2c2c" transform="rotate(-10,24,92)"/>
+      <ellipse cx="76" cy="92" rx="10" ry="17" fill="#2c2c2c" transform="rotate(10,76,92)"/>
+      <ellipse cx="50" cy="60" rx="22" ry="22" fill="#2c2c2c"/>
+      <ellipse cx="50" cy="62" rx="14" ry="14" fill="#f0f0f0"/>
+      <circle cx="44" cy="57" r="4" fill="white"/><circle cx="56" cy="57" r="4" fill="white"/>
+      <circle cx="45" cy="57" r="2.5" fill="#111"/><circle cx="57" cy="57" r="2.5" fill="#111"/>
+      <circle cx="46" cy="56" r="1" fill="white"/><circle cx="58" cy="56" r="1" fill="white"/>
+      <path d="M47 64 L53 64 L50 69 Z" fill="#f5a623"/>
+      <ellipse cx="41" cy="128" rx="9" ry="4" fill="#f5a623"/>
+      <ellipse cx="59" cy="128" rx="9" ry="4" fill="#f5a623"/>
+    </svg>`,
+    4:`<svg viewBox="0 0 110 160" width="125" height="165" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="55" cy="105" rx="30" ry="40" fill="#1a1a2e"/>
+      <ellipse cx="55" cy="111" rx="20" ry="28" fill="#f0f0f0"/>
+      <ellipse cx="26" cy="101" rx="11" ry="20" fill="#1a1a2e" transform="rotate(-8,26,101)"/>
+      <ellipse cx="84" cy="101" rx="11" ry="20" fill="#1a1a2e" transform="rotate(8,84,101)"/>
+      <ellipse cx="55" cy="66" rx="24" ry="24" fill="#1a1a2e"/>
+      <ellipse cx="55" cy="68" rx="16" ry="16" fill="#f0f0f0"/>
+      <circle cx="47" cy="63" r="5" fill="white"/><circle cx="63" cy="63" r="5" fill="white"/>
+      <circle cx="48" cy="63" r="3" fill="#111"/><circle cx="64" cy="63" r="3" fill="#111"/>
+      <circle cx="49" cy="62" r="1.2" fill="white"/><circle cx="65" cy="62" r="1.2" fill="white"/>
+      <path d="M52 71 L58 71 L55 76 Z" fill="#f5a623"/>
+      <ellipse cx="43" cy="70" rx="5" ry="3" fill="#ffb3c1" opacity="0.6"/>
+      <ellipse cx="67" cy="70" rx="5" ry="3" fill="#ffb3c1" opacity="0.6"/>
+      <text x="80" y="52" font-size="14" fill="#f5c842">✦</text>
+      <ellipse cx="45" cy="142" rx="10" ry="5" fill="#f5a623"/>
+      <ellipse cx="65" cy="142" rx="10" ry="5" fill="#f5a623"/>
+    </svg>`,
+    5:`<svg viewBox="0 0 110 170" width="125" height="175" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="55" cy="112" rx="33" ry="44" fill="#0d0d2b"/>
+      <ellipse cx="55" cy="119" rx="22" ry="31" fill="#f0f0f0"/>
+      <ellipse cx="23" cy="107" rx="12" ry="22" fill="#0d0d2b" transform="rotate(-8,23,107)"/>
+      <ellipse cx="87" cy="107" rx="12" ry="22" fill="#0d0d2b" transform="rotate(8,87,107)"/>
+      <ellipse cx="55" cy="68" rx="26" ry="26" fill="#0d0d2b"/>
+      <ellipse cx="55" cy="70" rx="17" ry="17" fill="#f0f0f0"/>
+      <circle cx="47" cy="65" r="6" fill="white"/><circle cx="63" cy="65" r="6" fill="white"/>
+      <circle cx="48" cy="65" r="3.5" fill="#111"/><circle cx="64" cy="65" r="3.5" fill="#111"/>
+      <circle cx="49" cy="64" r="1.4" fill="white"/><circle cx="65" cy="64" r="1.4" fill="white"/>
+      <path d="M52 74 L58 74 L55 80 Z" fill="#f5a623"/>
+      <ellipse cx="43" cy="73" rx="5" ry="3" fill="#ffb3c1" opacity="0.6"/>
+      <ellipse cx="67" cy="73" rx="5" ry="3" fill="#ffb3c1" opacity="0.6"/>
+      <path d="M28 95 Q55 104 82 95 Q82 107 55 115 Q28 107 28 95Z" fill="#e63946" opacity="0.85"/>
+      <ellipse cx="44" cy="153" rx="11" ry="5" fill="#f5a623"/>
+      <ellipse cx="66" cy="153" rx="11" ry="5" fill="#f5a623"/>
+    </svg>`,
+    6:`<svg viewBox="0 0 110 185" width="125" height="185" xmlns="http://www.w3.org/2000/svg">
+      <path d="M30 52 L36 34 L46 46 L55 26 L64 46 L74 34 L80 52 Z" fill="#f5c842" stroke="#d4a017" stroke-width="1.5"/>
+      <circle cx="55" cy="28" r="4" fill="#e63946"/>
+      <circle cx="36" cy="35" r="3" fill="#4ecdc4"/>
+      <circle cx="74" cy="35" r="3" fill="#4ecdc4"/>
+      <ellipse cx="55" cy="120" rx="34" ry="46" fill="#0d0d2b"/>
+      <ellipse cx="55" cy="127" rx="23" ry="33" fill="#f0f0f0"/>
+      <ellipse cx="21" cy="114" rx="13" ry="23" fill="#0d0d2b" transform="rotate(-8,21,114)"/>
+      <ellipse cx="89" cy="114" rx="13" ry="23" fill="#0d0d2b" transform="rotate(8,89,114)"/>
+      <ellipse cx="55" cy="76" rx="26" ry="26" fill="#0d0d2b"/>
+      <ellipse cx="55" cy="78" rx="17" ry="17" fill="#f0f0f0"/>
+      <circle cx="47" cy="73" r="6" fill="white"/><circle cx="63" cy="73" r="6" fill="white"/>
+      <path d="M47 73 Q50 70 53 73" fill="none" stroke="#111" stroke-width="1.8"/>
+      <circle cx="64" cy="73" r="3.5" fill="#111"/>
+      <circle cx="65" cy="72" r="1.4" fill="white"/>
+      <path d="M52 82 L58 82 L55 88 Z" fill="#f5a623"/>
+      <ellipse cx="43" cy="81" rx="5" ry="3" fill="#ffb3c1" opacity="0.7"/>
+      <ellipse cx="67" cy="81" rx="5" ry="3" fill="#ffb3c1" opacity="0.7"/>
+      <path d="M26 104 Q55 114 84 104 Q84 116 55 124 Q26 116 26 104Z" fill="#f5c842" opacity="0.9"/>
+      <text x="12" y="88" font-size="13" fill="#f5c842">✦</text>
+      <text x="88" y="83" font-size="10" fill="#f5c842">✦</text>
+      <ellipse cx="44" cy="163" rx="12" ry="5.5" fill="#f5a623"/>
+      <ellipse cx="66" cy="163" rx="12" ry="5.5" fill="#f5a623"/>
+    </svg>`
+  };
+  return svgs[Math.min(lv,6)] || svgs[1];
+}
+
 function getChar(){return charData?CHARS[charData.char_id]||null:null;}
-function getLevel(){if(totalMsgs>=500)return 5;if(totalMsgs>=200)return 4;if(totalMsgs>=80)return 3;if(totalMsgs>=30)return 2;return 1;}
-function getLvName(lv){return['새싹','친해지는중','단짝','절친','운명'][lv-1]||'새싹';}
+function getLevel(){if(totalMsgs>=500)return 6;if(totalMsgs>=200)return 5;if(totalMsgs>=80)return 4;if(totalMsgs>=30)return 3;if(totalMsgs>=10)return 2;return 1;}
+function getLvName(lv){return['알','부화중','아기펭귄','유아펭귄','다큰펭귄','스타펭귄'][lv-1]||'알';}
 function updateCharDisplay(){
   const ch=getChar();if(!ch)return;
   const lv=getLevel();
   const icon=ch.icons[Math.min(lv-1,ch.icons.length-1)]||ch.icon;
   const name=charData?.char_name||ch.name;
   const el=id=>document.getElementById(id);
-  if(el('char-emoji'))el('char-emoji').textContent=icon;
-  if(el('chat-char-icon'))el('chat-char-icon').textContent=icon;
+  const svgWrap=document.getElementById('char-svg-wrap');
+  if(svgWrap)svgWrap.innerHTML=getPenguinSVG(lv);
+  if(el('chat-char-icon'))el('chat-char-icon').textContent=ch.icons[Math.min(lv-1,ch.icons.length-1)]||'🐧';
   if(el('char-name-disp'))el('char-name-disp').textContent=name;
   if(el('char-type-disp'))el('char-type-disp').textContent=ch.type;
   if(el('char-level-disp'))el('char-level-disp').textContent=`Lv.${lv} · ${getLvName(lv)}`;
@@ -419,14 +528,15 @@ function updateCharDisplay(){
   if(el('stat-msgs'))el('stat-msgs').textContent=totalMsgs;
   if(el('stat-days'))el('stat-days').textContent=chatDays;
   if(el('stat-level'))el('stat-level').textContent=lv;
-  if(el('splash-char'))el('splash-char').textContent=icon;
+  if(el('splash-char'))el('splash-char').textContent=ch.icons[0]||'🥚';
   if(el('today-icon'))el('today-icon').textContent=icon;
   const bp=Math.min(bondLevel,100);
   if(el('bond-fill'))el('bond-fill').style.width=bp+'%';
   if(el('bond-percent'))el('bond-percent').textContent=bp+'%';
   const stage=document.getElementById('char-stage');
-  if(stage){stage.className='char-stage';if(lv>=5)stage.classList.add('lv-glow-5');else if(lv>=4)stage.classList.add('lv-glow-4');else if(lv>=3)stage.classList.add('lv-glow-3');else if(lv>=2)stage.classList.add('lv-glow-2');}
-  const todayMsgs=['대화하러 와줘서 기다리고 있었어!','오늘 어떤 하루였어?','보고싶었어 ㅋㅋ','야 밥은 먹었어?','오늘도 잘 부탁해'];
+  if(stage){stage.className='char-stage';if(lv>=6)stage.classList.add('lv-glow-6');else if(lv>=5)stage.classList.add('lv-glow-5');else if(lv>=4)stage.classList.add('lv-glow-4');else if(lv>=3)stage.classList.add('lv-glow-3');else if(lv>=2)stage.classList.add('lv-glow-2');}
+  const penguinMsg=PENGUIN_LEVELS[Math.min(lv-1,PENGUIN_LEVELS.length-1)];
+  const todayMsgs=lv===1?['...🥚 (아직 알 속이야. 말을 걸면 깨어날지도?)']:lv===2?['삐약..! 🐣 조금만 더 이야기해줘!']:['대화하러 와줘서 기다리고 있었어!','오늘 어떤 하루였어?','보고싶었어 ㅋㅋ','야 밥은 먹었어?','오늘도 잘 부탁해'];
   if(el('today-text'))el('today-text').textContent=todayMsgs[Math.floor(Math.random()*todayMsgs.length)];
   if(el('chat-btn-text'))el('chat-btn-text').textContent=messages.length>0?'계속 대화하기':'대화하기';
 }
@@ -552,19 +662,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 function setTrashMode(on){trashMode=on;const s=document.getElementById('chat-screen');if(on){s.classList.add('trash');document.getElementById('chat-status').textContent='💢 쓰레기통 모드';}else{s.classList.remove('trash');document.getElementById('chat-status').textContent='온라인';}}
 function toggleTrash(){setTrashMode(!trashMode);}
 async function autoSaveDiary(){if(!messages.length){showToast('대화 내용이 없어!');return;}showToast('일기 생성 중... ✨');try{const resp=await fetch('/api/summarize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages,date:new Date().toLocaleDateString('ko-KR')})});if(!resp.ok){showToast('생성 실패ㅠ');return;}const r=await resp.json();const text=(r.highlight?r.highlight+'\n\n':'')+r.summary;await sb.from('diary').insert({user_id:currentUser.id,mood:r.mood||'😊',content:text});showToast('일기 저장됐어 📔✨');}catch(e){showToast('오류났어ㅠ');}}
-async function confirmDeleteChar(){
-  if(!confirm(`"${charData?.char_name}"와 이별할까?
-
-모든 대화 기록이 삭제되고
-새 친구를 만날 수 있어.
-되돌릴 수 없어!`))return;
-  if(!confirm('정말? 진짜 이별이야...'))return;
-  showToast('이별 처리 중...');
-  await sb.from('messages').delete().eq('user_id',currentUser.id);
-  await sb.from('user_characters').delete().eq('user_id',currentUser.id);
-  charData=null;messages=[];bondLevel=0;totalMsgs=0;chatDays=0;
-  showToast('이별했어... 새로운 만남이 기다리고 있어');setTimeout(()=>startMatching(),1500);
-}
+async function confirmDeleteChar(){if(!confirm('"'+(charData?.char_name||'친구')+'"와 이별할까?\n\n모든 대화 기록이 삭제되고\n새 친구를 만날 수 있어.\n되돌릴 수 없어!'))return;if(!confirm('정말? 진짜 이별이야...'))return;showToast('이별 처리 중...');await sb.from('messages').delete().eq('user_id',currentUser.id);await sb.from('user_characters').delete().eq('user_id',currentUser.id);charData=null;messages=[];bondLevel=0;totalMsgs=0;chatDays=0;showToast('이별했어... 새로운 만남이 기다리고 있어');setTimeout(()=>startMatching(),1500);}
 function handleMedia(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{pendingMedia=ev.target.result;showMediaPreview(pendingMedia);};reader.readAsDataURL(file);e.target.value='';}
 function showMediaPreview(src){const wrap=document.getElementById('img-preview-wrap');if(!wrap)return;wrap.innerHTML=`<div class="img-preview"><img src="${src}"><button class="img-preview-del" onclick="clearMediaPreview()">✕</button></div>`;}
 function clearMediaPreview(){pendingMedia=null;const w=document.getElementById('img-preview-wrap');if(w)w.innerHTML='';}
