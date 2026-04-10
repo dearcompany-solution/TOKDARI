@@ -1,9 +1,15 @@
 const { createClient } = require('@supabase/supabase-js');
-const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
+const webpush = require('web-push');
 
 const sb = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
+);
+
+webpush.setVapidDetails(
+  process.env.VAPID_EMAIL,
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
 );
 
 module.exports = async function handler(req, res) {
@@ -22,16 +28,6 @@ module.exports = async function handler(req, res) {
       .eq('user_id', userId);
 
     if (!subs?.length) return res.status(200).json({ ok: true, sent: 0 });
-
-    // web-push를 dynamic import로 로드
-    const webpushModule = await import('web-push');
-    const webpush = webpushModule.default || webpushModule;
-
-    webpush.setVapidDetails(
-      process.env.VAPID_EMAIL,
-      process.env.VAPID_PUBLIC_KEY,
-      process.env.VAPID_PRIVATE_KEY
-    );
 
     let sent = 0;
     for (const row of subs) {
