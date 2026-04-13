@@ -706,10 +706,108 @@ function toggleEmojiPanel(){const p=document.getElementById('emoji-panel');if(!p
 function insertEmoji(e){const ta=document.getElementById('msg-input');if(!ta)return;const s=ta.selectionStart,en=ta.selectionEnd;ta.value=ta.value.slice(0,s)+e+ta.value.slice(en);ta.selectionStart=ta.selectionEnd=s+e.length;ta.focus();autoResize(ta);}
 document.addEventListener('click',e=>{const p=document.getElementById('emoji-panel');if(!p)return;if(!p.contains(e.target)&&!e.target.closest('.attach-btn'))p.classList.remove('show');});
 function fmtContent(text){if(!text||typeof text!=='string')return '';const parts=text.split(/(https?:\/\/[^\s<>"]+)/g);return parts.map(p=>{if(!p.match(/^https?:\/\//))return p.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');if(/youtube\.com|youtu\.be/i.test(p)){const m=p.match(/(?:v=|youtu\.be\/)([^&?/\s]+)/);const v=m?m[1]:'';return `<a href="${p}" target="_blank" style="color:var(--accent2);text-decoration:underline;word-break:break-all">🎬 ${p}</a>${v?`<br><img src="https://img.youtube.com/vi/${v}/mqdefault.jpg" style="max-width:200px;border-radius:8px;margin-top:4px;cursor:pointer;display:block" onclick="window.open('${p}','_blank')">`:''}`;}return `<a href="${p}" target="_blank" style="color:var(--accent2);text-decoration:underline;word-break:break-all">🔗 ${p}</a>`;}).join('');}
-async function toggleNotif(el){el.classList.toggle('on');if(el.classList.contains('on'))await requestNotifPermission();}
-async function requestNotifPermission(){if(!('Notification' in window)||!('serviceWorker' in navigator))return;const perm=await Notification.requestPermission();if(perm!=='granted')return;try{const reg=await navigator.serviceWorker.ready;const existing=await reg.pushManager.getSubscription();if(existing)return;const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToU8(VAPID_PUB)});await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:currentUser.id,subscription:sub})});showToast('알림 설정 완료! 📱');}catch(e){console.error(e);}}
+async function toggleNotif(el){
+  el.classList.toggle('on');
+  if(el.classList.contains('on')){
+    await requestNotifPermission();
+  } else {
+    showToast('알림을 껐어. 다시 켜면 알림 와!');
+  }
+}
+async function requestNotifPermission(){
+  if(!('Notification' in window)){showToast('이 브라우저는 알림을 지원하지 않아');return;}
+  if(!('serviceWorker' in navigator)){showToast('서비스워커 미지원 브라우저야');return;}
+
+  const perm = await Notification.requestPermission();
+  if(perm === 'denied'){showToast('알림 권한이 차단됐어. 브라우저 설정에서 허용해줘!');return;}
+  if(perm !== 'granted'){showToast('알림 권한이 필요해!');return;}
+
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    // 기존 구독 있으면 해제 후 재구독
+    const existing = await reg.pushManager.getSubscription();
+    if(existing) await existing.unsubscribe();
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlB64ToU8(VAPID_PUB)
+    });
+
+    const r = await fetch('/api/subscribe',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userId:currentUser.id, subscription:sub})
+    });
+
+    if(r.ok){
+      showToast('알림 설정 완료! 이제 선톡도 받을 수 있어 📱');
+      // 즉시 테스트 알림
+      setTimeout(()=>{
+        new Notification(charData?.char_name||'톡다리',{
+          body:'알림 설정됐어! 이제 내가 먼저 톡 할게 😊',
+          icon:'/icon.png'
+        });
+      }, 1000);
+    } else {
+      showToast('알림 등록 실패 ㅠ 다시 시도해봐');
+    }
+  }catch(e){
+    console.error(e);
+    showToast('알림 설정 중 오류났어: '+e.message);
+  }
+}
 function urlB64ToU8(b64){const p='='.repeat((4-b64.length%4)%4);const b=(b64+p).replace(/-/g,'+').replace(/_/g,'/');const d=window.atob(b);return Uint8Array.from([...d].map(c=>c.charCodeAt(0)));}
-function scheduleRandomPing(){setTimeout(async()=>{const pingOn=document.getElementById('toggle-ping')?.classList.contains('on');if(pingOn&&Notification.permission==='granted'&&document.hidden){const ch=getChar();const pings=['뭐해?','나 생각났어ㅋ','심심한데 얘기하자','오늘 어때?','밥은 먹었어?'];new Notification(charData?.char_name||'톡다리',{body:pings[Math.floor(Math.random()*pings.length)],icon:'/icon.png'});}scheduleRandomPing();},(2+Math.random()*4)*60*60*1000);}
+function scheduleRandomPing(){
+  const delay = (1 + Math.random()*3) * 60 * 60 * 1000; // 1~4시간
+  setTimeout(async()=>{
+    const pingOn = document.getElementById('toggle-ping')?.classList.contains('on');
+    if(!pingOn){scheduleRandomPing();return;}
+
+    const ch = getChar();
+    const lv = getLevel();
+    const name = charData?.char_name || '톡다리';
+
+    // 레벨/캐릭터별 선톡 메시지
+    let pings;
+    if(lv <= 1){
+      pings = ['...🥚','(아직 알 속이야)'];
+    } else if(lv <= 2){
+      pings = ['삐약...! 나 여기 있어','빨리 와줘'];
+    } else if(ch?.id === 'A'){
+      pings = ['야야야 나 생각났어ㅋㅋ','뭐해? 나 심심한데','오늘 어땠어? 빨리 말해봐','ㅋㅋ 나 또 왔어','야 나야'];
+    } else if(ch?.id === 'B'){
+      pings = ['...괜찮아?','생각나서','오늘 밥은 먹었어','잘 지내?'];
+    } else {
+      pings = ['어 살아있어?','요즘 뭐하냐고','할말있는데','심심하면 와'];
+    }
+
+    const msg = pings[Math.floor(Math.random()*pings.length)];
+
+    // 앱이 백그라운드일 때 — 푸시 알림
+    if(document.hidden && Notification.permission === 'granted'){
+      new Notification(name, {
+        body: msg,
+        icon: '/icon.png',
+        badge: '/icon.png',
+        vibrate: [200, 100, 200]
+      });
+    }
+
+    // 앱이 열려있을 때 — 채팅창에 메시지 + 토스트
+    if(!document.hidden && currentUser){
+      const chatOpen = document.getElementById('chat-screen')?.classList.contains('active');
+      if(chatOpen){
+        appendMsg('ai', msg);
+        messages.push({role:'assistant', content:msg, created_at:new Date().toISOString()});
+        await saveMsg('assistant', msg);
+      } else {
+        showToast(`${name}: ${msg}`);
+      }
+    }
+
+    scheduleRandomPing();
+  }, delay);
+}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
 </body>
