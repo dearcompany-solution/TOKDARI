@@ -574,7 +574,8 @@ async function loadMessages(){
   if(data&&data.length>0){messages=data.map(m=>({role:m.role,content:m.content,created_at:m.created_at}));renderAllMessages();setTimeout(scrollToBottom,100);}
 }
 async function saveMsg(role,content){if(!currentUser)return;await sb.from('messages').insert({user_id:currentUser.id,role,content,created_at:new Date().toISOString()});}
-function buildPrompt(){
+let currentWeather = null;
+  function buildPrompt(){
   const ch=getChar();if(!ch)return '';
   const lv=getLevel();
   const intimacy=['처음 만난 사이처럼 약간 어색하게','조금 친해진 느낌으로','친한 친구처럼','완전 절친처럼','평생 붙어다닌 친구처럼'][lv-1]||'친구처럼';
