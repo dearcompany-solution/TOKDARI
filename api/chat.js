@@ -45,11 +45,14 @@ module.exports = async function handler(req, res) {
           }
         );
         const searchData = await searchResp.json();
-        const results = searchData.web?.results?.slice(0, searchCount)
-  .map(r => `${r.title}\n${r.description}\n링크: ${r.url}`)
+        const rawResults = searchData.web?.results?.slice(0, searchCount) || [];
+const results = rawResults
+  .filter(r => r.url && r.url.startsWith('http'))
+  .map(r => `제목: ${r.title}\n설명: ${r.description}\nURL: ${r.url}`)
   .join('\n\n') || '';
+
 if (results) {
-  searchContext = `\n\n[실시간 검색 결과]\n${results}\n\n위 내용 참고해서 답해줘. 관련 링크는 그대로 전달해줘.`;
+  searchContext = `\n\n[실시간 검색 결과 - 아래 URL은 실제 링크야. 그대로 복사해서 전달해]\n${results}\n\n규칙: URL 절대 변형하지 말고 그대로 전달해.`;
 }
       } catch(e) {}
     }
