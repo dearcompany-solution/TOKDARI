@@ -46,13 +46,11 @@ module.exports = async function handler(req, res) {
         );
         const searchData = await searchResp.json();
         const results = searchData.web?.results?.slice(0, searchCount)
-          .map(r => `${r.title}: ${r.description}`)
-          .join('\n') || '';
-        if (results) {
-          searchContext = isExpertMode
-            ? `\n\n[실시간 검색 결과 - 정확한 정보로 답해줘]\n${results}`
-            : `\n\n[실시간 검색 결과]\n${results}\n위 내용을 참고해서 자연스럽게 답해줘.`;
-        }
+  .map(r => `${r.title}\n${r.description}\n링크: ${r.url}`)
+  .join('\n\n') || '';
+if (results) {
+  searchContext = `\n\n[실시간 검색 결과]\n${results}\n\n위 내용 참고해서 답해줘. 관련 링크는 그대로 전달해줘.`;
+}
       } catch(e) {}
     }
 
