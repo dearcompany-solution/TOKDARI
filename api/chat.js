@@ -70,10 +70,10 @@ module.exports = async function handler(req, res) {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: isExpertMode ? 'gpt-4o' : 'gpt-4o-mini',
-        messages: messagesWithSearch,
-        max_tokens: isExpertMode ? 800 : 500,
-        temperature: isExpertMode ? 0.3 : 0.9,
+        model: 'gpt-4o',
+messages: messagesWithSearch,
+max_tokens: 600,
+temperature: 1.1,
         presence_penalty: 0.6,
         frequency_penalty: 0.3
       })
