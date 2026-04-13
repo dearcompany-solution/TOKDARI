@@ -58,9 +58,9 @@ if (results) {
     }
 
     const messagesWithSearch = messages.map(m => {
-      if (m.role === 'system' && searchContext) {
-        return { ...m, content: m.content + searchContext };
-      }
+      if (m.role === 'system' && (searchContext || imageContext)) {
+  return { ...m, content: m.content + searchContext + imageContext };
+}
       return m;
     });
 
@@ -91,3 +91,25 @@ temperature: 1.1,
     return res.status(500).json({ error: e.message });
   }
 };
+// 이미지 검색 필요한 경우
+const needsImage = /사진|이미지|그림|보여줘|어떻게생겼|어떻게 생겼/.test(lastUserMsg);
+let imageContext = '';
+if(needsImage && process.env.BRAVE_API_KEY){
+  try{
+    const imgResp = await fetch(
+      `https://api.search.brave.com/res/v1/images/search?q=${encodeURIComponent(lastUserMsg)}&count=3`,
+      {
+        headers:{
+          'Accept':'application/json',
+          'Accept-Encoding':'gzip',
+          'X-Subscription-Token': process.env.BRAVE_API_KEY
+        }
+      }
+    );
+    const imgData = await imgResp.json();
+    const imgs = imgData.results?.slice(0,3)
+      .map(r=>`이미지: ${r.url}`)
+      .join('\n') || '';
+    if(imgs) imageContext = `\n\n[이미지 검색 결과]\n${imgs}\n위 이미지 URL 그대로 전달해줘.`;
+  }catch(e){}
+}
