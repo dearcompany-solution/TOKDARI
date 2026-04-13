@@ -38,10 +38,39 @@ module.exports = async function handler(req, res) {
         );
         const searchData = await searchResp.json();
         const rawResults = searchData.web?.results?.slice(0, searchCount) || [];
-        const results = rawResults
-          .filter(r => r.url && r.url.startsWith('http'))
-          .map(r => `제목: ${r.title}\n설명: ${r.description}\nURL: ${r.url}`)
-          .join('\n\n') || '';
+        // 페이월/접근불가 사이트 제외 목록
+const BLOCKED = [
+  'chosun.com','joongang.co.kr','donga.com','hani.co.kr','kmib.co.kr',
+  'munhwa.com','segye.com','sedaily.com','hankyung.com','mk.co.kr',
+  'economist.com','wsj.com','ft.com','nytimes.com','bloomberg.com',
+  'thetimes.co.uk','telegraph.co.uk'
+];
+
+// 무료 접근 가능 우선 사이트
+const PREFERRED = [
+  'yna.co.kr','yonhapnews.co.kr','kbs.co.kr','mbc.co.kr','sbs.co.kr',
+  'jtbc.co.kr','tvn.com','ytn.co.kr','newsis.com','news1.kr',
+  'ohmynews.com','pressian.com','khan.co.kr','hankookilbo.com',
+  'wikitree.co.kr','wikimediakorea.org','naver.com','daum.net',
+  'google.com','youtube.com','reddit.com','wikipedia.org','namu.wiki',
+  'github.com','stackoverflow.com','mdwiki.org'
+];
+
+const filtered = rawResults.filter(r => {
+  if(!r.url || !r.url.startsWith('http')) return false;
+  return !BLOCKED.some(b => r.url.includes(b));
+});
+
+// 우선 사이트 먼저 정렬
+const sorted = [
+  ...filtered.filter(r => PREFERRED.some(p => r.url.includes(p))),
+  ...filtered.filter(r => !PREFERRED.some(p => r.url.includes(p)))
+];
+
+const results = sorted
+  .slice(0, searchCount)
+  .map(r => `제목: ${r.title}\n설명: ${r.description}\nURL: ${r.url}`)
+  .join('\n\n') || '';
         if (results) {
           searchContext = `\n\n[실시간 검색 결과 - 아래 URL은 실제 링크야. 그대로 복사해서 전달해]\n${results}\n\n규칙: URL 절대 변형하지 말고 그대로 전달해.`;
         }
