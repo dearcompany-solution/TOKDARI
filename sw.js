@@ -1,12 +1,14 @@
-// 개발 중 - 캐시 비활성화 + 푸시 알림 수신
 self.addEventListener('install', e => self.skipWaiting());
+
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))));
   self.clients.claim();
 });
+
 self.addEventListener('fetch', e => {
-  e.respondWith(fetch(e.request).catch(()=>new Response('오프라인', {status:503})));
+  e.respondWith(fetch(e.request).catch(()=>new Response('오프라인',{status:503})));
 });
+
 self.addEventListener('push', e => {
   const data = e.data ? e.data.json() : {title:'톡다리', body:'선톡 왔어!'};
   e.waitUntil(
@@ -15,32 +17,21 @@ self.addEventListener('push', e => {
       icon: '/icon.png',
       badge: '/icon.png',
       vibrate: [200, 100, 200, 100, 200],
+      tag: 'tokdari-ping',
+      renotify: true,
       data: {url: self.location.origin}
     })
   );
 });
+
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(
-    clients.matchAll({type:'window'}).then(clientList => {
+    clients.matchAll({type:'window', includeUncontrolled:true}).then(clientList => {
       for(const client of clientList){
-        if(client.url === self.location.origin && 'focus' in client)
-          return client.focus();
+        if('focus' in client) return client.focus();
       }
       if(clients.openWindow) return clients.openWindow('/');
-    })
-  );
-});
-
-// 알림 클릭 시 앱 열기
-self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  e.waitUntil(
-    clients.matchAll({ type: 'window' }).then(clientList => {
-      for (const client of clientList) {
-        if (client.url === e.notification.data?.url && 'focus' in client) return client.focus();
-      }
-      if (clients.openWindow) return clients.openWindow(e.notification.data?.url || '/');
     })
   );
 });
