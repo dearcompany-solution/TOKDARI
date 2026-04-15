@@ -907,55 +907,62 @@ async function requestNotifPermission(){
 }
 function urlB64ToU8(b64){const p='='.repeat((4-b64.length%4)%4);const b=(b64+p).replace(/-/g,'+').replace(/_/g,'/');const d=window.atob(b);return Uint8Array.from([...d].map(c=>c.charCodeAt(0)));}
 function scheduleRandomPing(){
-  const delay = (1 + Math.random()*3) * 60 * 60 * 1000; // 1~4시간
+  const delay=(1+Math.random()*3)*60*60*1000;
   setTimeout(async()=>{
-    const pingOn = document.getElementById('toggle-ping')?.classList.contains('on');
+    const pingOn=document.getElementById('toggle-ping')?.classList.contains('on');
     if(!pingOn){scheduleRandomPing();return;}
 
-    const ch = getChar();
-    const lv = getLevel();
-    const name = charData?.char_name || '톡다리';
+    const ch=getChar();
+    const lv=getLevel();
+    const name=charData?.char_name||'톡다리';
 
-    // 레벨/캐릭터별 선톡 메시지
     let pings;
-    if(lv <= 1){
-      pings = ['...🥚','(아직 알 속이야)'];
-    } else if(lv <= 2){
-      pings = ['삐약...! 나 여기 있어','빨리 와줘'];
-    } else if(ch?.id === 'A'){
-      pings = ['야야야 나 생각났어ㅋㅋ','뭐해? 나 심심한데','오늘 어땠어? 빨리 말해봐','ㅋㅋ 나 또 왔어','야 나야'];
-    } else if(ch?.id === 'B'){
-      pings = ['...괜찮아?','생각나서','오늘 밥은 먹었어','잘 지내?'];
-    } else {
-      pings = ['어 살아있어?','요즘 뭐하냐고','할말있는데','심심하면 와'];
+    if(lv<=1) pings=['...🥚','(알 속에서 기다리는 중)'];
+    else if(lv<=2) pings=['삐약...! 나 여기 있어','빨리 와줘'];
+    else if(ch?.id==='A') pings=['야야야 나 생각났어ㅋㅋ','뭐해? 나 심심한데','오늘 어땠어?','야 나야','ㅋㅋ 나 또 왔어'];
+    else if(ch?.id==='B') pings=['...괜찮아?','생각나서','오늘 밥은 먹었어','잘 지내?'];
+    else pings=['어 살아있어?','요즘 뭐하냐고','할말있는데','심심하면 와'];
+
+    const msg=pings[Math.floor(Math.random()*pings.length)];
+
+    if(currentUser){
+      // DB에 저장 (채팅창 열면 보이게)
+      messages.push({role:'assistant',content:msg,created_at:new Date().toISOString()});
+      await saveMsg('assistant',msg);
     }
 
-    const msg = pings[Math.floor(Math.random()*pings.length)];
-
-    // 앱이 백그라운드일 때 — 푸시 알림
-    if(document.hidden && Notification.permission === 'granted'){
-      new Notification(name, {
-        body: msg,
-        icon: '/icon.png',
-        badge: '/icon.png',
-        vibrate: [200, 100, 200]
-      });
+    // 앱 백그라운드 → Service Worker로 알림
+    if(document.hidden && Notification.permission==='granted'){
+      try{
+        const reg=await navigator.serviceWorker.ready;
+        await reg.showNotification(name,{
+          body:msg,
+          icon:'/icon.png',
+          badge:'/icon.png',
+          vibrate:[200,100,200,100,200],
+          tag:'tokdari-ping',
+          renotify:true,
+          data:{url:self?.location?.origin||'/'}
+        });
+      }catch(e){
+        // 폴백: 직접 알림
+        if('Notification' in window) new Notification(name,{body:msg,icon:'/icon.png'});
+      }
     }
 
-    // 앱이 열려있을 때 — 채팅창에 메시지 + 토스트
-    if(!document.hidden && currentUser){
-      const chatOpen = document.getElementById('chat-screen')?.classList.contains('active');
+    // 앱 열려있을 때
+    if(!document.hidden){
+      const chatOpen=document.getElementById('chat-screen')?.classList.contains('active');
       if(chatOpen){
-        appendMsg('ai', msg);
-        messages.push({role:'assistant', content:msg, created_at:new Date().toISOString()});
-        await saveMsg('assistant', msg);
+        appendMsg('ai',msg);
       } else {
         showToast(`${name}: ${msg}`);
+        // 홈에서도 토스트로 표시
       }
     }
 
     scheduleRandomPing();
-  }, delay);
+  },delay);
 }
 // ══ 다이어리 ══
 async function autoSaveDiary(){
