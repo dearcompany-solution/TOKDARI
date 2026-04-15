@@ -211,7 +211,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
         <div class="chat-hdr-status" id="chat-status">온라인</div>
       </div>
       <div class="header-actions">
-        <button class="hbtn" onclick="autoSaveDiary()">✨</button>
         <button class="hbtn" onclick="toggleTrash()">💢</button>
       </div>
     </div>
@@ -246,21 +245,22 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
           <div class="bond-label"><span>친밀도</span><span id="bond-percent">0%</span></div>
           <div class="bond-bar"><div class="bond-fill" id="bond-fill" style="width:0%"></div></div>
         </div>
-        <div class="status-grid">
-          <div class="stat-card"><div class="stat-val" id="stat-msgs">0</div><div class="stat-lbl">총 대화</div></div>
-          <div class="stat-card"><div class="stat-val" id="stat-days">0</div><div class="stat-lbl">대화한 날</div></div>
-          <div class="stat-card"><div class="stat-val" id="stat-level">1</div><div class="stat-lbl">레벨</div></div>
-          <div class="stat-card"><div class="stat-val" id="stat-mood">😊</div><div class="stat-lbl">오늘 기분</div></div>
-        </div>
         <div class="today-msg">
-          <div class="today-icon" id="today-icon">🥚</div>
-          <div class="today-text" id="today-text">대화하러 와줘서 기다리고 있었어!</div>
-        </div>
+  <div class="today-icon" id="today-icon">🥚</div>
+  <div class="today-text" id="today-text">대화하러 와줘서 기다리고 있었어!</div>
+</div>
         <button class="chat-start-btn" onclick="openChat()">
           <span>💬</span><span id="chat-btn-text">대화하기</span>
         </button>
       </div>
     </div>
+    <!-- 다이어리 탭 -->
+<div id="diary-screen" class="tab-screen">
+  <div class="app-header"><div class="hdr-title">다이어리 📔</div></div>
+  <div id="diary-body" style="flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:10px">
+    <div style="text-align:center;color:var(--text3);font-size:.85rem;margin-top:2rem">대화하면 자동으로 기록돼!</div>
+  </div>
+</div>
     <div id="settings-screen" class="tab-screen">
       <div class="app-header"><div class="hdr-title">설정 ⚙️</div></div>
       <div class="settings-body">
@@ -281,9 +281,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
       </div>
     </div>
     <div class="tab-bar">
-      <button class="tab-item active" id="tab-home" onclick="switchTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
-      <button class="tab-item" id="tab-settings" onclick="switchTab('settings')"><span class="ti">⚙️</span><span class="tl">설정</span></button>
-    </div>
+  <button class="tab-item active" id="tab-home" onclick="switchTab('home')"><span class="ti">🏠</span><span class="tl">홈</span></button>
+  <button class="tab-item" id="tab-diary" onclick="switchTab('diary')"><span class="ti">📔</span><span class="tl">다이어리</span></button>
+  <button class="tab-item" id="tab-settings" onclick="switchTab('settings')"><span class="ti">⚙️</span><span class="tl">설정</span></button>
+</div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -562,9 +563,10 @@ function switchTab(tab){
   document.querySelectorAll('.tab-screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('chat-screen').classList.remove('active');
   document.getElementById('tab-'+tab)?.classList.add('active');
-  const map={home:'home-screen',settings:'settings-screen'};
+  const map={home:'home-screen',diary:'diary-screen',settings:'settings-screen'};
   if(map[tab])document.getElementById(map[tab]).classList.add('active');
   if(tab==='home')updateCharDisplay();
+  if(tab==='diary')loadDiary();
 }
 async function openChat(){
   document.getElementById('chat-screen').classList.add('active');
@@ -697,6 +699,8 @@ async function callGPT(){
     if(!resp.ok){appendMsg('ai','앗 오류났어 다시 해봐');}
     else{const data=await resp.json();const reply=data.choices?.[0]?.message?.content?.trim()||'응';appendMsg('ai',reply);messages.push({role:'assistant',content:reply,created_at:new Date().toISOString()});await saveMsg('assistant',reply);}
   }catch(e){removeTyping(typId);appendMsg('ai','인터넷 확인해봐');}
+  // 10번 대화마다 자동 다이어리 저장
+if(totalMsgs>0 && totalMsgs%10===0) autoSaveDiary();
   isLoading=false;document.getElementById('chat-status').textContent='온라인';
 }
 function appendMsg(role,content,imgSrc){
@@ -903,7 +907,63 @@ function scheduleRandomPing(){
     scheduleRandomPing();
   }, delay);
 }
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+// ══ 다이어리 ══
+async function autoSaveDiary(){
+  if(!messages.length||!currentUser)return;
+  try{
+    const today=new Date().toLocaleDateString('ko-KR');
+    // 오늘 이미 저장됐는지 확인
+    const{data:existing}=await sb.from('diary')
+      .select('id').eq('user_id',currentUser.id)
+      .gte('created_at',new Date().toISOString().slice(0,10))
+      .maybeSingle();
+    if(existing)return; // 오늘 이미 저장됨
+
+    const resp=await fetch('/api/summarize',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages,date:today})
+    });
+    if(!resp.ok)return;
+    const r=await resp.json();
+    const text=(r.highlight?r.highlight+'\n\n':'')+r.summary;
+    await sb.from('diary').insert({
+      user_id:currentUser.id,
+      mood:r.mood||'😊',
+      content:text,
+      created_at:new Date().toISOString()
+    });
+  }catch(e){console.error('다이어리 자동저장 오류:',e);}
+}
+
+async function loadDiary(){
+  const body=document.getElementById('diary-body');
+  if(!body||!currentUser)return;
+  body.innerHTML='<div style="text-align:center;color:var(--text3);font-size:.85rem;margin-top:2rem">불러오는 중...</div>';
+  try{
+    const{data}=await sb.from('diary').select('*')
+      .eq('user_id',currentUser.id)
+      .order('created_at',{ascending:false})
+      .limit(30);
+    if(!data||!data.length){
+      body.innerHTML='<div style="text-align:center;color:var(--text3);font-size:.85rem;margin-top:2rem">아직 일기가 없어!<br>대화하면 자동으로 기록돼 😊</div>';
+      return;
+    }
+    body.innerHTML=data.map(d=>{
+      const date=new Date(d.created_at).toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
+      return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1rem">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:1.4rem">${d.mood||'😊'}</span>
+          <span style="font-size:.78rem;color:var(--text3)">${date}</span>
+        </div>
+        <div style="font-size:.85rem;color:var(--text2);line-height:1.7;white-space:pre-wrap">${d.content||''}</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    body.innerHTML='<div style="text-align:center;color:#f87171;font-size:.85rem;margin-top:2rem">불러오기 실패ㅠ</div>';
+  }
+}
+  function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
 </body>
 </html>
