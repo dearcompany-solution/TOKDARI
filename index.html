@@ -1214,6 +1214,14 @@ function changeMonth(dir){
   if(calMonth<0){calMonth=11;calYear--;}
   renderCalendar();
 }
+function goToday(){
+  const today=new Date();
+  calYear=today.getFullYear();
+  calMonth=today.getMonth();
+  renderCalendar();
+  const todayStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  selectCalDate(todayStr);
+}
 
 function renderCalendar(){
   const title=document.getElementById('cal-title');
