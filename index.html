@@ -868,9 +868,8 @@ async function sendMessage(){
 
   if(pendingMedia){
   appendMsg('user','',pendingMedia.preview);
-  // Supabase Storage 업로드
   const imgUrl=await uploadImage(pendingMedia.file);
-  const content=imgUrl?`[이미지] ${imgUrl}`:`[미디어] 파일 보냈어`;
+  const content=imgUrl?`[이미지] ${imgUrl}`:`[사진] (업로드 실패)`;
   messages.push({role:'user',content,created_at:new Date().toISOString()});
   await saveMsg('user',content);
   clearMediaPreview();
@@ -970,22 +969,49 @@ function toggleTrash(){setTrashMode(!trashMode);}
 async function autoSaveDiary(){if(!messages.length){showToast('대화 내용이 없어!');return;}showToast('일기 생성 중... ✨');try{const resp=await fetch('/api/summarize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages,date:new Date().toLocaleDateString('ko-KR')})});if(!resp.ok){showToast('생성 실패ㅠ');return;}const r=await resp.json();const text=(r.highlight?r.highlight+'\n\n':'')+r.summary;await sb.from('diary').insert({user_id:currentUser.id,mood:r.mood||'😊',content:text});showToast('일기 저장됐어 📔✨');}catch(e){showToast('오류났어ㅠ');}}
 async function confirmDeleteChar(){if(!confirm('"'+(charData?.char_name||'친구')+'"와 이별할까?\n\n모든 대화 기록이 삭제되고\n새 친구를 만날 수 있어.\n되돌릴 수 없어!'))return;if(!confirm('정말? 진짜 이별이야...'))return;showToast('이별 처리 중...');await sb.from('messages').delete().eq('user_id',currentUser.id);await sb.from('user_characters').delete().eq('user_id',currentUser.id);charData=null;messages=[];bondLevel=0;totalMsgs=0;chatDays=0;showToast('이별했어... 새로운 만남이 기다리고 있어');setTimeout(()=>startMatching(),1500);}
 async function uploadImage(file){
+  if(file.size>10*1024*1024){showToast('사진이 너무 커! 10MB 이하로 보내줘 📷');return null;}
+  if(!file.type.startsWith('image/')){showToast('이미지 파일만 보낼 수 있어!');return null;}
+  showToast('사진 올리는 중... ⏳');
   try{
-    const ext=file.name.split('.').pop()||'jpg';
-    const path=`${currentUser.id}/${Date.now()}.${ext}`;
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+    const safeExt=['jpg','jpeg','png','gif','webp'].includes(ext)?ext:'jpg';
+    const path=`${currentUser.id}/${Date.now()}.${safeExt}`;
     const{data,error}=await sb.storage.from('chat-images').upload(path,file,{
-      cacheControl:'3600',upsert:false
+      cacheControl:'3600',
+      upsert:false,
+      contentType:file.type
     });
-    if(error){console.error('업로드 실패:',error.message);return null;}
+    if(error){
+      console.error('업로드 실패:',error.message);
+      if(error.message.includes('Bucket not found')){showToast('스토리지 설정 오류 - 관리자에게 문의해줘');}
+      else if(error.message.includes('row-level security')){showToast('권한 오류 - 다시 로그인해봐');}
+      else{showToast('사진 업로드 실패ㅠ 다시 시도해봐');}
+      return null;
+    }
     const{data:urlData}=sb.storage.from('chat-images').getPublicUrl(path);
+    showToast('사진 전송 완료! 📷');
     return urlData.publicUrl;
-  }catch(e){console.error('uploadImage 오류:',e);return null;}
+  }catch(e){
+    console.error('uploadImage 오류:',e);
+    showToast('네트워크 오류! 인터넷 확인해봐');
+    return null;
+  }
 }
-  function handleMedia(e){
+ function handleMedia(e){
   const file=e.target.files[0];if(!file)return;
+  if(!file.type.startsWith('image/')){showToast('이미지 파일만 보낼 수 있어!');return;}
   const reader=new FileReader();
   reader.onload=ev=>{pendingMedia={file,preview:ev.target.result};showMediaPreview(ev.target.result);};
   reader.readAsDataURL(file);e.target.value='';
+}
+function handleDrop(e){
+  e.preventDefault();
+  const file=e.dataTransfer?.files?.[0];
+  if(!file)return;
+  if(!file.type.startsWith('image/')){showToast('이미지 파일만 보낼 수 있어!');return;}
+  const reader=new FileReader();
+  reader.onload=ev=>{pendingMedia={file,preview:ev.target.result};showMediaPreview(ev.target.result);};
+  reader.readAsDataURL(file);
 }
 function showMediaPreview(src){const wrap=document.getElementById('img-preview-wrap');if(!wrap)return;wrap.innerHTML=`<div class="img-preview"><img src="${src}"><button class="img-preview-del" onclick="clearMediaPreview()">✕</button></div>`;}
 function clearMediaPreview(){pendingMedia=null;const w=document.getElementById('img-preview-wrap');if(w)w.innerHTML='';}
@@ -1337,26 +1363,7 @@ async function addScheduleManual(){
   await loadCalendar();
 }
 
-async function deleteSchedule(id){
-  if(!confirm('일정 삭제할까?'))return;
-  await sb.from('schedules').delete().eq('id',id);
-  loadCalendar();
-}
 
-async function addScheduleManual(){
-  const title=prompt('일정 제목:');
-  if(!title)return;
-  const dateStr=prompt('날짜 (예: 2026-04-20):');
-  if(!dateStr)return;
-  await sb.from('schedules').insert({
-    user_id:currentUser.id,
-    title,
-    event_date:new Date(dateStr).toISOString(),
-    created_at:new Date().toISOString()
-  });
-  showToast('일정 추가됐어 📅');
-  loadCalendar();
-}
 
 async function autoDetectSchedule(text){
   // 날짜 패턴 감지
