@@ -583,7 +583,7 @@ async function startApp(){
   document.getElementById('matching').classList.remove('show');
   const appEl=document.getElementById('app');appEl.classList.add('show');appEl.style.display='flex';
   hideSplash();
-  checkConsent();
+  await checkConsent();
   const{data}=await sb.from('user_characters').select('*').eq('user_id',currentUser.id).maybeSingle();
   if(!data){startMatching();return;}
   charData=data;bondLevel=data.bond||0;totalMsgs=data.total_msgs||0;chatDays=data.chat_days||0;
@@ -1579,21 +1579,31 @@ async function autoDetectSchedule(text){
   function showTerms(){document.getElementById('terms-modal').style.display='block';}
 function showPrivacy(){document.getElementById('privacy-modal').style.display='block';}
 function closeModal(id){document.getElementById(id).style.display='none';}
-  function checkConsent(){
-  // 이미 동의했으면 스킵
+  async function checkConsent(){
+  // 로컬에 있으면 바로 스킵
   if(localStorage.getItem('td_consent')==='1')return;
-  // 모달 표시
+  // DB에서 동의 여부 확인
+  try{
+    const{data}=await sb.from('profiles').select('agreed_at').eq('id',currentUser.id).maybeSingle();
+    if(data?.agreed_at){
+      // DB에 동의 기록 있으면 로컬에도 저장하고 스킵
+      localStorage.setItem('td_consent','1');
+      return;
+    }
+  }catch(e){console.error(e);}
+  // 동의 안 했으면 모달 표시
   document.getElementById('consent-modal').style.display='flex';
 }
-function confirmConsent(){
+async function confirmConsent(){
   const terms=document.getElementById('consent-terms').checked;
   const privacy=document.getElementById('consent-privacy').checked;
   const age=document.getElementById('consent-age').checked;
   const errEl=document.getElementById('consent-error');
-  if(!terms||!privacy||!age){
-    errEl.textContent='필수 항목 모두 체크해줘!';
-    return;
-  }
+  if(!terms||!privacy||!age){errEl.textContent='필수 항목 모두 체크해줘!';return;}
+  // DB에 동의 시각 저장
+  try{
+    await sb.from('profiles').update({agreed_at:new Date().toISOString()}).eq('id',currentUser.id);
+  }catch(e){console.error(e);}
   localStorage.setItem('td_consent','1');
   document.getElementById('consent-modal').style.display='none';
 }
