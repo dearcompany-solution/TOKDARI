@@ -1023,6 +1023,14 @@ document.addEventListener('click',e=>{const p=document.getElementById('emoji-pan
 function fmtContent(text){
   if(!text||typeof text!=='string')return '';
 
+  // 0. [이미지] URL 패턴 최우선 처리
+  if(text.startsWith('[이미지]')){
+    const url=text.replace('[이미지]','').trim();
+    if(url.startsWith('http')){
+      return `<img src="${url}" style="max-width:100%;border-radius:10px;display:block;margin-top:4px;cursor:pointer" onclick="window.open('${url}','_blank')" onerror="this.style.display='none'"><br><a href="${url}" target="_blank" style="color:var(--accent2);text-decoration:underline;font-size:.8rem">🖼 이미지 열기</a>`;
+    }
+  }
+
   // 1. 마크다운 표 감지 → HTML 테이블 변환
   if(text.includes('|')){
     const lines=text.split('\n');
