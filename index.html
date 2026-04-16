@@ -203,13 +203,29 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
   <div class="auth-wrap" id="find-screen">
   <div style="font-size:3rem">🔑</div>
   <div class="auth-title">계정 찾기</div>
-  <div class="auth-sub">가입한 이메일로 비밀번호 재설정 링크를 보내줄게</div>
-  <div class="auth-box">
-    <div><div class="auth-label">이메일</div><input class="auth-input" id="find-email" type="email" placeholder="가입한 이메일 입력" autocomplete="email"></div>
-    <div class="auth-error" id="find-error"></div>
+
+  <!-- 1단계: 이메일 확인 -->
+  <div id="find-step1" style="width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;align-items:center">
+    <div class="auth-sub">가입한 이메일을 입력해줘</div>
+    <div class="auth-box" style="width:100%">
+      <div><div class="auth-label">이메일</div><input class="auth-input" id="find-email" type="email" placeholder="가입한 이메일 입력" autocomplete="email"></div>
+      <div class="auth-error" id="find-error"></div>
+    </div>
+    <button class="auth-btn" onclick="doCheckEmail()">이메일 확인 →</button>
+    <div class="auth-switch" onclick="showLogin()">로그인으로 <span>돌아가기</span></div>
   </div>
-  <button class="auth-btn" onclick="doFindAccount()">재설정 링크 보내기</button>
-  <div class="auth-switch" onclick="showLogin()">로그인으로 <span>돌아가기</span></div>
+
+  <!-- 2단계: 새 비밀번호 입력 -->
+  <div id="find-step2" style="display:none;width:100%;max-width:360px;flex-direction:column;gap:12px;align-items:center">
+    <div class="auth-sub" id="find-email-label"></div>
+    <div class="auth-box" style="width:100%">
+      <div><div class="auth-label">새 비밀번호 (6자리 이상)</div><input class="auth-input" id="find-newpw" type="password" placeholder="새 비밀번호 입력" autocomplete="new-password"></div>
+      <div><div class="auth-label">비밀번호 확인</div><input class="auth-input" id="find-newpw2" type="password" placeholder="비밀번호 다시 입력" autocomplete="new-password"></div>
+      <div class="auth-error" id="find-error2"></div>
+    </div>
+    <button class="auth-btn" onclick="doResetPassword()">비밀번호 변경 →</button>
+    <div class="auth-switch" onclick="backToStep1()">이메일 다시 입력 <span>←</span></div>
+  </div>
 </div>
 <div id="matching">
   <div style="font-size:6rem;animation:pulse 2s infinite">🥚</div>
@@ -530,16 +546,61 @@ function showFindAccount(){
   document.getElementById('find-screen').classList.add('show');
   document.getElementById('login-screen').classList.remove('show');
   document.getElementById('signup-screen').classList.remove('show');
+  // 항상 1단계부터 시작
+  document.getElementById('find-step1').style.display='flex';
+  document.getElementById('find-step2').style.display='none';
+  document.getElementById('find-email').value='';
+  document.getElementById('find-error').textContent='';
 }
-async function doFindAccount(){
+function backToStep1(){
+  document.getElementById('find-step1').style.display='flex';
+  document.getElementById('find-step2').style.display='none';
+  document.getElementById('find-error').textContent='';
+}
+async function doCheckEmail(){
   const email=document.getElementById('find-email').value.trim();
   const errEl=document.getElementById('find-error');
   if(!email){errEl.textContent='이메일 입력해줘!';return;}
-  errEl.textContent='전송 중...';
-  const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:'https://tokdari.vercel.app'});
-  if(error){errEl.textContent='전송 실패ㅠ 이메일 다시 확인해봐';return;}
-  errEl.style.color='#22c55e';
-  errEl.textContent='전송됐어! 이메일 확인해줘 📧';
+  errEl.textContent='확인 중...';
+  // profiles 테이블에서 이메일 존재 확인
+  try{
+    const{data}=await sb.from('profiles').select('id').eq('email',email).maybeSingle();
+    if(!data){errEl.textContent='가입된 이메일이 아니야!';return;}
+    // 2단계로 이동
+    errEl.textContent='';
+    document.getElementById('find-email-label').textContent=email+'의 새 비밀번호를 입력해줘';
+    document.getElementById('find-step1').style.display='none';
+    document.getElementById('find-step2').style.display='flex';
+    document.getElementById('find-newpw').value='';
+    document.getElementById('find-newpw2').value='';
+    document.getElementById('find-error2').textContent='';
+  }catch(e){errEl.textContent='오류 났어 다시 시도해봐';}
+}
+async function doResetPassword(){
+  const email=document.getElementById('find-email').value.trim();
+  const pw=document.getElementById('find-newpw').value.trim();
+  const pw2=document.getElementById('find-newpw2').value.trim();
+  const errEl=document.getElementById('find-error2');
+  if(!pw||!pw2){errEl.textContent='비밀번호 입력해줘!';return;}
+  if(pw.length<6){errEl.textContent='비밀번호는 6자리 이상이어야 해!';return;}
+  if(pw!==pw2){errEl.textContent='비밀번호가 일치하지 않아!';return;}
+  errEl.textContent='변경 중...';
+  try{
+    // api/auth로 비밀번호 변경 요청
+    const r=await fetch('/api/auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'resetPassword',email,password:pw})
+    });
+    const res=await r.json();
+    if(!r.ok){errEl.textContent=res.error||'변경 실패ㅠ';return;}
+    errEl.style.color='#22c55e';
+    errEl.textContent='비밀번호 변경 완료! 🎉';
+    setTimeout(()=>{
+      document.getElementById('find-screen').classList.remove('show');
+      showLogin();
+    },1500);
+  }catch(e){errEl.textContent='오류 났어 다시 시도해봐';}
 }
   function showSignup(){document.getElementById('signup-screen').classList.add('show');document.getElementById('login-screen').classList.remove('show');}
 async function doSignup(){
