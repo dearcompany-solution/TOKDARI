@@ -343,23 +343,47 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
           <div class="toggle-row"><span class="toggle-label">먼저 선톡 받기</span><div class="toggle on" id="toggle-ping" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div></div>
           <div class="toggle-row"><span class="toggle-label">알림음</span><div class="toggle on" id="toggle-sound" onclick="toggleSound(this)"><div class="toggle-thumb"></div></div></div>
           <div class="toggle-row"><span class="toggle-label">진동</span><div class="toggle on" id="toggle-vibrate" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div></div>
-          <div id="sound-select-wrap" style="display:flex;flex-direction:column;gap:6px">
-            <div style="font-size:.75rem;color:var(--text3);font-weight:600">메시지 수신음</div>
-            <select class="sound-select" id="select-msg-sound" onchange="saveSoundSettings()">
-              <option value="notify1.mp3">🐧 선톡 메시지음 (기본)</option>
-              <option value="notify2.mp3">🔔 선톡 알림음</option>
-              <option value="notify3.mp3">✨ 특별 알림음</option>
-              <option value="none">🔇 무음</option>
-            </select>
-            <div style="font-size:.75rem;color:var(--text3);font-weight:600;margin-top:4px">선톡 알림음</div>
-            <select class="sound-select" id="select-ping-sound" onchange="saveSoundSettings()">
-              <option value="notify2.mp3">🔔 선톡 알림음 (기본)</option>
-              <option value="notify1.mp3">🐧 선톡 메시지음</option>
-              <option value="notify3.mp3">✨ 특별 알림음</option>
-              <option value="none">🔇 무음</option>
-            </select>
-            <button onclick="previewSound('msg')" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text2);font-size:.82rem;padding:8px;cursor:pointer;font-family:'Noto Sans KR',sans-serif">🔊 메시지음 미리듣기</button>
-            <button onclick="previewSound('ping')" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text2);font-size:.82rem;padding:8px;cursor:pointer;font-family:'Noto Sans KR',sans-serif">🔊 선톡음 미리듣기</button>
+          <div id="sound-select-wrap" style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div style="font-size:.72rem;color:var(--text3);font-weight:600;margin-bottom:6px;letter-spacing:.04em">메시지 수신음</div>
+              <div class="sound-btn-group" id="msg-sound-group">
+                <div class="sound-opt selected" onclick="selectSound('msg','notify1.mp3',this)">
+                  <div class="sound-opt-dot"></div><span>🐧 선톡 메시지음</span>
+                  <button onclick="event.stopPropagation();previewSound('msg')" style="margin-left:auto;background:none;border:none;color:var(--text3);font-size:.8rem;cursor:pointer">▶</button>
+                </div>
+                <div class="sound-opt" onclick="selectSound('msg','notify2.mp3',this)">
+                  <div class="sound-opt-dot"></div><span>🔔 선톡 알림음</span>
+                  <button onclick="event.stopPropagation();previewSoundFile('notify2.mp3')" style="margin-left:auto;background:none;border:none;color:var(--text3);font-size:.8rem;cursor:pointer">▶</button>
+                </div>
+                <div class="sound-opt" onclick="selectSound('msg','notify3.mp3',this)">
+                  <div class="sound-opt-dot"></div><span>✨ 특별 알림음</span>
+                  <button onclick="event.stopPropagation();previewSoundFile('notify3.mp3')" style="margin-left:auto;background:none;border:none;color:var(--text3);font-size:.8rem;cursor:pointer">▶</button>
+                </div>
+                <div class="sound-opt" onclick="selectSound('msg','none',this)">
+                  <div class="sound-opt-dot"></div><span>🔇 무음</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:.72rem;color:var(--text3);font-weight:600;margin-bottom:6px;letter-spacing:.04em">선톡 알림음</div>
+              <div class="sound-btn-group" id="ping-sound-group">
+                <div class="sound-opt" onclick="selectSound('ping','notify1.mp3',this)">
+                  <div class="sound-opt-dot"></div><span>🐧 선톡 메시지음</span>
+                  <button onclick="event.stopPropagation();previewSoundFile('notify1.mp3')" style="margin-left:auto;background:none;border:none;color:var(--text3);font-size:.8rem;cursor:pointer">▶</button>
+                </div>
+                <div class="sound-opt selected" onclick="selectSound('ping','notify2.mp3',this)">
+                  <div class="sound-opt-dot"></div><span>🔔 선톡 알림음</span>
+                  <button onclick="event.stopPropagation();previewSound('ping')" style="margin-left:auto;background:none;border:none;color:var(--text3);font-size:.8rem;cursor:pointer">▶</button>
+                </div>
+                <div class="sound-opt" onclick="selectSound('ping','notify3.mp3',this)">
+                  <div class="sound-opt-dot"></div><span>✨ 특별 알림음</span>
+                  <button onclick="event.stopPropagation();previewSoundFile('notify3.mp3')" style="margin-left:auto;background:none;border:none;color:var(--text3);font-size:.8rem;cursor:pointer">▶</button>
+                </div>
+                <div class="sound-opt" onclick="selectSound('ping','none',this)">
+                  <div class="sound-opt-dot"></div><span>🔇 무음</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="settings-section">
@@ -1694,11 +1718,15 @@ function initSounds(){
   const pingSound=localStorage.getItem('td_ping_sound')||'notify2.mp3';
   if(msgSound!=='none'){msgAudio=new Audio('/sounds/'+msgSound);msgAudio.volume=0.7;}
   if(pingSound!=='none'){pingAudio=new Audio('/sounds/'+pingSound);pingAudio.volume=0.7;}
-  // 설정 화면 select 값 복원
-  const ms=document.getElementById('select-msg-sound');
-  const ps=document.getElementById('select-ping-sound');
-  if(ms)ms.value=msgSound;
-  if(ps)ps.value=pingSound;
+  // 버튼 선택 상태 복원
+  document.querySelectorAll('#msg-sound-group .sound-opt').forEach(o=>{
+    o.classList.remove('selected');
+    if(o.getAttribute('onclick')?.includes(msgSound))o.classList.add('selected');
+  });
+  document.querySelectorAll('#ping-sound-group .sound-opt').forEach(o=>{
+    o.classList.remove('selected');
+    if(o.getAttribute('onclick')?.includes(pingSound))o.classList.add('selected');
+  });
   // 토글 상태 복원
   const soundOn=localStorage.getItem('td_sound_on')!=='0';
   const tog=document.getElementById('toggle-sound');
@@ -1735,7 +1763,27 @@ function playPingSound(){
   if(!on||!pingAudio)return;
   try{pingAudio.currentTime=0;pingAudio.play().catch(()=>{});}catch(e){}
 }
-function previewSound(type){
+function selectSound(type,value,el){
+  const groupId=type==='msg'?'msg-sound-group':'ping-sound-group';
+  document.querySelectorAll('#'+groupId+' .sound-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  if(type==='msg'){
+    localStorage.setItem('td_msg_sound',value);
+    msgAudio=value!=='none'?new Audio('/sounds/'+value):null;
+    if(msgAudio)msgAudio.volume=0.7;
+  }else{
+    localStorage.setItem('td_ping_sound',value);
+    pingAudio=value!=='none'?new Audio('/sounds/'+value):null;
+    if(pingAudio)pingAudio.volume=0.7;
+  }
+  showToast('알림음 변경됐어! 🔔');
+}
+function previewSoundFile(file){
+  const on=localStorage.getItem('td_sound_on')!=='0';
+  if(!on){showToast('알림음 토글을 먼저 켜줘!');return;}
+  try{const a=new Audio('/sounds/'+file);a.volume=0.7;a.play().catch(()=>{});}catch(e){}
+}
+  function previewSound(type){
   const on=localStorage.getItem('td_sound_on')!=='0';
   if(!on){showToast('알림음 토글을 먼저 켜줘!');return;}
   if(type==='msg'&&msgAudio){try{msgAudio.currentTime=0;msgAudio.play().catch(()=>{});}catch(e){}}
