@@ -64,7 +64,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 .header-actions{margin-left:auto;display:flex;gap:2px}
 #home-screen{background:var(--bg);overflow-y:auto}
 .home-inner{display:flex;flex-direction:column;align-items:center;padding:1.2rem 1rem 2rem;gap:1rem}
-.char-stage{width:200px;height:200px;border-radius:24px;background:linear-gradient(135deg,var(--bg2),var(--bg3));border:2px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;margin:.5rem 0;transition:all .5s;overflow:hidden}
+.char-stage{width:220px;height:220px;border-radius:50%;background:none;border:none;display:flex;align-items:center;justify-content:center;position:relative;margin:.5rem 0;transition:all .5s;overflow:visible}
+.char-aura{display:none}
+@keyframes float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-10px)}}
 .char-emoji{font-size:5rem;transition:all .5s}
 .char-aura{position:absolute;inset:-8px;border-radius:50%;border:2px solid transparent;animation:aura 3s infinite}
 @keyframes aura{0%,100%{border-color:rgba(124,58,237,.2);transform:scale(1)}50%{border-color:rgba(167,139,250,.5);transform:scale(1.04)}}
@@ -287,10 +289,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
   <div class="stat-card"><div class="stat-val" id="stat-level">1</div><div class="stat-lbl">레벨</div></div>
   <div class="stat-card"><div class="stat-val" id="stat-mood">😊</div><div class="stat-lbl">오늘 기분</div></div>
 </div>
-<div class="today-msg">
-  <div class="today-icon" id="today-icon">🥚</div>
-  <div class="today-text" id="today-text">대화하러 와줘서 기다리고 있었어!</div>
-</div>
+
         <button class="chat-start-btn" onclick="openChat()">
           <span>💬</span><span id="chat-btn-text">대화하기</span>
         </button>
@@ -816,9 +815,9 @@ function updateCharDisplay(){
   const svgWrap=document.getElementById('char-svg-wrap');
   if(svgWrap){
     const todayImg=getTodayPenguinImg();
-    svgWrap.innerHTML=`<div style="position:relative;width:140px;height:140px;display:flex;align-items:center;justify-content:center">
-      <img src="${todayImg}" style="width:130px;height:130px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(124,58,237,.4))" onerror="this.parentElement.innerHTML=getPenguinSVG(${lv})">
-      <div style="position:absolute;bottom:-8px;right:-4px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:2px 7px;font-size:.65rem;font-weight:700;color:var(--accent2)">Lv.${lv}</div>
+    svgWrap.innerHTML=`<div style="position:relative;display:flex;align-items:center;justify-content:center;animation:float 3s ease-in-out infinite">
+      <img src="${todayImg}" style="width:200px;height:200px;object-fit:contain;filter:drop-shadow(0 8px 24px rgba(124,58,237,.5))" onerror="this.parentElement.innerHTML=getPenguinSVG(${lv})">
+      <div style="position:absolute;bottom:-4px;right:0px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:2px 7px;font-size:.65rem;font-weight:700;color:var(--accent2)">Lv.${lv}</div>
     </div>`;
   }
   if(el('chat-char-icon'))el('chat-char-icon').textContent=ch.icons[Math.min(lv-1,ch.icons.length-1)]||'🐧';
