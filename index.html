@@ -160,6 +160,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
   .cal-event-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:.8rem;display:flex;flex-direction:column;gap:4px;transition:border-color .2s}
 .cal-event-card:active{border-color:var(--accent)}
 .cal-event-empty{text-align:center;color:var(--text3);font-size:.85rem;margin-top:1.5rem;line-height:1.8}
+.sound-btn-group{display:flex;flex-direction:column;gap:6px;width:100%}
+.sound-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .15s;font-size:.85rem;color:var(--text2)}
+.sound-opt.selected{border-color:var(--accent);background:rgba(124,58,237,.15);color:var(--accent2)}
+.sound-opt-dot{width:8px;height:8px;border-radius:50%;border:2px solid var(--text3);flex-shrink:0;transition:all .15s}
+.sound-opt.selected .sound-opt-dot{background:var(--accent);border-color:var(--accent)}
 </style>
 </head>
 <body>
