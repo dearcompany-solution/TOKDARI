@@ -1322,13 +1322,12 @@ async function toggleNotif(el){
 async function requestNotifPermission(){
   if(!('Notification' in window)||!('serviceWorker' in navigator))return;
 
-  // 이미 허용된 경우 조용히 구독만 확인
+  // 이미 허용된 경우
   if(Notification.permission==='granted'){
     try{
       const reg=await navigator.serviceWorker.ready;
       const existing=await reg.pushManager.getSubscription();
       if(!existing){
-        // 구독 없으면 새로 구독
         const sub=await reg.pushManager.subscribe({
           userVisibleOnly:true,
           applicationServerKey:urlB64ToU8(VAPID_PUB)
@@ -1340,12 +1339,17 @@ async function requestNotifPermission(){
     return;
   }
 
-  // 거부된 경우 토스트 없이 조용히 종료
-  if(Notification.permission==='denied')return;
+  if(Notification.permission==='denied'){
+    showToast('알림이 차단됐어! 브라우저 설정에서 허용해줘 🔔');
+    return;
+  }
 
-  // default(미결정) 상태일 때만 권한 요청
+  // 권한 요청
   const perm=await Notification.requestPermission();
-  if(perm!=='granted')return;
+  if(perm!=='granted'){
+    showToast('알림을 허용해야 선톡을 받을 수 있어!');
+    return;
+  }
 
   try{
     const reg=await navigator.serviceWorker.ready;
@@ -1357,7 +1361,7 @@ async function requestNotifPermission(){
     });
     const r=await fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({userId:currentUser.id,subscription:sub})});
-    if(r.ok)showToast('알림 설정 완료! 📱');
+    if(r.ok)showToast('알림 설정 완료! 선톡 받을 준비 됐어 📱');
   }catch(e){console.error(e);}
 }
 function urlB64ToU8(b64){const p='='.repeat((4-b64.length%4)%4);const b=(b64+p).replace(/-/g,'+').replace(/_/g,'/');const d=window.atob(b);return Uint8Array.from([...d].map(c=>c.charCodeAt(0)));}
@@ -1372,48 +1376,47 @@ function scheduleRandomPing(){
     const name=charData?.char_name||'톡다리';
 
     let pings;
-    if(lv<=1) pings=['...🥚','(알 속에서 기다리는 중)'];
-    else if(lv<=2) pings=['삐약...! 나 여기 있어','빨리 와줘'];
-    else if(ch?.id==='A') pings=['야야야 나 생각났어ㅋㅋ','뭐해? 나 심심한데','오늘 어땠어?','야 나야','ㅋㅋ 나 또 왔어'];
-    else if(ch?.id==='B') pings=['...괜찮아?','생각나서','오늘 밥은 먹었어','잘 지내?'];
+    if(lv<=1)pings=['...🥚','(알 속에서 기다리는 중)'];
+    else if(lv<=2)pings=['삐약...! 나 여기 있어','빨리 와줘'];
+    else if(ch?.id==='A')pings=['야야야 나 생각났어ㅋㅋ','뭐해? 나 심심한데','오늘 어땠어?','야 나야','ㅋㅋ 나 또 왔어'];
+    else if(ch?.id==='B')pings=['...괜찮아?','생각나서','오늘 밥은 먹었어','잘 지내?'];
     else pings=['어 살아있어?','요즘 뭐하냐고','할말있는데','심심하면 와'];
 
     const msg=pings[Math.floor(Math.random()*pings.length)];
 
     if(currentUser){
-      // DB에 저장 (채팅창 열면 보이게)
       messages.push({role:'assistant',content:msg,created_at:new Date().toISOString()});
       await saveMsg('assistant',msg);
     }
 
-    // 앱 백그라운드 → Service Worker로 알림
-    if(document.hidden && Notification.permission==='granted'){
+    // 앱 열려있을 때도 알림창 띄우기
+    if(Notification.permission==='granted'){
       try{
         const reg=await navigator.serviceWorker.ready;
+        // 앱 열려있든 꺼져있든 항상 SW 알림
         await reg.showNotification(name,{
           body:msg,
           icon:'/icon.png',
           badge:'/icon.png',
-          vibrate:[200,100,200,100,200],
+          vibrate:[300,100,300,100,300],
           tag:'tokdari-ping',
           renotify:true,
+          requireInteraction:true,
+          silent:false,
           data:{url:self?.location?.origin||'/'}
         });
       }catch(e){
-        // 폴백: 직접 알림
-        if('Notification' in window) new Notification(name,{body:msg,icon:'/icon.png'});
+        // 폴백: 브라우저 기본 알림
+        if('Notification' in window)new Notification(name,{body:msg,icon:'/icon.png'});
       }
     }
 
-    // 앱 열려있을 때
-    if(!document.hidden){
-      const chatOpen=document.getElementById('chat-screen')?.classList.contains('active');
-      if(chatOpen){
-        appendMsg('ai',msg);
-      } else {
-        showToast(`${name}: ${msg}`);
-        // 홈에서도 토스트로 표시
-      }
+    // 앱 열려있을 때 채팅창에도 표시
+    const chatOpen=document.getElementById('chat-screen')?.classList.contains('active');
+    if(!document.hidden&&chatOpen){
+      appendMsg('ai',msg);
+    }else if(!document.hidden){
+      showToast(`${name}: ${msg}`);
     }
 
     scheduleRandomPing();
