@@ -504,6 +504,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 - 회원 탈퇴 시 모든 데이터가 삭제됩니다
 
 시행일: 2026년 4월 16일</div>
+    <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--divider)">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <input type="checkbox" id="privacy-no-show" style="accent-color:var(--accent);width:16px;height:16px">
+        <span style="font-size:.82rem;color:var(--text2)">다시 보지 않기</span>
+      </label>
+      <button onclick="closePrivacyModal()" style="width:100%;margin-top:10px;padding:.8rem;background:linear-gradient(135deg,var(--accent),var(--pink));border:none;border-radius:12px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">확인</button>
+    </div>
   </div>
 </div>
   <div class="toast" id="toast"></div>
@@ -688,6 +695,12 @@ async function startApp(){
   hideSplash();
   await checkConsent();
     initSounds();
+  initSounds();
+  // 개인정보처리방침 미확인 시 자동 표시
+  const userId=currentUser?.id||'guest';
+  if(localStorage.getItem('td_privacy_done_'+userId)!=='1'){
+    setTimeout(()=>showPrivacy(),1000);
+  }
   const{data}=await sb.from('user_characters').select('*').eq('user_id',currentUser.id).maybeSingle();
   if(!data){startMatching();return;}
   charData=data;bondLevel=data.bond||0;totalMsgs=data.total_msgs||0;chatDays=data.chat_days||0;
@@ -1686,7 +1699,24 @@ async function autoDetectSchedule(text){
   }catch(e){}
 }
   function showTerms(){document.getElementById('terms-modal').style.display='block';}
-function showPrivacy(){document.getElementById('privacy-modal').style.display='block';}
+function showPrivacy(){
+  // 다시 보지 않기 체크한 아이디면 스킵
+  const userId=currentUser?.id||'guest';
+  if(localStorage.getItem('td_privacy_done_'+userId)==='1')return;
+  const modal=document.getElementById('privacy-modal');
+  modal.style.display='block';
+  // 체크박스 초기화
+  const cb=document.getElementById('privacy-no-show');
+  if(cb)cb.checked=false;
+}
+function closePrivacyModal(){
+  const cb=document.getElementById('privacy-no-show');
+  if(cb?.checked){
+    const userId=currentUser?.id||'guest';
+    localStorage.setItem('td_privacy_done_'+userId,'1');
+  }
+  document.getElementById('privacy-modal').style.display='none';
+}
 function closeModal(id){document.getElementById(id).style.display='none';}
  async function checkConsent(){
   if(localStorage.getItem('td_consent')==='1')return;
