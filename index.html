@@ -1745,9 +1745,13 @@ function closePrivacyModal(){
 function closeModal(id){document.getElementById(id).style.display='none';}
  async function checkConsent(){
   if(localStorage.getItem('td_consent')==='1')return;
-  if(!currentUser?.id){return;}
+  if(!currentUser?.id)return;
   try{
-    const{data}=await sb.from('profiles').select('agreed_at').eq('id',currentUser.id).maybeSingle();
+    // profile.id로 조회 (로그인 시 저장된 profiles 테이블 id)
+    const{data}=await sb.from('profiles')
+      .select('agreed_at')
+      .eq('id',profile.id)
+      .maybeSingle();
     if(data?.agreed_at){
       localStorage.setItem('td_consent','1');
       return;
@@ -1764,23 +1768,25 @@ async function confirmConsent(){
   errEl.textContent='저장 중...';
   try{
     if(currentUser?.id){
-      const{error}=await sb.from('profiles')
-        .update({agreed_at:new Date().toISOString()})
-        .eq('id',currentUser.id);
+      // auth_id로 먼저 시도, 안되면 id로 시도
+      const now=new Date().toISOString();
+      let{error}=await sb.from('profiles')
+        .update({agreed_at:now})
+        .eq('auth_id',currentUser.id);
       if(error){
-        // agreed_at 컬럼 없으면 upsert로 시도
         const{error:e2}=await sb.from('profiles')
-          .upsert({id:currentUser.id,agreed_at:new Date().toISOString()},{onConflict:'id'});
+          .update({agreed_at:now})
+          .eq('id',currentUser.id);
         if(e2){
-          errEl.textContent='저장 실패: '+e2.message;
-          return;
+          // 둘 다 실패하면 profile.id로 시도
+          const{error:e3}=await sb.from('profiles')
+            .update({agreed_at:now})
+            .eq('id',profile.id);
+          if(e3){errEl.textContent='저장 실패: '+e3.message;return;}
         }
       }
     }
-  }catch(e){
-    errEl.textContent='오류: '+e.message;
-    return;
-  }
+  }catch(e){errEl.textContent='오류: '+e.message;return;}
   localStorage.setItem('td_consent','1');
   errEl.textContent='';
   document.getElementById('consent-modal').style.display='none';
