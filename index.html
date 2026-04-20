@@ -445,7 +445,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
   <div style="max-width:500px;margin:2rem auto;background:var(--bg2);border-radius:20px;padding:1.5rem;border:1px solid var(--border)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
       <div style="font-size:1.1rem;font-weight:700">이용약관</div>
-      <button onclick="closeModal('terms-modal')" style="background:none;border:none;color:var(--text2);font-size:1.3rem;cursor:pointer">✕</button>
+      <button onclick="closeTermsModal()" style="background:none;border:none;color:var(--text2);font-size:1.3rem;cursor:pointer">✕</button>
     </div>
     <div style="font-size:.82rem;color:var(--text2);line-height:1.9;white-space:pre-wrap">제1조 (목적)
 본 약관은 톡다리(이하 "서비스")의 이용 조건 및 절차에 관한 사항을 규정합니다.
@@ -468,6 +468,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 운영자는 필요한 경우 약관을 변경할 수 있으며, 변경 시 앱 내 공지합니다.
 
 시행일: 2026년 4월 16일</div>
+    <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--divider)">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <input type="checkbox" id="terms-no-show" style="accent-color:var(--accent);width:16px;height:16px">
+        <span style="font-size:.82rem;color:var(--text2)">다시 보지 않기</span>
+      </label>
+      <button onclick="closeTermsModal()" style="width:100%;margin-top:10px;padding:.8rem;background:linear-gradient(135deg,var(--accent),var(--pink));border:none;border-radius:12px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">확인</button>
+    </div>
   </div>
 </div>
 
@@ -700,6 +707,9 @@ async function startApp(){
   const userId=currentUser?.id||'guest';
   if(localStorage.getItem('td_privacy_done_'+userId)!=='1'){
     setTimeout(()=>showPrivacy(),1000);
+  }
+  if(localStorage.getItem('td_terms_done_'+userId)!=='1'){
+    setTimeout(()=>showTerms(),2000);
   }
   const{data}=await sb.from('user_characters').select('*').eq('user_id',currentUser.id).maybeSingle();
   if(!data){startMatching();return;}
@@ -1698,7 +1708,22 @@ async function autoDetectSchedule(text){
     showToast(`📅 일정 추가됐어: ${schedule.title}`);
   }catch(e){}
 }
-  function showTerms(){document.getElementById('terms-modal').style.display='block';}
+  function showTerms(){
+  const userId=currentUser?.id||'guest';
+  if(localStorage.getItem('td_terms_done_'+userId)==='1')return;
+  const modal=document.getElementById('terms-modal');
+  modal.style.display='block';
+  const cb=document.getElementById('terms-no-show');
+  if(cb)cb.checked=false;
+}
+function closeTermsModal(){
+  const cb=document.getElementById('terms-no-show');
+  if(cb?.checked){
+    const userId=currentUser?.id||'guest';
+    localStorage.setItem('td_terms_done_'+userId,'1');
+  }
+  document.getElementById('terms-modal').style.display='none';
+}
 function showPrivacy(){
   // 다시 보지 않기 체크한 아이디면 스킵
   const userId=currentUser?.id||'guest';
