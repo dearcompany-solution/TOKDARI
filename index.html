@@ -1899,9 +1899,8 @@ async function addScheduleManual(){
 
 
 async function autoDetectSchedule(text){
-  const schedulePattern=/약속|미팅|회의|예약|일정|방문|만남|행사|시험|발표|면접|모임|데이트|여행|출장|병원|수업|강의|콘서트|공연|결혼식|생일|기념일|피부과|치과|내과|정형외과|안과|이비인후과/;
+  const schedulePattern=/약속|미팅|회의|예약|일정|방문|만남|행사|시험|발표|면접|모임|데이트|여행|출장|병원|수업|강의|콘서트|공연|결혼식|생일|기념일|피부과|치과|내과|정형외과|안과|이비인후과|예정|할거야|할게|갈거야|갈게/;
   const datePattern=/(\d{1,2})월\s*(\d{1,2})일|내일|모레|다음\s*주|이번\s*주|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\d{1,2}시/;
-  if(!schedulePattern.test(text)&&!datePattern.test(text))return;
   if(!schedulePattern.test(text))return;
 
   try{
@@ -1909,39 +1908,17 @@ async function autoDetectSchedule(text){
     const todayStr=today.toISOString().slice(0,10);
     const tomorrow=new Date(today);tomorrow.setDate(today.getDate()+1);
     const tomorrowStr=tomorrow.toISOString().slice(0,10);
+    const dayAfter=new Date(today);dayAfter.setDate(today.getDate()+2);
+    const dayAfterStr=dayAfter.toISOString().slice(0,10);
 
-    // api/summarize 대신 직접 OpenAI 호출 구조로 요청
-    const resp=await fetch('/api/chat',{
+    // 전용 schedule API 호출
+    const resp=await fetch('/api/schedule',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        messages:[
-          {
-            role:'system',
-            content:`[일정추출모드] 오늘:${todayStr} 내일:${tomorrowStr}
-JSON만 반환. 다른 텍스트 금지. 마크다운 금지.
-일정있으면: {"title":"제목","date":"YYYY-MM-DD","time":"HH:MM","content":"내용"}
-일정없으면: null
-규칙:
-- 내일=${tomorrowStr}
-- 모레=${new Date(today.getTime()+2*86400000).toISOString().slice(0,10)}
-- 시간은 24시간 형식 (오후2시=14:00)
-- 시간없으면 time=null`
-          },
-          {role:'user',content:`일정 추출: "${text}"`}
-        ]
-      })
+      body:JSON.stringify({text,today:todayStr,tomorrow:tomorrowStr,dayAfter:dayAfterStr})
     });
 
-    const data=await resp.json();
-    const raw=data.choices?.[0]?.message?.content?.trim()||'';
-    if(!raw||raw==='null')return;
-
-    const clean=raw.replace(/```json|```|\n/g,'').trim();
-    let schedule;
-    try{schedule=JSON.parse(clean);}catch(e){
-      console.error('일정 JSON 파싱 실패:',clean);return;
-    }
+    const schedule=await resp.json();
     if(!schedule?.title||!schedule?.date)return;
 
     // 날짜+시간 조합
@@ -1971,16 +1948,19 @@ JSON만 반환. 다른 텍스트 금지. 마크다운 금지.
       event_date:eventDateObj.toISOString(),
       created_at:new Date().toISOString()
     });
-
     if(error){console.error('일정 저장 실패:',error.message);return;}
 
     const dateLabel=eventDateObj.toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
     const timeStr=schedule.time?` ${schedule.time}`:'';
-    showToast(`📅 ${schedule.title} (${dateLabel}${timeStr}) 등록됐어!`);
+    showToast(`📅 ${schedule.title} (${dateLabel}${timeStr}) 캘린더 등록됐어!`);
 
-    // 캘린더 새로고침
-    if(currentTab==='calendar')loadCalendar();
-    else calSchedules=await sb.from('schedules').select('*').eq('user_id',currentUser.id).then(r=>r.data||[]);
+    // 캘린더 즉시 반영
+    if(currentTab==='calendar'){
+      loadCalendar();
+    }else{
+      const{data:all}=await sb.from('schedules').select('*').eq('user_id',currentUser.id);
+      calSchedules=all||[];
+    }
 
     // 알림 예약
     scheduleEventReminder(schedule.title,eventDateObj,schedule.content||'');
