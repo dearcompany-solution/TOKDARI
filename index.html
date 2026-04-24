@@ -129,6 +129,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 #chat-screen.trash .app-header{background:#1a0505;border-bottom-color:rgba(239,68,68,.3)}
 #chat-screen.trash #chat-messages{background:#0d0505}
 #chat-screen.trash .input-bar{background:#1a0505;border-top-color:rgba(239,68,68,.25)}
+#chat-screen.trash .bubble-user{background:#7f1d1d}
+#chat-screen.trash .bubble-ai{background:#1c0505}
+#chat-screen.trash .msg-input{background:#2a0808;color:#fca5a5}
 #settings-screen{background:var(--bg);overflow-y:auto}
 .settings-body{padding:.75rem;display:flex;flex-direction:column;gap:12px}
 .settings-section{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1rem;display:flex;flex-direction:column;gap:12px}
@@ -1006,7 +1009,13 @@ async function openChat(){
   if(messages.length===0) sendFirstMessage();
   else setTimeout(scrollToBottom,100);
 }
-function goBackToHome(){document.getElementById('chat-screen').classList.remove('active');setTrashMode(false);updateCharDisplay();}
+function goBackToHome(){
+  if(trashMode){
+    setTrashMode(false);
+  }
+  document.getElementById('chat-screen').classList.remove('active');
+  updateCharDisplay();
+}
 async function loadMessages(){
   if(!currentUser)return;
   try{
@@ -1110,6 +1119,8 @@ async function scanMessagesForSchedules(msgData){
 }
 async function saveMsg(role,content){
   if(!currentUser)return;
+  // 쓰레기통 모드면 저장 안 함
+  if(trashMode)return;
   try{
     const{error}=await sb.from('messages').insert({
       user_id:currentUser.id,
@@ -1472,8 +1483,45 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Shift+Enter는 줄바꿈
 });
 });
-function setTrashMode(on){trashMode=on;const s=document.getElementById('chat-screen');if(on){s.classList.add('trash');document.getElementById('chat-status').textContent='💢 쓰레기통 모드';}else{s.classList.remove('trash');document.getElementById('chat-status').textContent='온라인';}}
+function showChatNotice(msg){
+  // 대화창 가운데 안내 문구 표시
+  const wrap=document.getElementById('chat-messages');
+  if(!wrap)return;
+  const div=document.createElement('div');
+  div.style.cssText='text-align:center;padding:8px 16px;margin:8px auto;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:12px;font-size:.78rem;color:#fca5a5;max-width:260px;animation:fadeIn .3s ease';
+  div.textContent=msg;
+  wrap.appendChild(div);
+  scrollToBottom();
+  // 3초 후 사라짐
+  setTimeout(()=>div.remove(),3000);
+}
+
+function setTrashMode(on){
+  trashMode=on;
+  const s=document.getElementById('chat-screen');
+  const btn=document.querySelector('.hbtn[onclick="toggleTrash()"]');
+  if(on){
+    s.classList.add('trash');
+    document.getElementById('chat-status').textContent='🗑 휘발 모드 ON';
+    if(btn){btn.style.color='#ef4444';btn.style.textShadow='0 0 8px rgba(239,68,68,.8)';}
+    showChatNotice('🗑 휘발 모드 ON — 이 대화는 저장 안 돼');
+  }else{
+    s.classList.remove('trash');
+    document.getElementById('chat-status').textContent='온라인';
+    if(btn){btn.style.color='';btn.style.textShadow='';}
+    showChatNotice('💾 저장 모드로 돌아왔어');
+    // OFF 할 때 휘발 메시지 즉시 삭제
+    cleanTrashMessages();
+  }
+}
 function toggleTrash(){setTrashMode(!trashMode);}
+
+function cleanTrashMessages(){
+  // 마지막 저장된 시점 이후 메모리 메시지 제거 후 DB에서 다시 로드
+  loadMessages().then(()=>{
+    showChatNotice('🗑 휘발 대화 삭제 완료');
+  });
+}
 
 async function confirmDeleteChar(){if(!confirm('"'+(charData?.char_name||'친구')+'"와 이별할까?\n\n모든 대화 기록이 삭제되고\n새 친구를 만날 수 있어.\n되돌릴 수 없어!'))return;if(!confirm('정말? 진짜 이별이야...'))return;showToast('이별 처리 중...');await sb.from('messages').delete().eq('user_id',currentUser.id);await sb.from('user_characters').delete().eq('user_id',currentUser.id);charData=null;messages=[];bondLevel=0;totalMsgs=0;chatDays=0;showToast('이별했어... 새로운 만남이 기다리고 있어');setTimeout(()=>startMatching(),1500);}
 async function uploadImage(file){
