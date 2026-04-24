@@ -1019,8 +1019,94 @@ async function loadMessages(){
       messages=data.map(m=>({role:m.role,content:m.content,created_at:m.created_at}));
       renderAllMessages();
       setTimeout(scrollToBottom,100);
+      // 기존 대화에서 일정 자동 스캔 (백그라운드)
+      setTimeout(()=>scanMessagesForSchedules(data),2000);
     }
   }catch(e){console.error('loadMessages catch:',e);}
+}
+
+async function scanMessagesForSchedules(msgData){
+  if(!msgData?.length)return;
+  try{
+    // 유저 메시지만 필터링
+    const userMsgs=msgData.filter(m=>m.role==='user'&&m.content?.length>4);
+    // 일정 키워드 있는 메시지만
+    const schedulePattern=/약속|미팅|회의|예약|일정|방문|만남|행사|시험|발표|면접|모임|데이트|여행|출장|병원|수업|강의|콘서트|공연|결혼식|생일|기념일|피부과|치과|예정|할거야|갈거야/;
+    const datePattern=/(\d{1,2})월\s*(\d{1,2})일|내일|모레|다음\s*주|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\d{1,2}시/;
+    const candidates=userMsgs.filter(m=>schedulePattern.test(m.content)&&datePattern.test(m.content));
+    if(!candidates.length)return;
+
+    // 기존 저장된 일정 목록 가져오기
+    const{data:existingSchedules}=await sb.from('schedules')
+      .select('title,event_date')
+      .eq('user_id',currentUser.id);
+
+    // 메시지 기준 날짜로 일정 추출 (최근 30개만)
+    const toScan=candidates.slice(-30);
+    for(const msg of toScan){
+      const msgDate=new Date(msg.created_at);
+      const todayStr=msgDate.toISOString().slice(0,10);
+      const tomorrow=new Date(msgDate);tomorrow.setDate(msgDate.getDate()+1);
+      const tomorrowStr=tomorrow.toISOString().slice(0,10);
+      const dayAfter=new Date(msgDate);dayAfter.setDate(msgDate.getDate()+2);
+      const dayAfterStr=dayAfter.toISOString().slice(0,10);
+
+      try{
+        const resp=await fetch('/api/schedule',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            text:msg.content,
+            today:todayStr,
+            tomorrow:tomorrowStr,
+            dayAfter:dayAfterStr
+          })
+        });
+        const schedule=await resp.json();
+        if(!schedule?.title||!schedule?.date)continue;
+
+        // 날짜 유효성
+        const eventDateObj=schedule.time
+          ?new Date(`${schedule.date}T${schedule.time}:00`)
+          :new Date(`${schedule.date}T09:00:00`);
+        if(isNaN(eventDateObj.getTime()))continue;
+
+        // 과거 7일 이전 일정 제외
+        if(eventDateObj<new Date(Date.now()-7*86400000))continue;
+
+        // 중복 체크
+        const isDup=existingSchedules?.some(s=>
+          s.title===schedule.title&&
+          s.event_date?.startsWith(schedule.date)
+        );
+        if(isDup)continue;
+
+        // DB 저장
+        const{error}=await sb.from('schedules').insert({
+          user_id:currentUser.id,
+          title:schedule.title,
+          content:schedule.content||'',
+          event_date:eventDateObj.toISOString(),
+          created_at:new Date().toISOString()
+        });
+        if(!error){
+          const dateLabel=eventDateObj.toLocaleDateString('ko-KR',{month:'long',day:'numeric'});
+          console.log(`기존 대화 일정 복원: ${schedule.title} (${dateLabel})`);
+          // 복원된 일정 중복 방지용 추가
+          existingSchedules?.push({title:schedule.title,event_date:eventDateObj.toISOString()});
+        }
+      }catch(e){continue;}
+
+      // API 과부하 방지 딜레이
+      await new Promise(r=>setTimeout(r,500));
+    }
+
+    // 캘린더 새로고침
+    const{data:all}=await sb.from('schedules').select('*').eq('user_id',currentUser.id);
+    calSchedules=all||[];
+    if(currentTab==='calendar')loadCalendar();
+
+  }catch(e){console.error('scanMessagesForSchedules 오류:',e);}
 }
 async function saveMsg(role,content){
   if(!currentUser)return;
