@@ -16,6 +16,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#0d0d1a;--bg2:#13132a;--bg3:#1a1a35;--accent:#7c3aed;--accent2:#a78bfa;--pink:#ec4899;--text:#f0f0ff;--text2:#9999bb;--text3:#6666aa;--bubble-ai:#1e1e3f;--bubble-user:#5b21b6;--border:rgba(124,58,237,0.2);--green:#22c55e;--divider:rgba(255,255,255,0.06)}
+:root.light{--bg:#f5f5ff;--bg2:#ffffff;--bg3:#eeeeff;--accent:#7c3aed;--accent2:#6d28d9;--pink:#ec4899;--text:#1a1a2e;--text2:#44446a;--text3:#8888aa;--bubble-ai:#ede9fe;--bubble-user:#7c3aed;--border:rgba(124,58,237,0.25);--green:#16a34a;--divider:rgba(0,0,0,0.08)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text)}
 #splash{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
@@ -165,6 +166,22 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 .sound-opt.selected{border-color:var(--accent);background:rgba(124,58,237,.15);color:var(--accent2)}
 .sound-opt-dot{width:8px;height:8px;border-radius:50%;border:2px solid var(--text3);flex-shrink:0;transition:all .15s}
 .sound-opt.selected .sound-opt-dot{background:var(--accent);border-color:var(--accent)}
+/* 라이트 모드 추가 스타일 */
+:root.light .auth-input{color:var(--text);background:var(--bg3)}
+:root.light .msg-input{color:var(--text);background:var(--bg3)}
+:root.light .bubble-ai{color:var(--text)}
+:root.light .bubble-user{color:#fff}
+:root.light .app-header{background:var(--bg2);border-bottom:1px solid var(--divider)}
+:root.light #splash{background:var(--bg)}
+:root.light .auth-wrap{background:var(--bg)}
+:root.light #matching{background:var(--bg)}
+:root.light #chat-screen{background:var(--bg)}
+:root.light #home-screen{background:var(--bg)}
+:root.light .settings-section{background:var(--bg2);border-color:var(--border)}
+:root.light .sound-opt{background:var(--bg3);color:var(--text2)}
+:root.light select{background:var(--bg3);color:var(--text)}
+:root.light .cal-event-card{background:var(--bg2)}
+:root.light #theme-toggle-btn{background:var(--bg3);border-color:var(--border);color:var(--text2)}
 </style>
 </head>
 <body>
@@ -342,6 +359,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
     <div id="settings-screen" class="tab-screen">
       <div class="app-header"><div class="hdr-title">설정 ⚙️</div></div>
       <div class="settings-body">
+        <div class="settings-section">
+  <h3>화면 테마</h3>
+  <div class="toggle-row">
+    <span class="toggle-label">☀️ 라이트 모드</span>
+    <div class="toggle" id="toggle-theme" onclick="toggleTheme(this)"><div class="toggle-thumb"></div></div>
+  </div>
+</div>
         <div class="settings-section">
           <h3>알림 설정</h3>
           <div class="toggle-row"><span class="toggle-label">앱 알림 허용</span><div class="toggle on" id="toggle-notif" onclick="toggleNotif(this)"><div class="toggle-thumb"></div></div></div>
@@ -522,6 +546,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 </div>
   <div class="toast" id="toast"></div>
 <script>
+  // 테마 즉시 적용 (깜빡임 방지)
+(function(){
+  const t=localStorage.getItem('td_theme');
+  if(t==='light')document.documentElement.classList.add('light');
+})();
 const SUPA_URL='https://aeswnjssbaoqwicmgarb.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlc3duanNzYmFvcXdpY21nYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MTI4ODIsImV4cCI6MjA5MTE4ODg4Mn0.kNN-ggvTe44co49Qe0ywahxKFhRVfrwwVJJQ-kJTwE0';
 const VAPID_PUB='BIhrfjbJS3R9LPm8zha8VfPHkebk68TqF5h4XhOJ5KaO3blVj2KnCZnVkO9hrkxROxdFk5vqJDAB9a4sjB-7GeU';
@@ -701,6 +730,7 @@ async function startApp(){
   const appEl=document.getElementById('app');appEl.classList.add('show');appEl.style.display='flex';
   hideSplash();
   await checkConsent();
+    initTheme();  
     initSounds();
   initSounds();
   fetchWeather();
@@ -2174,6 +2204,30 @@ function previewSoundFile(file){
   if(!on){showToast('알림음 토글을 먼저 켜줘!');return;}
   if(type==='msg'&&msgAudio){try{msgAudio.currentTime=0;msgAudio.play().catch(()=>{});}catch(e){}}
   else if(type==='ping'&&pingAudio){try{pingAudio.currentTime=0;pingAudio.play().catch(()=>{});}catch(e){}}
+}
+  function applyTheme(isLight){
+  const root=document.documentElement;
+  if(isLight){
+    root.classList.add('light');
+    document.getElementById('theme-color-meta')?.setAttribute('content','#f5f5ff');
+  }else{
+    root.classList.remove('light');
+    document.getElementById('theme-color-meta')?.setAttribute('content','#0d0d1a');
+  }
+}
+function toggleTheme(el){
+  el.classList.toggle('on');
+  const isLight=el.classList.contains('on');
+  localStorage.setItem('td_theme',isLight?'light':'dark');
+  applyTheme(isLight);
+  showToast(isLight?'라이트 모드로 바꿨어 ☀️':'다크 모드로 바꿨어 🌙');
+}
+function initTheme(){
+  const saved=localStorage.getItem('td_theme')||'dark';
+  const isLight=saved==='light';
+  applyTheme(isLight);
+  const tog=document.getElementById('toggle-theme');
+  if(tog&&isLight)tog.classList.add('on');
 }
   function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
