@@ -1019,6 +1019,7 @@ function goBackToHome(){
 async function loadMessages(){
   if(!currentUser)return;
   try{
+    if(!currentUser?.id)return;
     const{data,error}=await sb.from('messages').select('*')
       .eq('user_id',currentUser.id)
       .order('created_at',{ascending:true})
@@ -1036,9 +1037,14 @@ async function loadMessages(){
 
 async function scanMessagesForSchedules(msgData){
   if(!msgData?.length)return;
+  if(!currentUser?.id)return;
   try{
-    // 유저 메시지만 필터링
-    const userMsgs=msgData.filter(m=>m.role==='user'&&m.content?.length>4);
+    // 반드시 현재 로그인한 유저 메시지만 필터링
+    const userMsgs=msgData.filter(m=>
+      m.role==='user'&&
+      m.content?.length>4&&
+      m.user_id===currentUser.id
+    );
     // 일정 키워드 있는 메시지만
     const schedulePattern=/약속|미팅|회의|예약|일정|방문|만남|행사|시험|발표|면접|모임|데이트|여행|출장|병원|수업|강의|콘서트|공연|결혼식|생일|기념일|피부과|치과|예정|할거야|갈거야/;
     const datePattern=/(\d{1,2})월\s*(\d{1,2})일|내일|모레|다음\s*주|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\d{1,2}시/;
@@ -1858,7 +1864,7 @@ async function autoSaveDiary(){
 
 async function loadDiary(){
   const body=document.getElementById('diary-body');
-  if(!body||!currentUser)return;
+  if(!body||!currentUser?.id)return;
   body.innerHTML='<div style="text-align:center;color:var(--text3);font-size:.85rem;margin-top:2rem">불러오는 중...</div>';
   try{
     const{data}=await sb.from('diary').select('*')
@@ -2071,6 +2077,7 @@ async function autoDetectSchedule(text){
     if(eventDateObj<new Date(Date.now()-86400000))return;
 
     // 중복 체크
+    if(!currentUser?.id)return;
     const{data:existing}=await sb.from('schedules')
       .select('id')
       .eq('user_id',currentUser.id)
