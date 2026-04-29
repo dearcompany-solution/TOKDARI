@@ -679,7 +679,7 @@ function clearSession(){localStorage.removeItem('tdv3');}
 window.addEventListener('load',async()=>{
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
   const saved=loadSession();
-  if(saved?.id){profile=saved;currentUser={id:saved.id};await startApp();}
+  if(saved?.id){profile=saved;currentUser={id:saved.id, auth_id:saved.auth_id};await startApp();}
   else{hideSplash();showLogin();}
 });
 function hideSplash(){setTimeout(()=>{const s=document.getElementById('splash');if(s)s.style.display='none';},600);}
