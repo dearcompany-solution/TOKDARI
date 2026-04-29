@@ -677,7 +677,17 @@ function saveSession(p){try{localStorage.setItem('tdv3',JSON.stringify({id:Strin
 function loadSession(){try{return JSON.parse(localStorage.getItem('tdv3'));}catch{return null;}}
 function clearSession(){localStorage.removeItem('tdv3');}
 window.addEventListener('load',async()=>{
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if('serviceWorker' in navigator){
+    // 기존 서비스워커 캐시 강제 갱신
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    try{
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const reg of regs){
+        const cache=await caches.keys();
+        for(const key of cache)await caches.delete(key);
+      }
+    }catch(e){}
+  }
   const saved=loadSession();
   if(saved?.id){
     profile=saved;
@@ -1136,10 +1146,12 @@ function goBackToHome(){
 async function loadMessages(){
   if(!currentUser?.id)return;
   try{
+    // 항상 최신 데이터 가져오기 (캐시 무시)
     const{data,error}=await sb.from('messages').select('*')
       .eq('user_id',currentUser.id)
       .order('created_at',{ascending:true})
-      .limit(200);
+      .limit(200)
+      .throwOnError();
     if(error){console.error('loadMessages 오류:',error.message);return;}
     if(data&&data.length>0){
       // 반드시 현재 유저 메시지만 필터링 (이중 안전장치)
