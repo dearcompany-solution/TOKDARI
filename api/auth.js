@@ -78,11 +78,10 @@ if(action==='resetPassword'){
     const{email,password}=req.body;
     if(!email||!password) return res.status(400).json({error:'이메일과 비밀번호를 입력해줘'});
     try{
-      const{data:users,error:listErr}=await sb.auth.admin.listUsers();
-      if(listErr) return res.status(500).json({error:'유저 조회 실패'});
-      const user=users.users.find(u=>u.email===email);
-      if(!user) return res.status(404).json({error:'가입된 이메일이 아니야'});
-      const{error:updateErr}=await sb.auth.admin.updateUserById(user.id,{password});
+      // listUsers 대신 getUserByEmail로 직접 조회
+      const{data:userData,error:getUserErr}=await sb.auth.admin.getUserByEmail(email);
+      if(getUserErr||!userData?.user) return res.status(404).json({error:'가입된 이메일이 아니야'});
+      const{error:updateErr}=await sb.auth.admin.updateUserById(userData.user.id,{password});
       if(updateErr) return res.status(500).json({error:'비밀번호 변경 실패: '+updateErr.message});
       return res.status(200).json({success:true});
     }catch(e){
