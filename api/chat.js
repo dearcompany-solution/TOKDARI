@@ -76,11 +76,11 @@ module.exports = async function handler(req, res) {
 
         if (sorted.length > 0) {
           const results = sorted
-            .map(r => `제목: ${r.title}\n설명: ${r.description || ''}\nURL: ${r.url}${r.age ? '\n날짜: ' + r.age : ''}`)
+            .map((r,i) => `[${i+1}] 제목: ${r.title}\n설명: ${r.description || '(설명 없음)'}\nURL: ${r.url}${r.age ? '\n날짜: '+r.age : ''}`)
             .join('\n\n');
-          searchContext = `\n\n[오늘(${today}) 기준 실시간 검색 결과]\n${results}\n\n★ 반드시 위 검색 결과 기반으로만 답해. URL은 절대 변형하지 마. 검색 결과에 없는 내용은 "확실하지 않아"라고 솔직하게 말해.`;
+          searchContext = `\n\n====실시간검색결과(${today})=====\n${results}\n====여기까지====\n\n[검색 결과 사용 규칙]\n1. 반드시 위 검색 결과 내용만 인용해서 답해. 학습 데이터로 추측하지 마.\n2. URL은 글자 하나도 바꾸지 말고 그대로 줘.\n3. 검색 결과에 없는 내용 물어보면 "검색해봤는데 못 찾겠어"라고 솔직하게 말해.\n4. 날짜 있으면 날짜도 같이 알려줘.\n5. 반말로 짧게 핵심만 전달해.`;
         } else {
-          searchContext = `\n\n[검색 결과 없음: 알고 있는 정보로만 답하되, 최신 정보가 아닐 수 있다고 말해줘.]`;
+          searchContext = `\n\n[검색 결과 없음]\n검색했는데 결과가 없어. "검색해봤는데 못 찾겠어" 라고 말하고, 알고 있는 정보로만 답해. 최신 정보가 아닐 수 있다고 언급해.`;
         }
       } catch(e) {
         searchContext = `\n\n[검색 실패: 알고 있는 정보로만 답해줘.]`;
