@@ -1,5 +1,17 @@
 const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
 
+// 링크 접근 가능 여부 체크 (타임아웃 2초로 단축)
+async function isLinkAccessible(url){
+  try{
+    const resp=await fetch(url,{
+      method:'HEAD',
+      timeout:2000,
+      headers:{'User-Agent':'Mozilla/5.0 (compatible; Googlebot/2.1)'}
+    });
+    return resp.status<400;
+  }catch(e){return false;}
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -26,7 +38,6 @@ module.exports = async function handler(req, res) {
     const needsImage = /사진|이미지|그림|보여줘|어떻게생겼|어떻게 생겼/.test(lastUserMsg);
     const searchCount = isExpertMode ? 5 : 3;
 
-    // 페이월 차단 도메인
     const BLOCKED = [
       'chosun.com','joongang.co.kr','donga.com','hani.co.kr','kmib.co.kr',
       'munhwa.com','segye.com','sedaily.com','hankyung.com','mk.co.kr',
@@ -35,7 +46,6 @@ module.exports = async function handler(req, res) {
       'biz.chosun.com','news.chosun.com'
     ];
 
-    // 신뢰도 높은 사이트 우선
     const PREFERRED = [
       'yna.co.kr','yonhapnews.co.kr','kbs.co.kr','mbc.co.kr','sbs.co.kr',
       'jtbc.co.kr','ytn.co.kr','newsis.com','news1.kr','ohmynews.com',
@@ -45,7 +55,6 @@ module.exports = async function handler(req, res) {
     let searchContext = '';
     let imageContext = '';
 
-    // 웹 검색 (링크 접근 체크 제거 → 속도 개선)
     if (needsSearch && process.env.BRAVE_API_KEY) {
       try {
         const today = new Date().toISOString().slice(0, 10);
@@ -62,36 +71,59 @@ module.exports = async function handler(req, res) {
         const searchData = await searchResp.json();
         const rawResults = searchData.web?.results || [];
 
-        // 차단 도메인 필터
+        // 1차: 차단 도메인 필터
         const filtered = rawResults.filter(r => {
           if (!r.url || !r.url.startsWith('http')) return false;
           return !BLOCKED.some(b => r.url.includes(b));
         });
 
-        // 우선 사이트 정렬
+        // 2차: 우선 사이트 정렬
         const sorted = [
           ...filtered.filter(r => PREFERRED.some(p => r.url.includes(p))),
           ...filtered.filter(r => !PREFERRED.some(p => r.url.includes(p)))
-        ].slice(0, searchCount);
+        ];
 
-        if (sorted.length > 0) {
-          const results = sorted
-            .map((r,i) => `[${i+1}] 제목: ${r.title}\n설명: ${r.description || '(설명 없음)'}\nURL: ${r.url}${r.age ? '\n날짜: '+r.age : ''}`)
+        // 3차: 상위 8개 병렬로 동시에 접근 체크 (타임아웃 2초)
+        const candidates = sorted.slice(0, 8);
+        const accessChecks = await Promise.all(
+          candidates.map(async r => {
+            const ok = await isLinkAccessible(r.url);
+            return ok ? r : null;
+          })
+        );
+
+        // 살아있는 링크만 추출
+        const validResults = accessChecks
+          .filter(Boolean)
+          .slice(0, searchCount);
+
+        if (validResults.length > 0) {
+          const results = validResults
+            .map((r,i) => `[${i+1}] 제목: ${r.title}\n내용: ${r.description || '(설명 없음)'}\nURL: ${r.url}${r.age ? '\n날짜: '+r.age : ''}`)
             .join('\n\n');
-          searchContext = `\n\n====실시간검색결과(${today})=====\n${results}\n====여기까지====\n\n[검색 결과 사용 규칙]\n1. 반드시 위 검색 결과 내용만 인용해서 답해. 학습 데이터로 추측하지 마.\n2. URL은 글자 하나도 바꾸지 말고 그대로 줘.\n3. 검색 결과에 없는 내용 물어보면 "검색해봤는데 못 찾겠어"라고 솔직하게 말해.\n4. 날짜 있으면 날짜도 같이 알려줘.\n5. 반말로 짧게 핵심만 전달해.`;
+          searchContext = `\n\n====실시간검색결과(${today})=====\n${results}\n====여기까지====\n\n[검색 결과 사용 규칙]\n1. 반드시 위 검색 결과 내용만 인용해서 답해. 학습 데이터로 추측하지 마.\n2. URL은 글자 하나도 바꾸지 말고 그대로 줘. (위 URL은 실제 접근 확인된 링크야)\n3. 검색 결과에 없는 내용 물어보면 "검색해봤는데 못 찾겠어"라고 솔직하게 말해.\n4. 날짜 있으면 날짜도 같이 알려줘.\n5. 반말로 짧게 핵심만 전달해.`;
         } else {
-          searchContext = `\n\n[검색 결과 없음]\n검색했는데 결과가 없어. "검색해봤는데 못 찾겠어" 라고 말하고, 알고 있는 정보로만 답해. 최신 정보가 아닐 수 있다고 언급해.`;
+          // 살아있는 링크 없으면 내용만 요약 전달
+          const fallback = sorted.slice(0, searchCount);
+          if (fallback.length > 0) {
+            const results = fallback
+              .map((r,i) => `[${i+1}] 제목: ${r.title}\n내용: ${r.description || '(설명 없음)'}${r.age ? '\n날짜: '+r.age : ''}`)
+              .join('\n\n');
+            searchContext = `\n\n====실시간검색결과(${today})=====\n${results}\n====여기까지====\n\n[주의] 링크 접근이 불안정해. URL은 주지 말고 내용만 요약해서 전달해. 출처 이름(KBS, 연합뉴스 등)은 언급해도 돼.`;
+          } else {
+            searchContext = `\n\n[검색 결과 없음] 검색했는데 결과가 없어. "검색해봤는데 못 찾겠어"라고 말하고 알고 있는 정보로만 답해.`;
+          }
         }
       } catch(e) {
-        searchContext = `\n\n[검색 실패: 알고 있는 정보로만 답해줘.]`;
+        searchContext = `\n\n[검색 실패] 알고 있는 정보로만 답해줘.`;
       }
     }
 
-    // 이미지 검색
+    // 이미지 검색 (접근 체크 포함)
     if (needsImage && process.env.BRAVE_API_KEY) {
       try {
         const imgResp = await fetch(
-          `https://api.search.brave.com/res/v1/images/search?q=${encodeURIComponent(lastUserMsg)}&count=3`,
+          `https://api.search.brave.com/res/v1/images/search?q=${encodeURIComponent(lastUserMsg)}&count=5`,
           {
             headers: {
               'Accept': 'application/json',
@@ -101,9 +133,19 @@ module.exports = async function handler(req, res) {
           }
         );
         const imgData = await imgResp.json();
-        const imgs = imgData.results?.slice(0, 3).filter(r => r.url?.startsWith('http')) || [];
-        if (imgs.length > 0) {
-          imageContext = `\n\n[이미지 검색 결과]\n${imgs.map(r => `이미지: ${r.url}`).join('\n')}\nURL 그대로 전달해줘.`;
+        const imgCandidates = imgData.results?.slice(0,5).filter(r=>r.url?.startsWith('http')) || [];
+
+        // 이미지도 병렬 접근 체크
+        const imgChecks = await Promise.all(
+          imgCandidates.map(async r => {
+            const ok = await isLinkAccessible(r.url);
+            return ok ? r : null;
+          })
+        );
+        const validImgs = imgChecks.filter(Boolean).slice(0, 3);
+
+        if (validImgs.length > 0) {
+          imageContext = `\n\n[이미지 검색 결과 - 접근 확인된 이미지]\n${validImgs.map(r=>`이미지: ${r.url}`).join('\n')}\nURL 그대로 전달해줘.`;
         }
       } catch(e) {}
     }
@@ -124,10 +166,10 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         model: 'gpt-4o',
         messages: messagesWithSearch,
-        max_tokens: 300,       // ✅ 600→300 (짧게 답하므로 충분, 속도 개선)
-        temperature: 0.85,     // ✅ 1.1→0.85 (자연스럽고 일관되게)
+        max_tokens: 300,
+        temperature: 0.85,
         presence_penalty: 0.5,
-        frequency_penalty: 0.5 // ✅ 반복 표현 줄임
+        frequency_penalty: 0.5
       })
     });
 
