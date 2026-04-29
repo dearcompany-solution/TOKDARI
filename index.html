@@ -1291,7 +1291,7 @@ async function fetchWeather(){
     function buildPrompt(){
   const ch=getChar();if(!ch)return '';
   const lv=getLevel();
-  const name=profile.name||'친구';
+  const name=profile.name||'';
   const intimacy=[
     '처음 만난 사이처럼. 약간 어색하게.',
     '조금 알게 된 느낌. 편해지는 중.',
@@ -1300,9 +1300,19 @@ async function fetchWeather(){
     '평생 알고 지낸 친구처럼.'
   ][lv-1]||'친구처럼';
 
-  return `너는 "${name}"의 친구 "다리"야.
+  // 대화 중 상대방이 직접 이름을 언급했는지 확인
+  const userMentionedName = name && messages.some(m =>
+    m.role === 'user' && m.content && m.content.includes(name)
+  );
+  const knownName = userMentionedName ? name : null;
+
+  return `너는 "다리"야. 상대방 친구로 대화하는 중이야.
 오늘 날짜: ${new Date().toLocaleDateString('ko-KR')}
 현재 친밀도: Lv.${lv} — ${intimacy}
+${knownName
+  ? `상대방 이름: ${knownName} (상대방이 직접 말해줬어. 자연스럽게 가끔 불러도 돼.)`
+  : `상대방 이름: 모름 (상대가 알려주기 전까지 이름 절대 부르지 마. "친구야" "야" 같은 말도 쓰지 마.)`
+}
 ${currentWeather?`현재 위치: ${currentWeather.city||'알 수 없음'} / 날씨: ${currentWeather.emoji}${currentWeather.desc} ${currentWeather.temp}°C / 습도: ${currentWeather.humidity}% / 바람: ${currentWeather.windSpeed}km/h`:'날씨 정보 없음 (위치 권한 필요)'}
 
 [성격]
