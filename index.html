@@ -185,6 +185,35 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 :root.light select{background:var(--bg3);color:var(--text)}
 :root.light .cal-event-card{background:var(--bg2)}
 :root.light #theme-toggle-btn{background:var(--bg3);border-color:var(--border);color:var(--text2)}
+/* 비밀번호 변경 입력창 */
+.pw-change-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 14px;
+  color: var(--text);
+  font-size: .88rem;
+  outline: none;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: border-color .2s;
+}
+.pw-change-input:focus { border-color: var(--accent); }
+.pw-change-btn {
+  width: 100%;
+  padding: .85rem;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: .9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.pw-change-btn:active { opacity: .85; }
+.pw-change-error { font-size: .75rem; color: #f87171; min-height: 16px; text-align: center; }
+.pw-change-ok { font-size: .75rem; color: var(--green); min-height: 16px; text-align: center; }
 </style>
 </head>
 <body>
@@ -416,6 +445,27 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+        <!-- 비밀번호 변경 섹션 -->
+        <div class="settings-section">
+          <h3>계정 보안</h3>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div>
+              <div class="auth-label" style="margin-bottom:5px">현재 비밀번호</div>
+              <input class="pw-change-input" id="pw-current" type="password" placeholder="현재 비밀번호 입력">
+            </div>
+            <div>
+              <div class="auth-label" style="margin-bottom:5px">새 비밀번호 (6자리 이상)</div>
+              <input class="pw-change-input" id="pw-new" type="password" placeholder="새 비밀번호 입력">
+            </div>
+            <div>
+              <div class="auth-label" style="margin-bottom:5px">새 비밀번호 확인</div>
+              <input class="pw-change-input" id="pw-confirm" type="password" placeholder="새 비밀번호 다시 입력">
+            </div>
+            <div class="pw-change-error" id="pw-change-error"></div>
+            <div class="pw-change-ok" id="pw-change-ok"></div>
+            <button class="pw-change-btn" onclick="doChangePassword()">🔐 비밀번호 변경</button>
           </div>
         </div>
         <div class="settings-section">
@@ -2444,6 +2494,41 @@ function safeInsert(table, data){
     return Promise.resolve({error:'user_id 불일치'});
   }
   return sb.from(table).insert({...data,user_id:uid});
+}
+  // ── 비밀번호 변경 (로그인 상태) ──
+async function doChangePassword(){
+  const current=document.getElementById('pw-current').value.trim();
+  const newPw=document.getElementById('pw-new').value.trim();
+  const confirm=document.getElementById('pw-confirm').value.trim();
+  const errEl=document.getElementById('pw-change-error');
+  const okEl=document.getElementById('pw-change-ok');
+  errEl.textContent='';
+  okEl.textContent='';
+
+  if(!current||!newPw||!confirm){errEl.textContent='모든 항목을 입력해줘';return;}
+  if(newPw.length<6){errEl.textContent='새 비밀번호는 6자리 이상이어야 해';return;}
+  if(newPw!==confirm){errEl.textContent='새 비밀번호가 서로 달라!';return;}
+  if(current===newPw){errEl.textContent='현재 비밀번호와 같아. 다른 비밀번호로 바꿔줘';return;}
+
+  const authId=currentUser?.auth_id||currentUser?.id;
+  if(!authId){errEl.textContent='로그인 정보를 찾을 수 없어. 다시 로그인해줘';return;}
+
+  try{
+    const resp=await fetch('/api/auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'changePassword',authId,currentPassword:current,newPassword:newPw})
+    });
+    const data=await resp.json();
+    if(!resp.ok||data.error){errEl.textContent=data.error||'변경 실패';return;}
+    okEl.textContent='비밀번호가 변경됐어! 🎉';
+    document.getElementById('pw-current').value='';
+    document.getElementById('pw-new').value='';
+    document.getElementById('pw-confirm').value='';
+    showToast('비밀번호 변경 완료! 🔐');
+  }catch(e){
+    errEl.textContent='오류가 생겼어: '+e.message;
+  }
 }
   function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
