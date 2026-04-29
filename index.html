@@ -2510,9 +2510,7 @@ async function doChangePassword(){
   if(newPw!==confirm){errEl.textContent='새 비밀번호가 서로 달라!';return;}
   if(current===newPw){errEl.textContent='현재 비밀번호와 같아. 다른 비밀번호로 바꿔줘';return;}
 
-  console.log('currentUser 확인:', JSON.stringify(currentUser));
   const authId=currentUser?.auth_id||currentUser?.authId||currentUser?.id;
-  console.log('authId 확인:', authId);
   if(!authId){errEl.textContent='로그인 정보를 찾을 수 없어. 다시 로그인해줘';return;}
 
   try{
