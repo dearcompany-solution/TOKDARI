@@ -1589,6 +1589,9 @@ async function sendMessage(){
 
   // 유저 답장 시간 기록
   localStorage.setItem('td_last_user_reply', Date.now().toString());
+  // 모바일 키보드 유지 — 포커스 즉시 복구
+  const ta2=document.getElementById('msg-input');
+  if(ta2){ta2.focus();}
   await updateBond();
   if(text) autoDetectSchedule(text);
 
@@ -1687,14 +1690,27 @@ function scrollToBottom(){const w=document.getElementById('chat-messages');if(w)
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
 document.addEventListener('DOMContentLoaded',()=>{
   const ta=document.getElementById('msg-input');if(!ta)return;let composing=false;
-  ta.addEventListener('compositionstart',()=>{composing=true;});ta.addEventListener('compositionend',()=>{composing=false;});
+  ta.addEventListener('compositionstart',()=>{composing=true;});
+  ta.addEventListener('compositionend',()=>{composing=false;});
   ta.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&!e.shiftKey&&!composing){
-    e.preventDefault();
-    sendMessage();
-  }
-  // Shift+Enter는 줄바꿈
-});
+    if(e.key==='Enter'&&!e.shiftKey&&!composing){
+      e.preventDefault();
+      sendMessage();
+      // 모바일 키보드 유지
+      setTimeout(()=>ta.focus(),50);
+    }
+  });
+  // 모바일 — 포커스 아웃 방지
+  ta.addEventListener('blur',()=>{
+    // 전송 버튼 클릭이 아닌 경우에만 재포커스
+    setTimeout(()=>{
+      const active=document.activeElement;
+      if(active&&active.id==='send-btn')return;
+      if(document.getElementById('chat-screen')?.classList.contains('show')){
+        ta.focus();
+      }
+    },100);
+  });
 });
 function showChatNotice(msg){
   // 대화창 가운데 안내 문구 표시
@@ -2282,7 +2298,20 @@ async function addScheduleManual(){
 async function autoDetectSchedule(text){
   const schedulePattern=/약속|미팅|회의|예약|일정|방문|만남|행사|시험|발표|면접|모임|데이트|여행|출장|병원|수업|강의|콘서트|공연|결혼식|생일|기념일|피부과|치과|내과|정형외과|안과|이비인후과|예정|할거야|할게|갈거야|갈게/;
   const datePattern=/(\d{1,2})월\s*(\d{1,2})일|내일|모레|다음\s*주|이번\s*주|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\d{1,2}시/;
+
+  // 일정 키워드 없으면 종료
   if(!schedulePattern.test(text))return;
+
+  // ✅ 날짜/시간 정보 없으면 다리가 확인 질문
+  if(!datePattern.test(text)){
+    setTimeout(async()=>{
+      const q='언제야? 날짜랑 시간 알려주면 캘린더에 등록해줄게';
+      appendMsg('ai',q);
+      messages.push({role:'assistant',content:q,created_at:new Date().toISOString()});
+      await saveMsg('assistant',q);
+    },2200);
+    return;
+  }
 
   try{
     const uid=safeUserId();
@@ -2294,7 +2323,6 @@ async function autoDetectSchedule(text){
     const dayAfter=new Date(today);dayAfter.setDate(today.getDate()+2);
     const dayAfterStr=dayAfter.toISOString().slice(0,10);
 
-    // 전용 schedule API 호출
     const resp=await fetch('/api/schedule',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -2313,15 +2341,25 @@ async function autoDetectSchedule(text){
     // 과거 날짜 제외
     if(eventDateObj<new Date(Date.now()-86400000))return;
 
-    // 중복 체크
+    // ✅ 중복 체크 강화 — 같은 날짜에 비슷한 제목 있으면 차단
     if(!currentUser?.id)return;
     const{data:existing}=await sb.from('schedules')
-      .select('id')
+      .select('id,title,event_date')
       .eq('user_id',currentUser.id)
-      .eq('title',schedule.title)
-      .eq('due_date',schedule.date)
-      .maybeSingle();
-    if(existing)return;
+      .eq('due_date',schedule.date);
+
+    if(existing&&existing.length>0){
+      // 같은 날 제목 유사도 체크
+      const isDup=existing.some(s=>{
+        const t1=s.title?.replace(/\s/g,'').toLowerCase();
+        const t2=schedule.title?.replace(/\s/g,'').toLowerCase();
+        return t1===t2||t1?.includes(t2)||t2?.includes(t1);
+      });
+      if(isDup){
+        console.log('중복 일정 차단:',schedule.title,schedule.date);
+        return;
+      }
+    }
 
     // DB 저장
     const{error}=await sb.from('schedules').insert({
@@ -2338,6 +2376,14 @@ async function autoDetectSchedule(text){
     const timeStr=schedule.time?` ${schedule.time}`:'';
     showToast(`📅 ${schedule.title} (${dateLabel}${timeStr}) 캘린더 등록됐어!`);
 
+    // ✅ 다리가 등록 확인 말해줌
+    setTimeout(async()=>{
+      const confirmMsg=`${schedule.title} ${dateLabel}${timeStr} 캘린더에 등록했어 📅`;
+      appendMsg('ai',confirmMsg);
+      messages.push({role:'assistant',content:confirmMsg,created_at:new Date().toISOString()});
+      await saveMsg('assistant',confirmMsg);
+    },2200);
+
     // 캘린더 즉시 반영
     if(currentTab==='calendar'){
       loadCalendar();
@@ -2346,7 +2392,6 @@ async function autoDetectSchedule(text){
       calSchedules=all||[];
     }
 
-    // 알림 예약
     scheduleEventReminder(schedule.title,eventDateObj,schedule.content||'');
 
   }catch(e){console.error('autoDetectSchedule 오류:',e);}
