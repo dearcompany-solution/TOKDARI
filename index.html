@@ -1761,8 +1761,8 @@ async function uploadImage(file){
     return urlData.publicUrl;
 
   }catch(e){
-    console.error('uploadImage catch:',e);
-    showToast('네트워크 오류! 인터넷 확인해봐');
+    console.error('uploadImage catch 상세:',e?.message,e?.status,e?.error,JSON.stringify(e));
+    showToast('오류: '+(e?.message||JSON.stringify(e)));
     return null;
   }
 }
