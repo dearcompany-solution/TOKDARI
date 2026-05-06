@@ -1593,6 +1593,8 @@ async function sendFirstMessage(){
 }
 let replyTimer = null;
 let pendingUserMsgs = [];
+let isUserTyping = false;      // 타이핑 중 여부
+let typingTimer = null;        // 타이핑 멈춤 감지 타이머
 
 async function sendMessage(){
   const ta=document.getElementById('msg-input');
@@ -1644,12 +1646,32 @@ async function sendMessage(){
   if(replyTimer) clearTimeout(replyTimer);
 
   // 마지막 메시지 후 침묵 감지
-  // 메시지 보낼 때마다 타이머 리셋 → 입력 멈추면 그때 답장
   const lastMsgLength = pendingUserMsgs.join('').length;
-  const silenceWait = lastMsgLength > 50 ? 5000 : 4000; // 긴 내용 5초, 짧으면 4초
+  const silenceWait = lastMsgLength > 50 ? 5000 : 4000;
 
   replyTimer = setTimeout(async()=>{
     if(isLoading)return;
+
+    // 타이핑 중이면 500ms마다 재확인 — 타이핑 완전히 멈출 때까지 대기
+    const waitForTypingStop = ()=> new Promise(resolve=>{
+      const check=()=>{
+        if(!isUserTyping){
+          resolve();
+        } else {
+          setTimeout(check, 500);
+        }
+      };
+      check();
+    });
+
+    await waitForTypingStop();
+
+    // 타이핑 멈춘 후 1초 추가 여유
+    await new Promise(r=>setTimeout(r,1000));
+
+    // 그 사이에 새 메시지가 왔으면 취소 (replyTimer가 바뀐 경우)
+    if(isLoading)return;
+
     const combinedMsgs = pendingUserMsgs.slice();
     pendingUserMsgs = [];
     await callGPT(combinedMsgs);
@@ -1746,6 +1768,16 @@ document.addEventListener('DOMContentLoaded',()=>{
   let composing=false;
   ta.addEventListener('compositionstart',()=>{composing=true;});
   ta.addEventListener('compositionend',()=>{composing=false;});
+
+  // 타이핑 중 감지 — 입력할 때마다 isUserTyping=true
+  // 1.5초 동안 추가 입력 없으면 타이핑 멈춘 것으로 판단
+  ta.addEventListener('input',()=>{
+    isUserTyping=true;
+    if(typingTimer)clearTimeout(typingTimer);
+    typingTimer=setTimeout(()=>{
+      isUserTyping=false;
+    },1500);
+  });
   ta.addEventListener('keydown',e=>{
     if(e.key==='Enter'&&!e.shiftKey&&!composing){
       e.preventDefault();
