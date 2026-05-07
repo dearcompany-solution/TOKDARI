@@ -1115,16 +1115,41 @@ async function updateBond(){
   const hour=new Date().getHours();
   const pd=charData?.personality_data||{};
 
+  // 현재 대화 주제 감지
+  const currentTopic=
+    /설레|좋아하|썸|연애|고백|남친|여친|짝사랑/.test(allText) ? '연애/썸' :
+    /힘들|우울|슬퍼|짜증|화나|스트레스|지쳐/.test(allText) ? '감정토로' :
+    /재밌|웃|ㅋㅋ|신나|좋았/.test(allText) ? '즐거운 대화' :
+    /밥|먹|배고|맛있|음식/.test(allText) ? '먹는 얘기' :
+    /잠|피곤|졸|자야|새벽/.test(allText) ? '피곤/잠' : '일상';
+
+  // 핵심 기억 추출 — 키워드 기반
+  const memKeywords=[];
+  const petMatch=allText.match(/고양이|강아지|강쥐|냥이|반려동물/);
+  const jobMatch=allText.match(/회사|직장|알바|취업|면접|학교|시험/);
+  const loveMatch=allText.match(/썸|남친|여친|좋아하는 사람|짝사랑/);
+  const worryMatch=allText.match(/고민|걱정|힘들어|우울/);
+  if(petMatch) memKeywords.push(petMatch[0]);
+  if(jobMatch) memKeywords.push(jobMatch[0]);
+  if(loveMatch) memKeywords.push(loveMatch[0]);
+  if(worryMatch) memKeywords.push(worryMatch[0]);
+
+  // 기존 기억 유지하면서 새 기억 추가 (최대 10개)
+  const existingMems=pd.memories||[];
+  const newMems=[...new Set([...existingMems,...memKeywords])].slice(-10);
+
   const newPd={
     ...pd,
-    talksLong:   avgLen>30,                                          // 길게 말하는 편
-    talksShort:  avgLen<10,                                          // 짧게 말하는 편
-    usesEmoji:   /[\u{1F300}-\u{1FFFF}]/u.test(allText),            // 이모지 사용
-    usesSlang:   /ㅋㅋ|ㅠㅠ|ㅎㅎ|ㄹㅇ|ㅇㅇ|ㄴㄴ|ㅜㅜ/.test(allText), // 줄임말 사용
-    likesHumor:  /ㅋㅋ|ㅎㅎ|웃|ㄱㄱ|ㄹㅇㅋ|재밌|신나/.test(allText),  // 유머 선호
-    likesSerious:/힘들|진지|고민|우울|슬퍼|외로|모르겠|걱정/.test(allText), // 진지한 대화 선호
-    likesInfo:   /알려줘|찾아봐|뭐야|어떻게|왜|언제|정보/.test(allText),   // 정보 추구형
-    nightOwl:    hour>=23||hour<4,                                   // 밤에 주로 대화
+    talksLong:   avgLen>30,
+    talksShort:  avgLen<10,
+    usesEmoji:   /[\u{1F300}-\u{1FFFF}]/u.test(allText),
+    usesSlang:   /ㅋㅋ|ㅠㅠ|ㅎㅎ|ㄹㅇ|ㅇㅇ|ㄴㄴ|ㅜㅜ/.test(allText),
+    likesHumor:  /ㅋㅋ|ㅎㅎ|웃|ㄱㄱ|ㄹㅇㅋ|재밌|신나/.test(allText),
+    likesSerious:/힘들|진지|고민|우울|슬퍼|외로|모르겠|걱정/.test(allText),
+    likesInfo:   /알려줘|찾아봐|뭐야|어떻게|왜|언제|정보/.test(allText),
+    nightOwl:    hour>=23||hour<4,
+    lastTopic:   currentTopic,   // 마지막 대화 주제 저장
+    memories:    newMems,        // 핵심 기억 누적 저장
     updatedAt:   new Date().toISOString()
   };
 
@@ -1411,8 +1436,14 @@ async function fetchWeather(){
   if(pd.likesSerious) styleHint.push('이 사람은 진지한 대화 선호해. 장난 줄이고 공감 위주로.');
   if(pd.likesInfo)    styleHint.push('이 사람은 정보나 팩트 좋아해. 물어보면 정확하게 답해.');
   if(pd.nightOwl)     styleHint.push('이 사람은 늦은 밤에 자주 대화해. 분위기 맞춰서 조용하게.');
-  const styleStr = styleHint.length > 0
-    ? `\n[학습된 대화 스타일]\n${styleHint.join('\n')}`
+
+  // 핵심 기억 추가
+  const memStr = pd.memories?.length>0
+    ? `\n[기억하고 있는 것]\n${pd.memories.join(', ')} — 대화 중 자연스럽게 언급해도 돼. "아 그거 어떻게 됐어?" 같은 식으로.`
+    : '';
+
+  const styleStr = styleHint.length > 0 || memStr
+    ? `\n[학습된 대화 스타일]\n${styleHint.join('\n')}${memStr}`
     : '';
 
   // 시간대 감지
@@ -2105,9 +2136,33 @@ function scheduleRandomPing(){
     let pings;
     if(lv<=1)pings=['...🥚','(알 속에서 기다리는 중)'];
     else if(lv<=2)pings=['삐약...! 나 여기 있어','빨리 와줘'];
-    else if(ch?.id==='A')pings=['야야야 나 생각났어ㅋㅋ','뭐해? 나 심심한데','오늘 어땠어?','야 나야','ㅋㅋ 나 또 왔어'];
-    else if(ch?.id==='B')pings=['...괜찮아?','생각나서','오늘 밥은 먹었어','잘 지내?'];
-    else pings=['어 살아있어?','요즘 뭐하냐고','할말있는데','심심하면 와'];
+    else{
+      // 대화 기억 기반 선톡 — personality_data 활용
+      const pd=charData?.personality_data||{};
+      const memoryPings=[];
+
+      // 저장된 기억 기반으로 선톡 생성
+      if(pd.lastTopic==='연애/썸') memoryPings.push('그 사람 어떻게 됐어','아직도 연락해?','ㅋㅋ 생각났어');
+      if(pd.lastTopic==='감정토로') memoryPings.push('요즘 좀 어때','아까 말한 거 계속 마음에 걸려','괜찮아?');
+      if(pd.lastTopic==='먹는 얘기') memoryPings.push('밥 먹었어','오늘 뭐 먹었어','나 또 배고프다');
+      if(pd.lastTopic==='피곤/잠') memoryPings.push('잠 잘 잤어','오늘은 좀 쉬었어?','어제 많이 피곤했잖아');
+      if(pd.lastTopic==='즐거운 대화') memoryPings.push('ㅋㅋ 또 생각났어','야 나야','오늘도 재밌는 거 있어?');
+      if(pd.likesHumor) memoryPings.push('야야야ㅋㅋ 들어봐','ㅋㅋ 나 또 왔어','할말있어');
+      if(pd.likesSerious) memoryPings.push('생각나서','요즘 어때','보고싶었어');
+      if(pd.nightOwl) memoryPings.push('또 깨있어?','잠 안 와?','나도 안 자');
+      if(pd.memories?.length>0){
+        // 저장된 기억 중 랜덤으로 언급
+        const mem=pd.memories[Math.floor(Math.random()*pd.memories.length)];
+        if(mem) memoryPings.push(`${mem} 생각났어`,`근데 ${mem} 어떻게 됐어`);
+      }
+
+      // 기억 기반 선톡이 없으면 기본값
+      if(memoryPings.length===0){
+        memoryPings.push('야 나야','오늘 어땠어?','뭐해','ㅋㅋ 나 또 왔어','생각나서');
+      }
+
+      pings=memoryPings;
+    }
 
     const msg=pings[Math.floor(Math.random()*pings.length)];
 
