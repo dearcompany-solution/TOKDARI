@@ -2772,7 +2772,17 @@ function selectSound(type,value,el){
     pingAudio=value!=='none'?new Audio('/sounds/'+value):null;
     if(pingAudio)pingAudio.volume=0.7;
   }
-  showToast('알림음 변경됐어! 🔔');
+  // 선택하자마자 바로 소리 재생
+  if(value!=='none'){
+    try{
+      const preview=new Audio('/sounds/'+value);
+      preview.volume=0.7;
+      preview.play().catch(()=>{});
+    }catch(e){}
+    showToast('알림음 변경됐어! 🔔');
+  }else{
+    showToast('무음으로 변경됐어! 🔇');
+  }
 }
 function previewSoundFile(file){
   const on=localStorage.getItem('td_sound_on')!=='0';
