@@ -2156,9 +2156,15 @@ function scheduleRandomPing(){
         if(mem) memoryPings.push(`${mem} 생각났어`,`근데 ${mem} 어떻게 됐어`);
       }
 
-      // 기억 기반 선톡이 없으면 기본값
+      // lastTopic 없으면 최근 메시지에서 즉시 감지
       if(memoryPings.length===0){
-        memoryPings.push('야 나야','오늘 어땠어?','뭐해','ㅋㅋ 나 또 왔어','생각나서');
+        const recentText=messages.slice(-10).filter(m=>m.role==='user').map(m=>m.content||'').join(' ');
+        if(/설레|좋아하|썸|연애|남친|여친/.test(recentText)) memoryPings.push('그 사람 어떻게 됐어','아직도 연락해?');
+        else if(/힘들|우울|슬퍼|짜증|스트레스/.test(recentText)) memoryPings.push('요즘 좀 어때','괜찮아?','마음에 걸려서');
+        else if(/밥|먹|배고|음식/.test(recentText)) memoryPings.push('밥 먹었어','오늘 뭐 먹었어');
+        else if(/잠|피곤|졸|자야/.test(recentText)) memoryPings.push('잘 잤어?','오늘은 좀 쉬었어?');
+        else if(/ㅋㅋ|재밌|웃|신나/.test(recentText)) memoryPings.push('ㅋㅋ 또 생각났어','오늘도 뭔가 있어?');
+        else memoryPings.push('뭐해','오늘 어땠어?','생각나서','밥은 먹었어?');
       }
 
       pings=memoryPings;
