@@ -119,17 +119,16 @@ module.exports = async function handler(req, res) {
 
         if(validResults.length > 0){
           const results = validResults
-            .map((r,i) => `[${i+1}] 제목: ${r.title}\n내용: ${r.description||'(설명 없음)'}\nURL: ${r.url}${r.age?'\n날짜: '+r.age:''}`)
+            .map((r,i) => `[출처${i+1}] ${r.title}\n요약: ${r.description||'(설명 없음)'}\n링크: ${r.url}${r.age?'\n날짜: '+r.age:''}`)
             .join('\n\n');
-          searchContext = `\n\n====실시간검색결과(${today})=====\n${results}\n====여기까지====\n\n[규칙]\n1. 위 내용 기반으로 답해\n2. 위에 있는 URL만 전달해. 없는 URL 절대 지어내지 마\n3. 날짜 있으면 같이 알려줘\n4. 반말로 짧게 핵심만\n5. "링크를 줄 수 없어" "확인할 수 없어" 같은 말 하지 마\n6. URL 줄 때 한 줄에 하나씩. 깔끔하게`;
+          searchContext = `\n\n====실시간검색결과(${today})====\n${results}\n====여기까지====\n\n[필수규칙]\n1. 위 검색결과 내용만 기반으로 답해\n2. 링크는 위에 있는 것만 써. 위에 없는 URL 절대 만들지 마. 네가 아는 URL도 쓰지 마\n3. 반말로 짧게 핵심만\n4. "링크를 줄 수 없어" "확인이 어려워" 같은 말 금지\n5. 출처 표기: "출처1 참고" 이런 식으로`;
         } else {
-          // 살아있는 링크 없어도 내용은 전달 — URL만 빼고
-          const fallback = sorted.slice(0, searchCount);
-          if(fallback.length > 0){
-            const results = fallback
-              .map((r,i) => `[${i+1}] 제목: ${r.title}\n내용: ${r.description||'(설명 없음)'}${r.age?'\n날짜: '+r.age:''}`)
-              .join('\n\n');
-            searchContext = `\n\n====실시간검색결과(${today})=====\n${results}\n====여기까지====\n\n[주의] 링크가 불안정해. URL은 주지 말고 내용만 요약해. 출처(KBS, 연합뉴스 등)는 언급해도 돼.`;
+            const fallback = sorted.slice(0, searchCount);
+            if(fallback.length > 0){
+              const results = fallback
+                .map((r,i) => `[출처${i+1}] ${r.title}\n요약: ${r.description||'(설명 없음)'}${r.age?'\n날짜: '+r.age:''}`)
+                .join('\n\n');
+              searchContext = `\n\n====실시간검색결과(${today})====\n${results}\n====여기까지====\n\n[필수규칙]\n1. 위 내용만 기반으로 답해\n2. 접근 가능한 링크가 없어서 URL은 절대 주지 마. 네가 아는 URL도 쓰지 마\n3. 내용만 요약해. 출처 이름(KBS, 연합뉴스 등)은 언급 가능\n4. 반말로 짧게`;
           } else {
             // 검색 결과 아예 없으면 — 다시 검색 시도 (영어로)
             const engQuery = lastUserMsg.replace(/[가-힣]/g,'').trim();
