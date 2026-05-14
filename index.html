@@ -1637,6 +1637,18 @@ let isUserTyping = false;      // 타이핑 중 여부
 let typingTimer = null;        // 타이핑 멈춤 감지 타이머
 
 async function sendMessage(){
+  // 일일 메시지 제한 (100개)
+  const todayKey='td_msg_count_'+new Date().toISOString().slice(0,10);
+  const msgCount=parseInt(localStorage.getItem(todayKey)||'0');
+  if(msgCount>=100){
+    showToast('오늘 메시지 한도에 도달했어! 내일 다시 와줘 😢');
+    return;
+  }
+  localStorage.setItem(todayKey,String(msgCount+1));
+  // 어제 카운터 정리
+  const yKey='td_msg_count_'+new Date(Date.now()-86400000).toISOString().slice(0,10);
+  localStorage.removeItem(yKey);
+
   const ta=document.getElementById('msg-input');
   const text=ta.value.trim();
   // 사진만 있어도 전송 가능하도록 수정
