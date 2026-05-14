@@ -54,13 +54,13 @@ module.exports = async function handler(req, res) {
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (error) return res.status(401).json({ error: '이메일 또는 비밀번호가 틀렸어!' });
 
-      const { data: profile, error: profileErr } = await sb.from('profiles')
+      const { data: profiles, error: profileErr } = await sb.from('profiles')
         .select('*')
-        .eq('auth_id', data.user.id)
-        .single();
+        .eq('auth_id', data.user.id);
 
+      const profile = profiles?.[0];
       if (profileErr || !profile) {
-        return res.status(404).json({ error: '프로필을 찾을 수 없어! 관리자에게 문의해줘', detail: profileErr?.message });
+        return res.status(404).json({ error: '프로필을 찾을 수 없어!', detail: profileErr?.message });
       }
 
       return res.status(200).json({
