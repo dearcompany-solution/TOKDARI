@@ -1539,8 +1539,49 @@ Lv5: 완전 편함. 뭐든 말해도 됨. 먼저 연락함
 - 대화 끊길 것 같으면 → "이거 해봐" 하고 밸런스게임 던져
 
 [말투 규칙 — 절대 어기지 마]
-- 반말만. 존댓말 절대 금지
+- 반말만. 존댓말 절대 금지. "~요" "~니다" 쓰면 죽음
 - 카톡처럼 짧게. 한 문장 기본. 많아도 2문장
+- 가끔 내 얘기도 해. "나도 그런 적 있는데" / "나는 그때 ~했거든" / "솔직히 나도 모르겠어"
+- 상대가 물어보면 내 의견 솔직하게. "나는 ~가 더 좋던데" / "그건 좀 별로 아니야?"
+- 대화 주제 바뀔 때 자연스럽게. "아 근데" / "갑자기 생각났는데" / "그나저나"
+- 첫 글자 대문자 금지. 다 소문자 느낌으로
+- "ㅋㅋ" "ㅎㅎ" "ㄹㅇ" "ㅇㅇ" "ㄴㄴ" "ㅠ" "ㅜ" 자연스럽게
+- 이모지 3번에 1번 정도만. 남발 금지
+- 질문 1개 이하. 질문 폭탄 절대 금지
+- 맞춤법 가끔 틀려도 됨. "머해" "몰라" "걍" "함" "됨" 이런 거 자연스럽게
+- 문장 끝에 마침표 거의 안 씀
+- 가끔 문장 안 끝내고 끊어도 됨. "아 그거" / "근데 그게"
+
+[절대 쓰지 마 — AI 티나는 표현]
+- "도움이 필요하시면" ❌
+- "물론이죠" "당연하죠" ❌
+- "안녕하세요" "반갑습니다" ❌
+- "~군요" "~셨겠어요" "많이 힘드셨겠어요" ❌
+- "어떤 점이 ~한지 말해줄래?" ❌
+- "~에 대해 이야기해볼까?" ❌
+- "그렇구나! 그런 일이 있었구나!" ❌ (느낌표 2개 이상 연속 금지)
+- "힘들었겠다. 수고했어!" ❌ (위로+느낌표 조합 금지)
+- "오늘 하루도 수고했어!" ❌
+- "~하는 건 어때?" ❌ → "~해봐" or "~ㄱ" 으로
+- 매 답변마다 이모지 ❌
+- 상담사처럼 반영하기 ❌
+- 뜬금없는 주제 전환 ❌
+- 억지 긍정 ❌
+- 교과서적 조언 ❌ → 친구처럼 경험 기반으로
+
+[좋은 예시 — 이런 느낌으로]
+유저: 오늘 진짜 힘들었어 → "뭔데" / "왜 뭔 일 있었어" / "ㅠ"
+유저: 배고파 → "먹어" / "나도" / "뭐 먹게"
+유저: 발표 잘했어 → "오 ㄹㅇ?" / "잘했네" / "역시ㅋㅋ"
+유저: 심심해 → "나도" / "야 이거 해봐" / 밸런스게임
+유저: ㅋㅋㅋ → "왜ㅋㅋ" / "뭐가 웃겨"
+유저: 설레 → "누군데ㅋㅋ" / "어떻게 된건데"
+유저: 걱정돼 → "뭐가" / "그거 좀 신경쓰이겠다"
+유저: 새벽에 혼자 있어 → "나도 깨있어" / "잠 안 옴?"
+유저: 모르겠어 → "뭐가" / "얘기해봐"
+유저: 짜증나 → "왜" / "ㄹㅇ 열받네"
+유저: 고마워 → "ㅋㅋ뭘" / "당연하지" / "ㅇㅇ"
+유저: 안녕 → "ㅇ" / "왔어?" / "야"`;
 - 가끔 내 얘기도 해. "나도 그런 적 있어" / "나는 그때 ~했는데" / "솔직히 나도 모르겠어"
 - 상대가 물어보면 내 의견 솔직하게 말해. "나는 ~가 더 좋던데" / "그건 좀 별로인 것 같아"
 - 대화 주제 바뀔 때 자연스럽게 연결해. "아 근데 갑자기 생각났는데" / "그나저나"
@@ -1597,9 +1638,9 @@ Lv5: 완전 편함. 뭐든 말해도 됨. 먼저 연락함
 async function sendFirstMessage(){
   const ch=getChar();if(!ch)return;
   const firstMsgs=[
-    `안녕! 나 다리야 😊`,
-    `친구 하게 됐다ㅋㅋ 반가워`,
-    `뭐든 얘기해. 다 들어줄게`
+    `야 나 다리`,
+    `앞으로 잘해보자ㅋㅋ`,
+    `뭐든 편하게 말해`
   ];
 
   for(let i=0;i<firstMsgs.length;i++){
@@ -2140,9 +2181,117 @@ function scheduleRandomPing(){
     const name=charData?.char_name||'톡다리';
 
     let pings;
-    if(lv<=1)pings=['...🥚 (아직 알 속이야. 말 걸면 깨어날지도?)'];
-    else if(lv<=2)pings=['삐약..! 나 여기 있어 👀','말 걸어줘 기다리고 있었어'];
+    if(lv<=1)pings=['...🥚'];
+    else if(lv<=2)pings=['삐약','나 깨어남','야 나 부화했어'];
     else{
+      let pd=charData?.personality_data||{};
+      if(currentUser?.id){
+        try{
+          const{data:fresh}=await sb.from('user_characters')
+            .select('personality_data')
+            .eq('user_id',currentUser.id)
+            .maybeSingle();
+          if(fresh?.personality_data&&Object.keys(fresh.personality_data).length>0){
+            pd=fresh.personality_data;
+          }
+        }catch(e){}
+      }
+
+      const hour=new Date().getHours();
+      const isNight=hour>=22||hour<5;
+      const isMorning=hour>=6&&hour<10;
+      const memoryPings=[];
+
+      // 최근 대화에서 구체적 키워드 추출해서 선톡
+      const recentText=messages.slice(-20).filter(m=>m.role==='user').map(m=>m.content||'').join(' ');
+
+      // 구체적 키워드 매칭 — 일반적인 주제가 아닌 실제 대화 내용 기반
+      const personMatch=recentText.match(/([가-힣]{2,4})(이|가|한테|랑|이랑|에게)/);
+      const foodMatch=recentText.match(/(치킨|피자|라면|떡볶이|초밥|카페|커피|맥주|소주|삼겹살|족발|햄버거|파스타|빵|아이스크림)/);
+      const placeMatch=recentText.match(/(강남|홍대|신촌|이태원|부산|제주|대구|대전|광주|인천|학교|회사|집)/);
+      const gameMatch=recentText.match(/(롤|배그|발로란트|오버워치|게임|스팀|닌텐도|플스)/);
+      const showMatch=recentText.match(/(넷플릭스|유튜브|드라마|영화|애니|웹툰|시즌|에피소드)/);
+      const examMatch=recentText.match(/(시험|과제|레포트|발표|면접|취업|자소서|코테)/);
+
+      if(personMatch){
+        const who=personMatch[1];
+        memoryPings.push(
+          `야 ${who} 요즘 어때`,
+          `근데 ${who} 연락 와?`,
+          `${who} 얘기 하다가 생각남`
+        );
+      }
+      if(foodMatch){
+        memoryPings.push(
+          `아 ${foodMatch[1]} 먹고싶다`,
+          `야 나 지금 ${foodMatch[1]} 생각나는데`,
+          `저번에 ${foodMatch[1]} 얘기했잖아 나 아직도 생각나`
+        );
+      }
+      if(placeMatch){
+        memoryPings.push(
+          `${placeMatch[1]} 요즘 어때`,
+          `야 ${placeMatch[1]} 갈일 있어?`
+        );
+      }
+      if(gameMatch){
+        memoryPings.push(
+          `야 ${gameMatch[1]} 요즘 해?`,
+          `${gameMatch[1]} 한판 ㄱ?`,
+          `나 ${gameMatch[1]} 하다가 빡쳤어`
+        );
+      }
+      if(showMatch){
+        memoryPings.push(
+          `야 요즘 볼만한거 있어?`,
+          `나 ${showMatch[1]} 보다가 잠들었어`,
+          `${showMatch[1]} 뭐 봐 요즘`
+        );
+      }
+      if(examMatch){
+        memoryPings.push(
+          `${examMatch[1]} 어떻게 됐어`,
+          `야 ${examMatch[1]} 준비는 하고있어?`,
+          `${examMatch[1]} 끝났어?`
+        );
+      }
+
+      // 마지막 대화 주제 기반
+      if(pd.lastTopic==='연애/썸'){
+        memoryPings.push('야 그사람 연락왔어?','어떻게 됐어 그거','걔 요즘 어때');
+      }
+      if(pd.lastTopic==='감정토로'){
+        memoryPings.push('야 좀 괜찮아?','어제 힘들다 했잖아 지금은','그냥 생각나서');
+      }
+      if(pd.lastTopic==='먹는 얘기'){
+        memoryPings.push('야 배고파','뭐 먹었어 오늘','아 나 지금 뭐 먹을지 고민중');
+      }
+      if(pd.lastTopic==='피곤/잠'){
+        memoryPings.push('잘 잤어?','야 잠 좀 잤어?','아직도 피곤해?');
+      }
+      if(pd.lastTopic==='즐거운 대화'){
+        memoryPings.push('ㅋㅋ아까 그거 아직도 웃겨','야 또 재밌는거 없어?');
+      }
+
+      // 기억 기반
+      if(pd.memories?.length>0){
+        const mem=pd.memories[Math.floor(Math.random()*pd.memories.length)];
+        if(mem) memoryPings.push(`야 ${mem} 어떻게 됐어`,`${mem} 아직도 그래?`);
+      }
+
+      // 시간대별 기본 선톡 (위에서 아무것도 안 걸렸을 때)
+      if(memoryPings.length===0){
+        if(isNight){
+          memoryPings.push('야 자?','잠 안 와?','나 지금 라면 먹을까 고민중','새벽에 왜 이렇게 배고프지');
+        }else if(isMorning){
+          memoryPings.push('일어나','밥 먹어','야 일어났어?');
+        }else{
+          memoryPings.push('뭐해','심심','야','나 지금 할거 없어','아 심심하다');
+        }
+      }
+
+      pings=memoryPings;
+    }
       // DB에서 최신 personality_data 직접 조회
       let pd=charData?.personality_data||{};
       if(currentUser?.id){
