@@ -119,16 +119,16 @@ module.exports = async function handler(req, res) {
 
         if(validResults.length > 0){
           const results = validResults
-            .map((r,i) => `[출처${i+1}] ${r.title}\n요약: ${r.description||'(설명 없음)'}\n링크: ${r.url}${r.age?'\n날짜: '+r.age:''}`)
+            .map((r,i) => `${r.title}\n${r.description||''}\n${r.url}${r.age?'\n'+r.age:''}`)
             .join('\n\n');
-          searchContext = `\n\n====실시간검색결과(${today})====\n${results}\n====여기까지====\n\n[필수규칙]\n1. 위 검색결과 내용만 기반으로 답해\n2. 링크는 위에 있는 것만 써. 위에 없는 URL 절대 만들지 마. 네가 아는 URL도 쓰지 마\n3. 반말로 짧게 핵심만\n4. "링크를 줄 수 없어" "확인이 어려워" 같은 말 금지\n5. 출처 표기: "출처1 참고" 이런 식으로`;
+          searchContext = `\n\n====검색결과====\n${results}\n====끝====\n\n[규칙]\n1. 위 내용 기반으로 자연스럽게 답해\n2. 링크 줄 때는 "여기서 볼 수 있어" "이거 참고해봐" 같이 자연스럽게 문장에 넣어\n3. 위에 없는 URL 절대 만들지 마\n4. "출처" "참고" 같은 딱딱한 표현 쓰지 마\n5. 반말로 짧게 친구처럼\n6. 검색결과 형식 그대로 보여주지 마. 네가 아는 것처럼 자연스럽게 말해`;
         } else {
             const fallback = sorted.slice(0, searchCount);
             if(fallback.length > 0){
               const results = fallback
-                .map((r,i) => `[출처${i+1}] ${r.title}\n요약: ${r.description||'(설명 없음)'}${r.age?'\n날짜: '+r.age:''}`)
+                .map((r,i) => `${r.title}\n${r.description||''}${r.age?'\n'+r.age:''}`)
                 .join('\n\n');
-              searchContext = `\n\n====실시간검색결과(${today})====\n${results}\n====여기까지====\n\n[필수규칙]\n1. 위 내용만 기반으로 답해\n2. 접근 가능한 링크가 없어서 URL은 절대 주지 마. 네가 아는 URL도 쓰지 마\n3. 내용만 요약해. 출처 이름(KBS, 연합뉴스 등)은 언급 가능\n4. 반말로 짧게`;
+              searchContext = `\n\n====검색결과====\n${results}\n====끝====\n\n[규칙]\n1. 위 내용 기반으로 자연스럽게 답해\n2. 링크는 없으니까 URL 절대 주지 마. 네가 아는 URL도 쓰지 마\n3. 그냥 네가 아는 것처럼 자연스럽게 말해\n4. "출처" "참고" "검색결과" 같은 단어 쓰지 마\n5. 반말로 짧게 친구처럼`;
           } else {
             // 검색 결과 아예 없으면 — 다시 검색 시도 (영어로)
             const engQuery = lastUserMsg.replace(/[가-힣]/g,'').trim();
