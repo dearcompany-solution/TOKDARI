@@ -493,6 +493,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
         <div class="settings-info" id="settings-user-info"></div>
         
         <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+        <button class="danger-btn" style="margin-top:8px" onclick="doDeleteAccount()">🚨 회원 탈퇴 (모든 데이터 삭제)</button>
       </div>
     </div>
     <div class="tab-bar">
@@ -3041,6 +3042,30 @@ async function doChangePassword(){
   }catch(e){
     errEl.textContent='오류가 생겼어: '+e.message;
   }
+}
+  async function doDeleteAccount(){
+  if(!confirm('정말 탈퇴할까?\n모든 대화, 다이어리, 일정이 삭제되고\n되돌릴 수 없어!'))return;
+  if(!confirm('마지막 확인이야. 진짜 탈퇴해?'))return;
+  const authId=currentUser?.auth_id||currentUser?.id;
+  if(!authId){showToast('로그인 정보를 찾을 수 없어');return;}
+  try{
+    showToast('탈퇴 처리 중...');
+    const resp=await fetch('/api/auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'deleteAccount',authId})
+    });
+    const data=await resp.json();
+    if(!resp.ok){showToast(data.error||'탈퇴 실패');return;}
+    try{await sb.auth.signOut();}catch(e){}
+    clearSession();
+    localStorage.removeItem('td_consent');
+    currentUser=null;profile={};messages=[];charData=null;
+    document.getElementById('app').classList.remove('show');
+    document.getElementById('app').style.display='';
+    showLogin();
+    showToast('탈퇴 완료. 그동안 고마웠어 😢');
+  }catch(e){showToast('오류: '+e.message);}
 }
   function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
