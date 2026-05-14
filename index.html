@@ -832,7 +832,7 @@ async function doLoginWith(email,password,errEl){
   if(errEl)errEl.textContent='';
   hideSplash();await startApp();
 }
-async function doLogout(){if(!confirm('로그아웃 할까?'))return;clearSession();currentUser=null;profile={};messages=[];charData=null;document.getElementById('app').classList.remove('show');document.getElementById('app').style.display='';showLogin();}
+async function doLogout(){if(!confirm('로그아웃 할까?'))return;try{await sb.auth.signOut();}catch(e){}clearSession();localStorage.removeItem('td_consent');currentUser=null;profile={};messages=[];charData=null;document.getElementById('app').classList.remove('show');document.getElementById('app').style.display='';showLogin();}
 async function startApp(){
   ['login-screen','signup-screen'].forEach(id=>document.getElementById(id)?.classList.remove('show'));
   document.getElementById('matching').classList.remove('show');
