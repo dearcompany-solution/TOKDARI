@@ -113,7 +113,7 @@ module.exports = async function handler(req, res) {
           const results = validResults
             .map((r,i) => `[${i+1}] 제목: ${r.title}\n내용: ${r.description||'(설명 없음)'}\nURL: ${r.url}${r.age?'\n날짜: '+r.age:''}`)
             .join('\n\n');
-          searchContext = `\n\n====실시간검색결과(${today})=====\n${results}\n====여기까지====\n\n[규칙]\n1. 위 내용 기반으로만 답해. 학습 데이터로 추측 금지\n2. URL 그대로 줘 (접근 확인된 링크)\n3. 날짜 있으면 같이 알려줘\n4. 반말로 짧게 핵심만`;
+          searchContext = `\n\n====실시간검색결과(${today})=====\n${results}\n====여기까지====\n\n[규칙]\n1. 위 내용 기반으로 답해\n2. URL은 반드시 그대로 전달해. 절대 생략하지 마\n3. 날짜 있으면 같이 알려줘\n4. 반말로 짧게 핵심만\n5. "링크를 줄 수 없어" "확인할 수 없어" 같은 말 절대 하지 마. 위에 URL 있으면 그거 줘\n6. 이미지 URL도 그대로 전달해`;
         } else {
           // 살아있는 링크 없어도 내용은 전달 — URL만 빼고
           const fallback = sorted.slice(0, searchCount);
