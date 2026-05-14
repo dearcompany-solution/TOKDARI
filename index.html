@@ -1726,9 +1726,12 @@ async function callGPT(combinedMsgs=[]){
   const typId=showTyping();
   let typRemoved=false;
   try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),30000);
     const resp=await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
+      signal:controller.signal,
       body:JSON.stringify({messages:[
         {role:'system',content:buildPrompt()
           // 여러 말풍선이 쌓였으면 맥락 힌트 추가
@@ -1750,7 +1753,7 @@ async function callGPT(combinedMsgs=[]){
         })
       ]})
     });
-    removeTyping(typId);typRemoved=true;
+    clearTimeout(timeout);removeTyping(typId);typRemoved=true;
     document.getElementById('chat-status').textContent='입력 중...';
     if(!resp.ok){appendMsg('ai','앗 오류났어 다시 해봐');}
     else{
@@ -1761,8 +1764,9 @@ async function callGPT(combinedMsgs=[]){
       await saveMsg('assistant',reply);
     }
   }catch(e){
+    clearTimeout(timeout);
     if(!typRemoved)removeTyping(typId);
-    appendMsg('ai','인터넷 확인해봐');
+    appendMsg('ai',e.name==='AbortError'?'응답이 너무 오래 걸려... 다시 해봐':'인터넷 확인해봐');
   }
   if(totalMsgs>0&&totalMsgs%10===0)autoSaveDiary();
   isLoading=false;document.getElementById('chat-status').textContent='온라인';
