@@ -60,7 +60,7 @@ module.exports = async function handler(req, res) {
         .single();
 
       if (profileErr || !profile) {
-        return res.status(404).json({ error: '프로필을 찾을 수 없어!' });
+        return res.status(404).json({ error: '프로필을 찾을 수 없어! 관리자에게 문의해줘', detail: profileErr?.message });
       }
 
       return res.status(200).json({
@@ -117,8 +117,9 @@ module.exports = async function handler(req, res) {
       });
       if (signInErr) return res.status(401).json({ error: '현재 비밀번호가 틀렸어!' });
 
-      // 새 비밀번호로 변경
-      const { error: updateErr } = await sb.auth.admin.updateUserById(authId, { password: newPassword });
+      // 새 비밀번호로 변경 — profiles.auth_id 사용
+      const realAuthId = profile.auth_id || authId;
+      const { error: updateErr } = await sb.auth.admin.updateUserById(realAuthId, { password: newPassword });
       if (updateErr) return res.status(500).json({ error: '비밀번호 변경 실패: ' + updateErr.message });
 
       return res.status(200).json({ success: true });
