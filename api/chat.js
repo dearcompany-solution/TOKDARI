@@ -81,15 +81,17 @@ module.exports = async function handler(req, res) {
         // 검색 쿼리 최적화 — 불필요한 말투 제거
         const searchQuery = lastUserMsg
           .replace(/[?!~ㅋㅋㅎㅎㅠㅠㅜㅜ]/g,'')
-          .replace(/뭐야|뭔데|알려줘|찾아봐|검색해줘|궁금해|알고싶어/g,'')
-          .replace(/요즘|최근|지금/g,'2026')
+          .replace(/뭐야|뭔데|알려줘|찾아봐|검색해줘|궁금해|알고싶어|뭐임/g,'')
+          .replace(/요즘|최근|지금|올해/g,'2026년 5월')
           .trim() || lastUserMsg;
-        let rawResults = await doSearch(searchQuery, isNewsSearch ? 'pw' : '');
+        // 검색어에 연도 없으면 추가
+        const finalQuery = /\d{4}/.test(searchQuery) ? searchQuery : searchQuery + ' 2026';
+        let rawResults = await doSearch(finalQuery, isNewsSearch ? 'pw' : 'pm');
 
         // 결과 없거나 너무 적으면 — 쿼리 단순화해서 재검색
         if(rawResults.length < 3){
-          const simpleQuery = lastUserMsg.replace(/[?!~ㅋㅋㅎㅎㅠㅠ]/g,'').trim().split(' ').slice(0,4).join(' ');
-          rawResults = await doSearch(simpleQuery, '');
+          const simpleQuery = lastUserMsg.replace(/[?!~ㅋㅋㅎㅎㅠㅠ]/g,'').trim().split(' ').slice(0,4).join(' ') + ' 2026';
+          rawResults = await doSearch(simpleQuery, 'pm');
         }
 
         // 1차: 차단 도메인 필터
