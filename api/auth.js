@@ -57,7 +57,7 @@ module.exports = async function handler(req, res) {
       const { data: profiles, error: profileErr } = await sb.from('profiles')
         .select('*')
         .eq('auth_id', data.user.id);
-
+console.log('profiles count:', profiles?.length, 'profileErr:', profileErr?.message);
       console.log('auth_id:', data.user.id);
       console.log('profiles:', JSON.stringify(profiles));
       console.log('profileErr:', profileErr?.message);
