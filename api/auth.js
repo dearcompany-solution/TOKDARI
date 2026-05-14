@@ -80,12 +80,14 @@ console.log('profiles count:', profiles?.length, 'profileErr:', profileErr?.mess
   // ── 비밀번호 찾기 (로그아웃 상태) ──
   if (action === 'resetPassword') {
     if (!email || !password) return res.status(400).json({ error: '이메일과 비밀번호를 입력해줘' });
+    if (!name) return res.status(400).json({ error: '이름을 입력해줘' });
     try {
       const { data: profiles, error: profileErr } = await sb.from('profiles')
-        .select('auth_id')
+        .select('auth_id, name')
         .eq('email', email);
       const profile = profiles?.[0];
       if (profileErr) return res.status(500).json({ error: '조회 오류: ' + profileErr.message });
+      if (profile && profile.name !== name) return res.status(401).json({ error: '이름이 일치하지 않아!' });
       if (!profile?.auth_id) return res.status(404).json({ error: '가입된 이메일이 아니야', debug: profiles });
 
       const { error: updateErr } = await sb.auth.admin.updateUserById(profile.auth_id, { password });
