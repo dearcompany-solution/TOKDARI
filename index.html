@@ -2590,12 +2590,23 @@ async function autoDetectSchedule(text){
 
     if(existing&&existing.length>0){
       // 같은 날 제목 유사도 체크
-      const isDup=existing.some(s=>{
+      const dupItem=existing.find(s=>{
         const t1=s.title?.replace(/\s/g,'').toLowerCase();
         const t2=schedule.title?.replace(/\s/g,'').toLowerCase();
         return t1===t2||t1?.includes(t2)||t2?.includes(t1);
       });
-      if(isDup){
+      if(dupItem&&schedule.time){
+        // 같은 일정인데 시간 정보가 새로 들어왔으면 업데이트
+        const newDate=new Date(`${schedule.date}T${schedule.time}:00`);
+        await sb.from('schedules').update({
+          event_date:newDate.toISOString()
+        }).eq('id',dupItem.id);
+        const dateLabel=newDate.toLocaleDateString('ko-KR',{month:'long',day:'numeric'});
+        showToast(`📅 ${schedule.title} 시간 ${schedule.time}으로 변경됨!`);
+        if(currentTab==='calendar')loadCalendar();
+        return;
+      }
+      if(dupItem){
         console.log('중복 일정 차단:',schedule.title,schedule.date);
         return;
       }
