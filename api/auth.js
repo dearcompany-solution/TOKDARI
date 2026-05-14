@@ -103,21 +103,28 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: '새 비밀번호는 6자리 이상이어야 해' });
     }
     try {
-      // profiles.id(PK) 또는 auth_id 둘 다 시도
-      const { data: profile, error: profileErr } = await sb.from('profiles')
+      let profile = null;
+      const { data: p1 } = await sb.from('profiles')
         .select('email, auth_id')
-        .or(`id.eq.${authId},auth_id.eq.${authId}`)
+        .eq('id', authId)
         .maybeSingle();
-      if (profileErr || !profile) return res.status(404).json({ error: '유저를 찾을 수 없어' });
+      if (p1) {
+        profile = p1;
+      } else {
+        const { data: p2 } = await sb.from('profiles')
+          .select('email, auth_id')
+          .eq('auth_id', authId)
+          .maybeSingle();
+        if (p2) profile = p2;
+      }
+      if (!profile) return res.status(404).json({ error: '유저를 찾을 수 없어' });
 
-      // 현재 비밀번호 검증
       const { error: signInErr } = await sb.auth.signInWithPassword({
         email: profile.email,
         password: currentPassword
       });
       if (signInErr) return res.status(401).json({ error: '현재 비밀번호가 틀렸어!' });
 
-      // 새 비밀번호로 변경 — profiles.auth_id 사용
       const realAuthId = profile.auth_id || authId;
       const { error: updateErr } = await sb.auth.admin.updateUserById(realAuthId, { password: newPassword });
       if (updateErr) return res.status(500).json({ error: '비밀번호 변경 실패: ' + updateErr.message });
