@@ -58,9 +58,13 @@ module.exports = async function handler(req, res) {
         .select('*')
         .eq('auth_id', data.user.id);
 
+      console.log('auth_id:', data.user.id);
+      console.log('profiles:', JSON.stringify(profiles));
+      console.log('profileErr:', profileErr?.message);
+
       const profile = profiles?.[0];
       if (profileErr || !profile) {
-        return res.status(404).json({ error: '프로필을 찾을 수 없어!', detail: profileErr?.message });
+        return res.status(404).json({ error: '프로필을 찾을 수 없어!', detail: profileErr?.message, auth_id: data.user.id });
       }
 
       return res.status(200).json({
