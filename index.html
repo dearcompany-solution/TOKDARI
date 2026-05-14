@@ -321,6 +321,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
       <div>
         <div class="chat-hdr-name" id="chat-char-name">친구</div>
         <div class="chat-hdr-status" id="chat-status">온라인</div>
+        <div style="font-size:.58rem;color:var(--text3);margin-top:1px">AI 친구</div>
       </div>
       <div class="header-actions">
         <button class="hbtn" onclick="toggleTrash()">💢</button>
@@ -491,6 +492,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
           <button class="prepare-btn" onclick="alert('준비중이야! 곧 만날 수 있어 🙏')">✨ 친구 추가하기 (준비중)</button>
         </div>
         <div class="settings-info" id="settings-user-info"></div>
+        <div class="settings-info" style="line-height:1.8;font-size:.72rem">
+          톡다리는 AI 기반 대화 서비스야.<br>
+          다리의 답변은 AI가 생성한 거라 정확하지 않을 수 있어.<br>
+          대화 내용은 서비스 제공 목적으로만 저장돼.
+        </div>
         
         <button class="logout-btn" onclick="doLogout()">로그아웃</button>
         <button class="danger-btn" style="margin-top:8px" onclick="doDeleteAccount()">🚨 회원 탈퇴 (모든 데이터 삭제)</button>
