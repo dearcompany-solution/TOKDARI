@@ -141,5 +141,31 @@ console.log('profiles count:', profiles?.length, 'profileErr:', profileErr?.mess
     }
   }
 
+  // ── 회원 탈퇴 ──
+  if (action === 'deleteAccount') {
+    const { authId } = req.body;
+    if (!authId) return res.status(400).json({ error: '인증 정보가 없어' });
+    try {
+      const { data: profile } = await sb.from('profiles')
+        .select('id, auth_id')
+        .or(`id.eq.${authId},auth_id.eq.${authId}`)
+        .maybeSingle();
+      if (!profile) return res.status(404).json({ error: '유저를 찾을 수 없어' });
+      const userId = profile.id;
+      const realAuthId = profile.auth_id || authId;
+
+      await sb.from('messages').delete().eq('user_id', userId);
+      await sb.from('diary').delete().eq('user_id', userId);
+      await sb.from('schedules').delete().eq('user_id', userId);
+      await sb.from('user_characters').delete().eq('user_id', userId);
+      await sb.from('profiles').delete().eq('id', userId);
+      await sb.auth.admin.deleteUser(realAuthId);
+
+      return res.status(200).json({ success: true });
+    } catch(e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
   return res.status(400).json({ error: '잘못된 요청' });
 };
