@@ -78,7 +78,13 @@ module.exports = async function handler(req, res) {
     if (needsSearch && process.env.BRAVE_API_KEY) {
       try {
         // 뉴스면 최신 1주일 우선, 아니면 전체
-        let rawResults = await doSearch(lastUserMsg, isNewsSearch ? 'pw' : '');
+        // 검색 쿼리 최적화 — 불필요한 말투 제거
+        const searchQuery = lastUserMsg
+          .replace(/[?!~ㅋㅋㅎㅎㅠㅠㅜㅜ]/g,'')
+          .replace(/뭐야|뭔데|알려줘|찾아봐|검색해줘|궁금해|알고싶어/g,'')
+          .replace(/요즘|최근|지금/g,'2026')
+          .trim() || lastUserMsg;
+        let rawResults = await doSearch(searchQuery, isNewsSearch ? 'pw' : '');
 
         // 결과 없거나 너무 적으면 — 쿼리 단순화해서 재검색
         if(rawResults.length < 3){
