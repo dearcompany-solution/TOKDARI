@@ -1775,7 +1775,11 @@ async function callGPT(combinedMsgs=[]){
     });
     clearTimeout(timeout);removeTyping(typId);typRemoved=true;
     document.getElementById('chat-status').textContent='입력 중...';
-    if(!resp.ok){appendMsg('ai','앗 오류났어 다시 해봐');}
+    if(!resp.ok){
+      const errData=await resp.json().catch(()=>({}));
+      if(resp.status===429)appendMsg('ai','잠깐 쉬었다 하자ㅋㅋ 너무 빠르게 보내고 있어');
+      else appendMsg('ai','아 잠깐 오류 났어 다시 말해봐');
+    }
     else{
       const data=await resp.json();
       const reply=data.choices?.[0]?.message?.content?.trim()||'응';
@@ -1786,7 +1790,7 @@ async function callGPT(combinedMsgs=[]){
   }catch(e){
     clearTimeout(timeout);
     if(!typRemoved)removeTyping(typId);
-    appendMsg('ai',e.name==='AbortError'?'응답이 너무 오래 걸려... 다시 해봐':'인터넷 확인해봐');
+    appendMsg('ai',e.name==='AbortError'?'야 너무 오래 걸린다 다시 말해봐':'인터넷 연결 좀 확인해봐');
   }
   if(totalMsgs>0&&totalMsgs%10===0)autoSaveDiary();
   isLoading=false;document.getElementById('chat-status').textContent='온라인';
