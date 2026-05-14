@@ -15,12 +15,39 @@ async function isLinkAccessible(url){
   }catch(e){return false;}
 }
 
+const rateLimitMap = new Map();
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
+
+  // 입력값 길이 제한
+  const bodyStr = JSON.stringify(req.body);
+  if (bodyStr.length > 50000) {
+    return res.status(400).json({ error: '메시지가 너무 길어!' });
+  }
+
+  // IP 기반 rate limiting — 1분에 15회
+  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+  const now = Date.now();
+  const windowMs = 60000;
+  const maxRequests = 15;
+  if (!rateLimitMap.has(ip)) rateLimitMap.set(ip, []);
+  const timestamps = rateLimitMap.get(ip).filter(t => now - t < windowMs);
+  if (timestamps.length >= maxRequests) {
+    return res.status(429).json({ error: '너무 빠르게 보내고 있어! 잠깐만 기다려줘' });
+  }
+  timestamps.push(now);
+  rateLimitMap.set(ip, timestamps);
+  // 오래된 IP 정리 (메모리 누수 방지)
+  if (rateLimitMap.size > 10000) {
+    for (const [k, v] of rateLimitMap) {
+      if (v.every(t => now - t > windowMs)) rateLimitMap.delete(k);
+    }
+  }
 
   const { messages } = req.body;
   if (!messages || !Array.isArray(messages)) {
