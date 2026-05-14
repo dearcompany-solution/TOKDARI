@@ -279,9 +279,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto San
 
   <!-- 1단계: 이메일 확인 -->
   <div id="find-step1" style="width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;align-items:center">
-    <div class="auth-sub">가입한 이메일을 입력해줘</div>
+    <div class="auth-sub">가입한 이메일과 이름을 입력해줘</div>
     <div class="auth-box" style="width:100%">
       <div><div class="auth-label">이메일</div><input class="auth-input" id="find-email" type="email" placeholder="가입한 이메일 입력" autocomplete="email"></div>
+      <div><div class="auth-label">가입 시 입력한 이름</div><input class="auth-input" id="find-name" type="text" placeholder="이름 입력" autocomplete="name"></div>
       <div class="auth-error" id="find-error"></div>
     </div>
     <button class="auth-btn" onclick="doCheckEmail()">이메일 확인 →</button>
@@ -2954,10 +2955,11 @@ async function doChangePassword(){
   if(!authId){errEl.textContent='로그인 정보를 찾을 수 없어. 다시 로그인해줘';return;}
 
   try{
+    const findName=document.getElementById('find-name').value.trim();
     const resp=await fetch('/api/auth',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'changePassword',authId,currentPassword:current,newPassword:newPw})
+      body:JSON.stringify({action:'resetPassword',email,password:pw,name:findName})
     });
     const data=await resp.json();
     if(!resp.ok||data.error){errEl.textContent=data.error||'변경 실패';return;}
