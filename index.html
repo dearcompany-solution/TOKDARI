@@ -1388,15 +1388,13 @@ async function scanMessagesForSchedules(msgData){
   }catch(e){console.error('scanMessagesForSchedules 오류:',e);}
 }
 async function saveMsg(role,content){
-  const uid=safeUserId();
-  if(!uid||trashMode)return;
-  try{
-    const{error}=await sb.from('messages').insert({
-      user_id:uid,role,content,
-      created_at:new Date().toISOString()
-    });
-    if(error)console.error('저장오류:',error.message);
-  }catch(e){console.error('saveMsg 오류:',e);}
+  if(trashMode)return;
+  const uid=safeUserId();if(!uid)return;
+  const{error}=await sb.from('messages').insert({user_id:uid,role,content,created_at:new Date().toISOString()});
+  if(error&&error.message?.includes('JWT')){
+    showToast('세션이 만료됐어! 다시 로그인해줘');
+    doLogout();
+  }
 }
 let currentWeather = null;
   
@@ -1715,6 +1713,12 @@ async function sendMessage(){
   // 오프라인이면 전송 차단
   if(!navigator.onLine){
     showToast('인터넷 연결이 없어! 연결 후 다시 보내줘 📡');
+    return;
+  }
+  // 세션 만료 체크
+  if(!currentUser?.id){
+    showToast('로그인이 만료됐어! 다시 로그인해줘');
+    doLogout();
     return;
   }
   // 일일 메시지 제한 (100개)
