@@ -3,12 +3,16 @@
 // 링크 접근 가능 여부 체크 — GET으로 변경 (HEAD 막는 사이트 대응)
 async function isLinkAccessible(url){
   try{
+    // 주요 포털/뉴스는 무조건 접근 가능 처리
+    const alwaysOk=['naver.com','daum.net','wikipedia.org','namu.wiki','yna.co.kr','yonhapnews.co.kr','kbs.co.kr','mbc.co.kr','sbs.co.kr','jtbc.co.kr','ytn.co.kr','newsis.com','news1.kr','youtube.com','google.com','tiktok.com','instagram.com'];
+    if(alwaysOk.some(d=>url.includes(d)))return true;
     const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),2000);
+    const timer=setTimeout(()=>controller.abort(),3000);
     const resp=await fetch(url,{
       method:'GET',
       signal:controller.signal,
-      headers:{'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+      redirect:'follow',
+      headers:{'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'}
     });
     clearTimeout(timer);
     return resp.status<400;
@@ -159,7 +163,7 @@ module.exports = async function handler(req, res) {
         ];
 
         // 3차: 상위 8개 병렬 접근 체크
-        const candidates = sorted.slice(0, 8);
+        const candidates = sorted.slice(0, 12);
         const accessChecks = await Promise.all(
           candidates.map(async r => {
             const ok = await isLinkAccessible(r.url);
