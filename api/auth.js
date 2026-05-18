@@ -108,26 +108,9 @@ console.log('profiles count:', profiles?.length, 'profileErr:', profileErr?.mess
       // 여기서는 profiles에 코드를 저장하고, 유저에게 코드를 알려주는 방식 사용
       // 실제 이메일 발송은 아래 fetch로 처리
 
-      try {
-        await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            service_id: process.env.EMAILJS_SERVICE_ID || '',
-            template_id: process.env.EMAILJS_TEMPLATE_ID || '',
-            user_id: process.env.EMAILJS_PUBLIC_KEY || '',
-            template_params: {
-              to_email: email,
-              to_name: profile.name || '회원',
-              reset_code: code
-            }
-          })
-        });
-      } catch(emailErr) {
-        console.error('이메일 발송 실패:', emailErr);
-      }
+      
 
-      return res.status(200).json({ success: true, message: '인증 코드를 이메일로 보냈어!' });
+      return res.status(200).json({ success: true, code: code, name: profile.name || '회원' });
     } catch(e) {
       return res.status(500).json({ error: e.message });
     }
