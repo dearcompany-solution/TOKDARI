@@ -666,14 +666,18 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const VAPID_PUB='BIhrfjbJS3R9LPm8zha8VfPHkebk68TqF5h4XhOJ5KaO3blVj2KnCZnVkO9hrkxROxdFk5vqJDAB9a4sjB-7GeU';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 // 레벨별 펭귄 성장 단계
-// Lv1: 알 🥚 → Lv2: 부화중 🐣 → Lv3: 아기펭귄 🐧 → Lv4: 유아펭귄 → Lv5: 다큰펭귄 → Lv6: 스타펭귄
+// Lv1~10: 브론즈 → 실버 → 골드 → 플래티넘 → 다이아 → 마스터 → 그랜드마스터 → 챌린저 → 레전드 → 전설의 펭귄
 const PENGUIN_LEVELS=[
-  {lv:1,icon:'🥚',label:'알',desc:'아직 알 속에 있어... 말을 걸면 깨어날까?'},
-  {lv:2,icon:'🐣',label:'부화중',desc:'껍질이 깨지기 시작했어! 조금만 더!'},
-  {lv:3,icon:'🐧',label:'아기펭귄',desc:'드디어 태어났어! 아직 많이 서툴러.'},
-  {lv:4,icon:'🐧✨',label:'유아펭귄',desc:'점점 말이 많아지고 있어. 친해지고 있나봐.'},
-  {lv:5,icon:'🐧💫',label:'다큰펭귄',desc:'이제 제법 친해졌네. 편하게 얘기해.'},
-  {lv:6,icon:'🐧👑',label:'스타펭귄',desc:'진짜 특별한 사이가 됐어. 운명이었나봐!'}
+  {lv:1,icon:'🥉',label:'브론즈',desc:'첫 만남! 대화를 시작해볼까?'},
+  {lv:2,icon:'🥈',label:'실버',desc:'조금씩 친해지고 있어'},
+  {lv:3,icon:'🥇',label:'골드',desc:'꽤 편한 사이가 됐네'},
+  {lv:4,icon:'💎',label:'플래티넘',desc:'이제 제법 친한 사이야'},
+  {lv:5,icon:'💠',label:'다이아',desc:'특별한 친구가 됐어'},
+  {lv:6,icon:'🔮',label:'마스터',desc:'서로 뭐든 얘기할 수 있는 사이'},
+  {lv:7,icon:'🏆',label:'그랜드마스터',desc:'진짜 소울메이트급이야'},
+  {lv:8,icon:'🐧🔥',label:'챌린저',desc:'이 정도면 찐친이지'},
+  {lv:9,icon:'🐧👑',label:'레전드',desc:'전설적인 우정이야'},
+  {lv:10,icon:'👑✨',label:'전설의 펭귄',desc:'더 이상 올라갈 곳이 없어. 영원한 친구!'}
 ];
 // 펭귄 이미지 배열 (GitHub raw URL로 교체해줘)
 const PENGUIN_IMGS=[
@@ -1172,8 +1176,8 @@ function getPenguinSVG(lv){
 }
 
 function getChar(){return charData?CHARS[charData.char_id]||null:null;}
-function getLevel(){if(totalMsgs>=500)return 6;if(totalMsgs>=200)return 5;if(totalMsgs>=80)return 4;if(totalMsgs>=30)return 3;if(totalMsgs>=10)return 2;return 1;}
-function getLvName(lv){return['알','부화중','아기펭귄','유아펭귄','다큰펭귄','스타펭귄'][lv-1]||'알';}
+function getLevel(){if(totalMsgs>=1200)return 10;if(totalMsgs>=800)return 9;if(totalMsgs>=500)return 8;if(totalMsgs>=350)return 7;if(totalMsgs>=200)return 6;if(totalMsgs>=100)return 5;if(totalMsgs>=60)return 4;if(totalMsgs>=30)return 3;if(totalMsgs>=10)return 2;return 1;}
+function getLvName(lv){return['브론즈','실버','골드','플래티넘','다이아','마스터','그랜드마스터','챌린저','레전드','전설의 펭귄'][lv-1]||'브론즈';}
 function updateCharDisplay(){
   const ch=getChar();if(!ch)return;
   const lv=getLevel();
@@ -2333,8 +2337,8 @@ function scheduleRandomPing(){
     const name=charData?.char_name||'톡다리';
 
     let pings;
-    if(lv<=1)pings=['...🥚'];
-    else if(lv<=2)pings=['삐약','나 깨어남','야 나 부화했어'];
+    if(lv<=1)pings=['야','ㅎㅇ','뭐해'];
+    else if(lv<=2)pings=['야','심심','뭐하냐'];
     else{
       let pd=charData?.personality_data||{};
       if(currentUser?.id){
