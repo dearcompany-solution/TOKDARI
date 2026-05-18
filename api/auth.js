@@ -167,5 +167,24 @@ console.log('profiles count:', profiles?.length, 'profileErr:', profileErr?.mess
     }
   }
 
+  // ── 친밀도 저장 (앱 종료 시) ──
+  if (action === 'saveBond') {
+    const { userId, bondData } = req.body;
+    if (!userId || !bondData) return res.status(400).json({ error: '데이터 없음' });
+    try {
+      const parsed = typeof bondData === 'string' ? JSON.parse(bondData) : bondData;
+      await sb.from('user_characters').update({
+        bond: parsed.bond,
+        total_msgs: parsed.total_msgs,
+        chat_days: parsed.chat_days,
+        personality_data: parsed.personality_data,
+        updated_at: parsed.updated_at || new Date().toISOString()
+      }).eq('user_id', userId);
+      return res.status(200).json({ ok: true });
+    } catch(e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
   return res.status(400).json({ error: '잘못된 요청' });
 };
