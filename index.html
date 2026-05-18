@@ -2165,13 +2165,13 @@ text=text.replace(/\[이미지\]\s*(https?:\/\/[^\s]+)/g,
     if(/youtube\.com|youtu\.be/i.test(p)){
       const m=p.match(/(?:v=|youtu\.be\/)([^&?/\s]+)/);
       const v=m?m[1]:'';
-      return `<a href="${p}" target="_blank" style="color:var(--accent2);text-decoration:underline;word-break:break-all">🎬 ${p}</a>${v?`<br><img src="https://img.youtube.com/vi/${v}/mqdefault.jpg" style="max-width:200px;border-radius:8px;margin-top:4px;cursor:pointer;display:block" onclick="window.open('${p}','_blank')">` : ''}`;
+      return `<a href="${p}" onclick="event.preventDefault();window.open('${p}','_blank')" style="color:var(--accent2);text-decoration:underline;word-break:break-all;cursor:pointer">🎬 ${p}</a>${v?`<br><img src="https://img.youtube.com/vi/${v}/mqdefault.jpg" style="max-width:200px;border-radius:8px;margin-top:4px;cursor:pointer;display:block" onclick="window.open('${p}','_blank')">` : ''}`;
     }
     // 이미지 URL 감지 (.jpg .png .gif .webp)
     if(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(p)){
       return `<img src="${p}" style="max-width:100%;border-radius:10px;margin-top:4px;display:block;cursor:pointer" onclick="window.open('${p}','_blank')" onerror="this.style.display='none'"><br><a href="${p}" target="_blank" style="color:var(--accent2);text-decoration:underline;font-size:.8rem">🖼 이미지 열기</a>`;
     }
-    return `<a href="${p}" target="_blank" style="color:var(--accent2);text-decoration:underline;word-break:break-all">🔗 ${p}</a>`;
+    return `<a href="${p}" onclick="event.preventDefault();window.open('${p}','_blank')" style="color:var(--accent2);text-decoration:underline;word-break:break-all;cursor:pointer">🔗 ${p}</a>`;
   }).join('');
 }
 async function toggleNotif(el){
