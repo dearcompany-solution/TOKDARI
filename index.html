@@ -2629,27 +2629,8 @@ function selectCalDate(dateStr){
             <div style="width:8px;height:8px;background:var(--accent);border-radius:50%;flex-shrink:0"></div>
             <div style="font-size:.9rem;font-weight:600">${s.title}</div>
           </div>
-          <button onclick="editSchedule(${s.id},'${s.title.replace(/'/g,"\\'")}','${s.event_date||''}','${(s.content||'').replace(/'/g,"\\'")}')" style="background:none;border:none;color:var(--accent2);cursor:pointer;font-size:.75rem;padding:2px 6px">수정</button>
+          <button onclick="editSchedule(${s.id})" style="background:none;border:none;color:var(--accent2);cursor:pointer;font-size:.75rem;padding:2px 6px">수정</button>
           <button onclick="deleteSchedule(${s.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:.75rem;padding:2px 6px">삭제</button>
-          async function editSchedule(id,title,eventDate,content){
-  const newTitle=prompt('일정 제목:',title);
-  if(!newTitle)return;
-  const currentDate=eventDate?eventDate.slice(0,10):'';
-  const currentTime=eventDate?new Date(eventDate).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}):'09:00';
-  const newDate=prompt('날짜 (예: 2026-05-20):',currentDate);
-  if(!newDate)return;
-  const newTime=prompt('시간 (예: 14:00):',currentTime)||'09:00';
-  const newContent=prompt('메모 (없으면 엔터):',content)||'';
-  try{
-    await sb.from('schedules').update({
-      title:newTitle,
-      event_date:new Date(newDate+'T'+newTime+':00').toISOString(),
-      content:newContent
-    }).eq('id',id);
-    showToast('일정 수정 완료 📅');
-    loadCalendar();
-  }catch(e){showToast('수정 실패ㅠ');}
-}
         </div>
         ${time?`<div style="font-size:.75rem;color:var(--text3);margin-left:14px">🕐 ${time}</div>`:''}
         ${s.content?`<div style="font-size:.78rem;color:var(--text2);margin-top:2px;margin-left:14px;line-height:1.5">${s.content}</div>`:''}
@@ -2679,7 +2660,27 @@ async function deleteSchedule(id){
   await sb.from('schedules').delete().eq('id',id);
   loadCalendar();
 }
-
+async function editSchedule(id){
+  const s=calSchedules.find(x=>x.id===id);
+  if(!s)return;
+  const newTitle=prompt('일정 제목:',s.title);
+  if(!newTitle)return;
+  const currentDate=s.event_date?s.event_date.slice(0,10):'';
+  const currentTime=s.event_date?new Date(s.event_date).toTimeString().slice(0,5):'09:00';
+  const newDate=prompt('날짜 (예: 2026-05-20):',currentDate);
+  if(!newDate)return;
+  const newTime=prompt('시간 (예: 14:00):',currentTime)||'09:00';
+  const newContent=prompt('메모 (없으면 엔터):',s.content||'')||'';
+  try{
+    await sb.from('schedules').update({
+      title:newTitle,
+      event_date:new Date(newDate+'T'+newTime+':00').toISOString(),
+      content:newContent
+    }).eq('id',id);
+    showToast('일정 수정 완료 📅');
+    loadCalendar();
+  }catch(e){showToast('수정 실패ㅠ');}
+}
 async function addScheduleManual(){
   const title=prompt('일정 제목:');
   if(!title)return;
