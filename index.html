@@ -1892,6 +1892,13 @@ function appendMsg(role,content,imgSrc,silent=false){
     row.appendChild(av);
   }
   const col=document.createElement('div');col.className='msg-col';const bub=document.createElement('div');bub.className='bubble '+(role==='user'?'user':'ai');
+  if(role==='user'){
+    let pressTimer;
+    bub.addEventListener('touchstart',function(e){pressTimer=setTimeout(()=>{deleteSingleMsg(this);},600);},{passive:true});
+    bub.addEventListener('touchend',function(){clearTimeout(pressTimer);});
+    bub.addEventListener('touchmove',function(){clearTimeout(pressTimer);});
+    bub.addEventListener('contextmenu',function(e){e.preventDefault();deleteSingleMsg(this);});
+  }
   if(imgSrc){const img=document.createElement('img');img.src=imgSrc;bub.appendChild(img);}
   else if(typeof content==='string')bub.innerHTML=DOMPurify.sanitize(fmtContent(content));
   const tm=document.createElement('div');tm.className='msg-time';tm.textContent=time;
@@ -1908,7 +1915,28 @@ function renderAllMessages(){
 }
 function showTyping(){const wrap=document.getElementById('chat-messages');const row=document.createElement('div');row.className='msg-row';row.id='typ-'+Date.now();const av=document.createElement('div');av.className='msg-av';const ch=getChar();av.textContent=ch?.icon||'🌱';const b=document.createElement('div');b.className='typing-bubble';b.innerHTML='<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';row.appendChild(av);row.appendChild(b);wrap.appendChild(row);scrollToBottom();return row.id;}
 function removeTyping(id){document.getElementById(id)?.remove();}
-function scrollToBottom(){const w=document.getElementById('chat-messages');if(w)w.scrollTop=w.scrollHeight;}
+async function deleteSingleMsg(bubEl){
+  if(!confirm('이 메시지를 삭제할까?'))return;
+  const row=bubEl.closest('.msg-row');
+  const allRows=[...document.querySelectorAll('#chat-messages .msg-row')];
+  const idx=allRows.indexOf(row);
+  if(idx<0)return;
+  const msg=messages[idx];
+  if(msg){
+    if(msg.id){
+      await sb.from('messages').delete().eq('id',msg.id);
+    }else{
+      await sb.from('messages').delete()
+        .eq('user_id',currentUser.id)
+        .eq('content',typeof msg.content==='string'?msg.content:'')
+        .eq('role',msg.role);
+    }
+    messages.splice(idx,1);
+  }
+  row.remove();
+  showToast('메시지 삭제됨');
+}
+  function scrollToBottom(){const w=document.getElementById('chat-messages');if(w)w.scrollTop=w.scrollHeight;}
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
 document.addEventListener('DOMContentLoaded',()=>{
   const ta=document.getElementById('msg-input');if(!ta)return;
