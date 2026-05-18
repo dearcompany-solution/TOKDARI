@@ -1698,7 +1698,7 @@ async function sendFirstMessage(){
     try{
       const reg=await navigator.serviceWorker.ready;
       await reg.showNotification('다리',{
-        body:`${name}이랑 친구 하게 됐다ㅋㅋ 반가워`,
+        body:`${profile.name||'너'}랑 친구 하게 됐다ㅋㅋ 반가워`,
         icon:'/icon.png',badge:'/icon.png',
         vibrate:[300,100,300],
         tag:'tokdari-first',renotify:true
@@ -1991,7 +1991,7 @@ function cleanTrashMessages(){
   });
 }
 
-async function confirmDeleteChar(){if(!confirm('"'+(charData?.char_name||'친구')+'"와 이별할까?\n\n모든 대화 기록이 삭제되고\n새 친구를 만날 수 있어.\n되돌릴 수 없어!'))return;if(!confirm('정말? 진짜 이별이야...'))return;showToast('이별 처리 중...');await sb.from('messages').delete().eq('user_id',currentUser.id);await sb.from('user_characters').delete().eq('user_id',currentUser.id);charData=null;messages=[];bondLevel=0;totalMsgs=0;chatDays=0;showToast('이별했어... 새로운 만남이 기다리고 있어');setTimeout(()=>startMatching(),1500);}
+async function confirmDeleteChar(){if(!confirm('"'+(charData?.char_name||'친구')+'"와 이별할까?\n\n모든 대화, 다이어리, 일정이 삭제되고\n새 친구를 만날 수 있어.\n되돌릴 수 없어!'))return;if(!confirm('정말? 진짜 이별이야...'))return;showToast('이별 처리 중...');await sb.from('messages').delete().eq('user_id',currentUser.id);await sb.from('diary').delete().eq('user_id',currentUser.id);await sb.from('schedules').delete().eq('user_id',currentUser.id);await sb.from('user_characters').delete().eq('user_id',currentUser.id);charData=null;messages=[];bondLevel=0;totalMsgs=0;chatDays=0;localStorage.removeItem('td_bond_backup');showToast('이별했어... 새로운 만남이 기다리고 있어');setTimeout(()=>startMatching(),1500);}
 async function uploadImage(file){
   // 파일 크기 체크
   if(file.size>10*1024*1024){showToast('사진이 너무 커! 10MB 이하로 보내줘 📷');return null;}
