@@ -283,28 +283,38 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover,input[type="time"]::
   <div style="font-size:3rem">🔑</div>
   <div class="auth-title">계정 찾기</div>
 
-  <!-- 1단계: 이메일 확인 -->
+  <!-- 1단계: 이메일 입력 -->
   <div id="find-step1" style="width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;align-items:center">
-    <div class="auth-sub">가입한 이메일과 이름을 입력해줘</div>
+    <div class="auth-sub">가입한 이메일을 입력하면 인증 코드를 보내줄게</div>
     <div class="auth-box" style="width:100%">
       <div><div class="auth-label">이메일</div><input class="auth-input" id="find-email" type="email" placeholder="가입한 이메일 입력" autocomplete="email"></div>
-      <div><div class="auth-label">가입 시 입력한 이름</div><input class="auth-input" id="find-name" type="text" placeholder="이름 입력" autocomplete="name"></div>
       <div class="auth-error" id="find-error"></div>
     </div>
-    <button class="auth-btn" onclick="doCheckEmail()">이메일 확인 →</button>
+    <button class="auth-btn" onclick="doSendResetCode()">인증 코드 보내기 →</button>
     <div class="auth-switch" onclick="showLogin()">로그인으로 <span>돌아가기</span></div>
   </div>
 
-  <!-- 2단계: 새 비밀번호 입력 -->
+  <!-- 2단계: 인증 코드 입력 -->
   <div id="find-step2" style="display:none;width:100%;max-width:360px;flex-direction:column;gap:12px;align-items:center">
     <div class="auth-sub" id="find-email-label"></div>
     <div class="auth-box" style="width:100%">
-      <div><div class="auth-label">새 비밀번호 (6자리 이상)</div><input class="auth-input" id="find-newpw" type="password" placeholder="새 비밀번호 입력" autocomplete="new-password"></div>
-      <div><div class="auth-label">비밀번호 확인</div><input class="auth-input" id="find-newpw2" type="password" placeholder="비밀번호 다시 입력" autocomplete="new-password"></div>
+      <div><div class="auth-label">인증 코드 (6자리)</div><input class="auth-input" id="find-code" type="text" inputmode="numeric" maxlength="6" placeholder="이메일로 받은 코드 입력" style="text-align:center;font-size:1.3rem;letter-spacing:8px"></div>
       <div class="auth-error" id="find-error2"></div>
     </div>
-    <button class="auth-btn" onclick="doResetPassword()">비밀번호 변경 →</button>
+    <button class="auth-btn" onclick="doVerifyCode()">인증 확인 →</button>
+    <div class="auth-switch" onclick="doSendResetCode()">코드 다시 <span>보내기</span></div>
     <div class="auth-switch" onclick="backToStep1()">이메일 다시 입력 <span>←</span></div>
+  </div>
+
+  <!-- 3단계: 새 비밀번호 입력 -->
+  <div id="find-step3" style="display:none;width:100%;max-width:360px;flex-direction:column;gap:12px;align-items:center">
+    <div class="auth-sub">✅ 인증 완료! 새 비밀번호를 입력해줘</div>
+    <div class="auth-box" style="width:100%">
+      <div><div class="auth-label">새 비밀번호 (6자리 이상)</div><input class="auth-input" id="find-newpw" type="password" placeholder="새 비밀번호 입력" autocomplete="new-password"></div>
+      <div><div class="auth-label">비밀번호 확인</div><input class="auth-input" id="find-newpw2" type="password" placeholder="비밀번호 다시 입력" autocomplete="new-password"></div>
+      <div class="auth-error" id="find-error3"></div>
+    </div>
+    <button class="auth-btn" onclick="doResetPassword()">비밀번호 변경 →</button>
   </div>
 </div>
 <div id="matching">
@@ -814,58 +824,73 @@ function showFindAccount(){
   // 항상 1단계부터 시작
   document.getElementById('find-step1').style.display='flex';
   document.getElementById('find-step2').style.display='none';
+  document.getElementById('find-step3').style.display='none';
   document.getElementById('find-email').value='';
   document.getElementById('find-error').textContent='';
 }
 function backToStep1(){
   document.getElementById('find-step1').style.display='flex';
   document.getElementById('find-step2').style.display='none';
+  document.getElementById('find-step3').style.display='none';
   document.getElementById('find-error').textContent='';
 }
-async function doCheckEmail(){
+let resetVerifiedCode='';
+async function doSendResetCode(){
   const email=document.getElementById('find-email').value.trim();
   const errEl=document.getElementById('find-error');
   if(!email){errEl.textContent='이메일 입력해줘!';return;}
-  errEl.textContent='확인 중...';
-  // profiles 테이블에서 이메일 존재 확인
+  errEl.textContent='인증 코드 보내는 중...';
   try{
-    const{data}=await sb.from('profiles').select('id').eq('email',email).maybeSingle();
-    if(!data){errEl.textContent='가입된 이메일이 아니야!';return;}
-    // 2단계로 이동
+    const r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sendResetCode',email})});
+    const res=await r.json();
+    if(!r.ok){errEl.textContent=res.error||'발송 실패ㅠ';return;}
     errEl.textContent='';
-    document.getElementById('find-email-label').textContent=email+'의 새 비밀번호를 입력해줘';
+    document.getElementById('find-email-label').textContent=email+'로 인증 코드를 보냈어! 10분 안에 입력해줘';
     document.getElementById('find-step1').style.display='none';
     document.getElementById('find-step2').style.display='flex';
+    document.getElementById('find-code').value='';
+    document.getElementById('find-error2').textContent='';
+  }catch(e){errEl.textContent='오류 났어 다시 시도해봐';}
+}
+async function doVerifyCode(){
+  const email=document.getElementById('find-email').value.trim();
+  const code=document.getElementById('find-code').value.trim();
+  const errEl=document.getElementById('find-error2');
+  if(!code||code.length!==6){errEl.textContent='6자리 인증 코드를 입력해줘!';return;}
+  errEl.textContent='확인 중...';
+  try{
+    const r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'verifyResetCode',email,code})});
+    const res=await r.json();
+    if(!r.ok){errEl.textContent=res.error||'인증 실패';return;}
+    resetVerifiedCode=code;
+    document.getElementById('find-step2').style.display='none';
+    document.getElementById('find-step3').style.display='flex';
     document.getElementById('find-newpw').value='';
     document.getElementById('find-newpw2').value='';
-    document.getElementById('find-error2').textContent='';
+    document.getElementById('find-error3').textContent='';
   }catch(e){errEl.textContent='오류 났어 다시 시도해봐';}
 }
 async function doResetPassword(){
   const email=document.getElementById('find-email').value.trim();
   const pw=document.getElementById('find-newpw').value.trim();
   const pw2=document.getElementById('find-newpw2').value.trim();
-  const errEl=document.getElementById('find-error2');
+  const errEl=document.getElementById('find-error3');
   if(!pw||!pw2){errEl.textContent='비밀번호 입력해줘!';return;}
   if(pw.length<6){errEl.textContent='비밀번호는 6자리 이상이어야 해!';return;}
   if(pw!==pw2){errEl.textContent='비밀번호가 일치하지 않아!';return;}
   errEl.textContent='변경 중...';
   try{
-    // api/auth로 비밀번호 변경 요청
-    const r=await fetch('/api/auth',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'resetPassword',email,password:pw})
-    });
+    const r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'resetPassword',email,password:pw,code:resetVerifiedCode})});
     const res=await r.json();
     if(!r.ok){errEl.textContent=res.error||'변경 실패ㅠ';return;}
     errEl.style.color='#22c55e';
     errEl.textContent='비밀번호 변경 완료! 🎉';
+    resetVerifiedCode='';
     setTimeout(()=>{
       document.getElementById('find-screen').classList.remove('show');
       showLogin();
     },1500);
-  }catch(e){errEl.textContent='오류 났어 다시 시도해봐';}
+  }catch(e){errEl.textContent='오류: '+e.message;}
 }
   function showSignup(){document.getElementById('signup-screen').classList.add('show');document.getElementById('login-screen').classList.remove('show');}
 async function doSignup(){
