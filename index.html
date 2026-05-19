@@ -2945,27 +2945,35 @@ async function autoDetectSchedule(text){
   // ── 번호로 삭제 응답 감지 ──
   const pendingDelete=localStorage.getItem('td_pending_delete');
   if(pendingDelete){
-    const numMatch=text.match(/^(\d)$/);
-    if(numMatch){
-      const idx=parseInt(numMatch[1])-1;
-      const items=JSON.parse(pendingDelete);
-      if(idx>=0&&idx<items.length){
-        const item=items[idx];
-        try{
-          const uid=safeUserId();if(!uid)return true;
+    const items=JSON.parse(pendingDelete);
+    // "1,2,3" 또는 "1 2 3" 또는 "전부" 또는 "다" 또는 단일 숫자
+    const allPattern=/^(전부|다|모두|전체|다삭제|전부삭제)$/;
+    const nums=text.match(/\d+/g);
+    let deleteTargets=[];
+    if(allPattern.test(text.trim())){
+      deleteTargets=items;
+    }else if(nums){
+      deleteTargets=nums.map(n=>items[parseInt(n)-1]).filter(Boolean);
+    }
+    if(deleteTargets.length>0){
+      try{
+        const uid=safeUserId();if(!uid)return true;
+        const names=[];
+        for(const item of deleteTargets){
           await sb.from('schedules').delete().eq('id',item.id);
-          const msg=`${item.title} 삭제했어 🗑️`;
-          setTimeout(async()=>{
-            appendMsg('ai',msg);
-            messages.push({role:'assistant',content:msg,created_at:new Date().toISOString()});
-            await saveMsg('assistant',msg);
-          },1000);
-          if(currentTab==='calendar')loadCalendar();
-          else{const{data:all}=await sb.from('schedules').select('*').eq('user_id',uid);calSchedules=all||[];}
-        }catch(e){}
-        localStorage.removeItem('td_pending_delete');
-        return true;
-      }
+          names.push(item.title);
+        }
+        const msg=names.length===1?`${names[0]} 삭제했어 🗑️`:`${names.join(', ')} 총 ${names.length}개 삭제했어 🗑️`;
+        setTimeout(async()=>{
+          appendMsg('ai',msg);
+          messages.push({role:'assistant',content:msg,created_at:new Date().toISOString()});
+          await saveMsg('assistant',msg);
+        },1000);
+        if(currentTab==='calendar')loadCalendar();
+        else{const{data:all}=await sb.from('schedules').select('*').eq('user_id',uid);calSchedules=all||[];}
+      }catch(e){}
+      localStorage.removeItem('td_pending_delete');
+      return true;
     }
     localStorage.removeItem('td_pending_delete');
   }
