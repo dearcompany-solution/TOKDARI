@@ -335,7 +335,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover,input[type="time"]::
   <div id="chat-screen">
     <div class="app-header">
       <button class="hbtn" onclick="goBackToHome()" style="font-size:1.4rem">←</button>
-      <div class="chat-hdr-av"><span id="chat-char-icon">🥚</span><div class="online-dot"></div></div>
+      <div class="chat-hdr-av"><span id="chat-char-icon" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;overflow:hidden;border-radius:50%">🥚</span><div class="online-dot"></div></div>
       <div>
         <div class="chat-hdr-name" id="chat-char-name">친구</div>
         <div class="chat-hdr-status" id="chat-status">온라인</div>
@@ -1193,7 +1193,7 @@ function updateCharDisplay(){
       <div style="position:absolute;bottom:-4px;right:0px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:2px 7px;font-size:.65rem;font-weight:700;color:var(--accent2)">Lv.${lv}</div>
     </div>`;
   }
-  if(el('chat-char-icon'))el('chat-char-icon').textContent=ch.icons[Math.min(lv-1,ch.icons.length-1)]||'🐧';
+  if(el('chat-char-icon')){const todayImg=getTodayPenguinImg();el('chat-char-icon').innerHTML=`<img src="${todayImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.textContent='🐧'">`;}
   if(el('char-name-disp'))el('char-name-disp').textContent=name;
   
   if(el('char-level-disp'))el('char-level-disp').textContent=`Lv.${lv} · ${getLvName(lv)}`;
@@ -1973,7 +1973,7 @@ function renderAllMessages(){
     appendMsg(m.role==='user'?'user':'ai',m.content,null,true);
   });
 }
-function showTyping(){const wrap=document.getElementById('chat-messages');const row=document.createElement('div');row.className='msg-row';row.id='typ-'+Date.now();const av=document.createElement('div');av.className='msg-av';const ch=getChar();av.textContent=ch?.icon||'🌱';const b=document.createElement('div');b.className='typing-bubble';b.innerHTML='<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';row.appendChild(av);row.appendChild(b);wrap.appendChild(row);scrollToBottom();return row.id;}
+function showTyping(){const wrap=document.getElementById('chat-messages');const row=document.createElement('div');row.className='msg-row';row.id='typ-'+Date.now();const av=document.createElement('div');av.className='msg-av';const todayImg=getTodayPenguinImg();av.innerHTML=`<img src="${todayImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.textContent='🐧'">`; const b=document.createElement('div');b.className='typing-bubble';b.innerHTML='<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';row.appendChild(av);row.appendChild(b);wrap.appendChild(row);scrollToBottom();return row.id;}
 function removeTyping(id){document.getElementById(id)?.remove();}
 async function deleteSingleMsg(bubEl){
   if(!confirm('이 메시지를 삭제할까?'))return;
