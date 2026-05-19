@@ -657,6 +657,23 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover,input[type="time"]::
 </div>
   <div class="toast" id="toast"></div>
 <script>
+// 모든 링크를 외부 브라우저에서 열기
+function openExternal(url){
+  const a=document.createElement('a');
+  a.href=url;
+  a.target='_blank';
+  a.rel='noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+document.addEventListener('click',function(e){
+  const a=e.target.closest('a[href]');
+  if(a&&a.href&&a.href.startsWith('http')&&!a.href.includes(location.hostname)){
+    e.preventDefault();
+    openExternal(a.href);
+  }
+});
   // 테마 즉시 적용 (깜빡임 방지)
 (function(){
   const t=localStorage.getItem('td_theme');
