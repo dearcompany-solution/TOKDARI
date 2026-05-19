@@ -2891,7 +2891,7 @@ async function autoDetectSchedule(text){
   const deletePattern=/(삭제|지워|취소|없애|빼줘|제거).*(일정|약속|미팅|회의|예약|스케줄)|(일정|약속|미팅|회의|예약|스케줄).*(삭제|지워|취소|없애|빼줘|제거)/;
   if(deletePattern.test(text)){
     try{
-      const uid=safeUserId();if(!uid)return;
+      const uid=safeUserId();if(!uid)return true;
       // 텍스트에서 일정 제목 키워드 추출
       const keywords=text.replace(/삭제|지워|취소|없애|빼줘|제거|해줘|해|좀|일정|약속|스케줄|내용|캘린더/g,'').trim();
       const{data:allSchedules}=await sb.from('schedules')
@@ -2952,7 +2952,7 @@ async function autoDetectSchedule(text){
       if(idx>=0&&idx<items.length){
         const item=items[idx];
         try{
-          const uid=safeUserId();if(!uid)return;
+          const uid=safeUserId();if(!uid)return true;
           await sb.from('schedules').delete().eq('id',item.id);
           const msg=`${item.title} 삭제했어 🗑️`;
           setTimeout(async()=>{
